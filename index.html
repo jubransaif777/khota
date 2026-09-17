@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الخطة الأسبوعية — واجهة ولي الأمر</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F1F5F4; --surface:#FFFFFF; --surface-2:#EAF0EE;
+    --ink:#15302D; --muted:#5E706C; --line:#DBE4E1;
+    --primary:#0E5A54; --primary-soft:#E1EEEC; --primary-ink:#0B403B;
+    --alert:#B26A15; --alert-soft:#FBEEDA; --alert-ink:#8A520F;
+    --radius:16px; --radius-sm:11px;
+    --shadow:0 1px 2px rgba(16,45,42,.05), 0 8px 24px -18px rgba(16,45,42,.35);
+    --maxw:560px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0D1615; --surface:#15211F; --surface-2:#1C2A27;
+      --ink:#E9F1EF; --muted:#9CB0AC; --line:#263733;
+      --primary:#4FB6A9; --primary-soft:#123430; --primary-ink:#B9E4DE;
+      --alert:#E0A24A; --alert-soft:#31230F; --alert-ink:#F0C888;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px -18px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1615; --surface:#15211F; --surface-2:#1C2A27;
+    --ink:#E9F1EF; --muted:#9CB0AC; --line:#263733;
+    --primary:#4FB6A9; --primary-soft:#123430; --primary-ink:#B9E4DE;
+    --alert:#E0A24A; --alert-soft:#31230F; --alert-ink:#F0C888;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px -18px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:'Readex Pro','Segoe UI',Tahoma,sans-serif; background:var(--bg); color:var(--ink);
+    -webkit-font-smoothing:antialiased; line-height:1.5}
+  .app{max-width:var(--maxw); margin:0 auto; padding:0 14px 40px; min-height:100vh}
+  .top{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:18px 4px 12px}
+  .brand{display:flex; align-items:center; gap:11px; min-width:0}
+  .crest{flex:0 0 auto; width:40px; height:40px; border-radius:12px; background:var(--primary); color:#fff;
+    display:grid; place-items:center; font-weight:700; font-size:19px; box-shadow:var(--shadow)}
+  .brand-t{min-width:0}
+  .brand-t h1{font-size:16.5px; font-weight:600; margin:0; letter-spacing:-.2px}
+  .brand-t p{font-size:11.5px; color:var(--muted); margin:2px 0 0; white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; max-width:230px}
+  .icon-btn{flex:0 0 auto; width:38px; height:38px; border-radius:11px; border:1px solid var(--line);
+    background:var(--surface); color:var(--ink); font-size:17px; cursor:pointer; display:grid; place-items:center}
+  .icon-btn:active{transform:scale(.95)}
+  .class-btn{width:100%; border:1px solid var(--line); background:var(--surface); border-radius:var(--radius);
+    padding:13px 15px; cursor:pointer; color:var(--ink); display:flex; align-items:center; justify-content:space-between;
+    gap:10px; box-shadow:var(--shadow); font-family:inherit; text-align:inherit}
+  .class-btn .lbl{display:flex; flex-direction:column; align-items:flex-start; gap:1px}
+  .class-btn .lbl small{font-size:11px; color:var(--muted)}
+  .class-btn .lbl b{font-size:17px; font-weight:600}
+  .class-btn .caret{color:var(--primary); font-size:13px; font-weight:700}
+  .weeknav{display:flex; align-items:stretch; gap:8px; margin-top:10px}
+  .weeknav .nav{flex:0 0 auto; width:44px; border:1px solid var(--line); background:var(--surface);
+    border-radius:var(--radius-sm); cursor:pointer; color:var(--primary); font-size:20px; display:grid;
+    place-items:center; font-family:inherit}
+  .weeknav .nav:disabled{opacity:.35; cursor:default; color:var(--muted)}
+  .weeknav .nav:active:not(:disabled){background:var(--primary-soft)}
+  .weekcenter{flex:1 1 auto; border:1px solid var(--line); background:var(--surface); border-radius:var(--radius-sm);
+    padding:8px 12px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px}
+  .weekcenter .wk{font-size:15px; font-weight:600}
+  .weekcenter .rg{font-size:12px; color:var(--muted)}
+  .now-tag{display:inline-block; margin-top:1px; font-size:10.5px; font-weight:600; color:var(--primary-ink);
+    background:var(--primary-soft); padding:2px 9px; border-radius:20px}
+  .glance{margin-top:14px; display:flex; gap:9px}
+  .stat{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:12px 13px; display:flex; align-items:center; gap:10px}
+  .stat .num{font-size:24px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums}
+  .stat .cap{font-size:12px; color:var(--muted); line-height:1.35}
+  .stat.tests .num{color:var(--alert)}
+  .stat.hw .num{color:var(--primary)}
+  .stat .ic{font-size:17px; opacity:.9}
+  .listhead{display:flex; align-items:center; justify-content:space-between; margin:20px 4px 10px}
+  .listhead .cnt{font-size:13px; color:var(--muted)}
+  .listhead .cnt b{color:var(--ink); font-weight:600}
+  .toggle-all{border:none; background:none; color:var(--primary); font-weight:500; font-size:13px; cursor:pointer;
+    font-family:inherit; padding:4px 2px}
+  .cards{display:flex; flex-direction:column; gap:10px}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden}
+  .card.has-test{border-color:color-mix(in srgb, var(--alert) 40%, var(--line))}
+  .card-head{width:100%; border:none; background:none; cursor:pointer; font-family:inherit; color:var(--ink);
+    display:flex; align-items:center; gap:12px; padding:13px 14px; text-align:inherit}
+  .mono{flex:0 0 auto; width:38px; height:38px; border-radius:11px; display:grid; place-items:center;
+    font-size:19px; color:#fff}
+  .head-mid{flex:1 1 auto; min-width:0}
+  .head-mid .sn{font-size:15.5px; font-weight:600; display:block}
+  .head-mid .tch{font-size:11.5px; color:var(--muted); display:block; margin-top:1px}
+  .head-mid .badges{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
+  .badge{font-size:11px; font-weight:500; padding:2.5px 9px; border-radius:20px; white-space:nowrap}
+  .badge.test{background:var(--alert-soft); color:var(--alert-ink)}
+  .badge.note{background:var(--primary-soft); color:var(--primary-ink)}
+  .badge.none{background:var(--surface-2); color:var(--muted)}
+  .chev{flex:0 0 auto; color:var(--muted); font-size:15px; transition:transform .22s ease}
+  .card.open .chev{transform:rotate(-90deg)}
+  .card-body{display:none; padding:0 14px 15px; padding-inline-start:64px}
+  .card.open .card-body{display:block}
+  .row{padding-top:11px; border-top:1px solid var(--line); margin-top:11px}
+  .row:first-child{border-top:none; margin-top:0; padding-top:2px}
+  .row .rl{font-size:11.5px; font-weight:600; color:var(--muted); margin-bottom:3px}
+  .row .rv{font-size:14.5px; line-height:1.6; word-break:break-word}
+  .alertbox{background:var(--alert-soft); border-radius:12px; padding:11px 13px; margin-top:12px; display:flex;
+    gap:11px; align-items:flex-start}
+  .alertbox .ai{font-size:17px; line-height:1.2}
+  .alertbox .at{font-size:11.5px; font-weight:600; color:var(--alert-ink); margin-bottom:2px}
+  .alertbox .av{font-size:14.5px; font-weight:500}
+  .change-teacher{border:none; background:none; color:var(--primary); font-size:12.5px; font-weight:500; cursor:pointer;
+    font-family:inherit; padding:10px 0 0; margin-top:11px; border-top:1px solid var(--line); width:100%; text-align:start}
+  .soft-note{color:var(--muted); font-size:13.5px; padding-top:2px; line-height:1.6}
+  /* chooser */
+  .card.chooser{border-color:color-mix(in srgb, var(--primary) 38%, var(--line))}
+  .chooser-head{display:flex; align-items:flex-start; gap:12px; padding:13px 14px 2px}
+  .chooser-head .sn{font-size:15.5px; font-weight:600}
+  .chooser-head .tch{font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.5}
+  .chooser-q{font-size:12.5px; color:var(--primary-ink); font-weight:600; padding:8px 14px 0; padding-inline-start:64px}
+  .chooser-opts{display:flex; flex-direction:column; gap:8px; padding:10px 14px 14px; padding-inline-start:64px}
+  .tchoice{width:100%; text-align:inherit; border:1px solid var(--line); background:var(--surface); border-radius:11px;
+    padding:11px 13px; cursor:pointer; color:var(--ink); font-family:inherit; font-size:14.5px; font-weight:500;
+    display:flex; align-items:center; justify-content:space-between; gap:8px}
+  .tchoice:active{transform:scale(.99)}
+  .tchoice .has{font-size:10.5px; font-weight:600; color:var(--primary-ink); background:var(--primary-soft);
+    padding:2px 8px; border-radius:20px; white-space:nowrap}
+  .empty-block{background:var(--surface); border:1px dashed var(--line); border-radius:var(--radius);
+    padding:26px 18px; text-align:center; color:var(--muted); font-size:14px; line-height:1.7}
+  .empty-block .big{font-size:26px; display:block; margin-bottom:8px; opacity:.7}
+  .foot{margin-top:22px; display:flex; flex-direction:column; gap:12px; align-items:center}
+  .pdf-btn{width:100%; border:1px solid var(--primary); background:var(--primary-soft); color:var(--primary-ink);
+    border-radius:var(--radius); padding:13px; font-size:14.5px; font-weight:600; cursor:pointer; font-family:inherit;
+    display:flex; align-items:center; justify-content:center; gap:9px}
+  .pdf-btn:active{transform:scale(.99)}
+  .sync{font-size:11.5px; color:var(--muted); display:flex; align-items:center; gap:6px; text-align:center}
+  .credits{margin-top:8px; text-align:center; color:var(--muted); font-size:11px; line-height:1.75}
+  .credits .ct{font-weight:600; color:var(--ink); font-size:12.5px}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--primary); flex:0 0 auto}
+  .scrim{position:fixed; inset:0; background:rgba(10,20,18,.42); opacity:0; pointer-events:none;
+    transition:opacity .2s ease; z-index:40}
+  .scrim.on{opacity:1; pointer-events:auto}
+  .sheet{position:fixed; inset-inline:0; bottom:0; z-index:50; background:var(--surface); border-radius:22px 22px 0 0;
+    padding:8px 14px calc(18px + env(safe-area-inset-bottom)); max-width:var(--maxw); margin:0 auto;
+    transform:translateY(102%); transition:transform .26s cubic-bezier(.22,.61,.36,1);
+    box-shadow:0 -12px 40px -20px rgba(0,0,0,.5); max-height:80vh; overflow-y:auto}
+  .sheet.on{transform:translateY(0)}
+  .grab{width:38px; height:4px; border-radius:4px; background:var(--line); margin:6px auto 12px}
+  .sheet h3{font-size:14px; margin:0 4px 10px; color:var(--muted); font-weight:600}
+  .opt{width:100%; text-align:inherit; border:1px solid var(--line); background:var(--surface); border-radius:12px;
+    padding:13px 15px; margin-bottom:8px; cursor:pointer; color:var(--ink); font-family:inherit; font-size:15.5px;
+    font-weight:500; display:flex; align-items:center; justify-content:space-between}
+  .opt small{font-size:12px; color:var(--muted); font-weight:400; margin-inline-start:8px}
+  .opt.sel{border-color:var(--primary); background:var(--primary-soft); color:var(--primary-ink)}
+  .opt .tick{color:var(--primary); font-weight:700; opacity:0}
+  .opt.sel .tick{opacity:1}
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+  :focus-visible{outline:2.5px solid var(--primary); outline-offset:2px; border-radius:6px}
+  @media print{
+    body{background:#fff}
+    .top .icon-btn,.weeknav .nav,.class-btn .caret,.toggle-all,.foot,.scrim,.sheet,.change-teacher{display:none !important}
+    .print-head{display:block !important}
+    .card{break-inside:avoid; border:1px solid #ccc; box-shadow:none}
+    .card-body{display:block !important}
+    .chev{display:none}
+    .app{max-width:100%}
+  }
+  .print-head{display:none; margin:0 4px 12px}
+  .print-head h2{margin:0; font-size:18px}
+  .print-head p{margin:3px 0 0; color:#555; font-size:13px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="crest">م</div>
+      <div class="brand-t"><h1>الخطة الأسبوعية</h1><p id="schoolLine"></p></div>
+    </div>
+    <button class="icon-btn" id="themeBtn" aria-label="تبديل الوضع الليلي">☾</button>
+  </header>
+  <div class="print-head" id="printHead"></div>
+  <button class="class-btn" id="classBtn" aria-haspopup="dialog">
+    <span class="lbl"><small>صف ابنك وشعبته</small><b id="classLabel"></b></span>
+    <span class="caret">تغيير ▾</span>
+  </button>
+  <nav class="weeknav" aria-label="التنقل بين الأسابيع">
+    <button class="nav" id="prevWk" aria-label="الأسبوع السابق">›</button>
+    <div class="weekcenter">
+      <span class="wk" id="wkLabel"></span><span class="rg" id="wkRange"></span>
+      <span class="now-tag" id="nowTag">هذا الأسبوع</span>
+    </div>
+    <button class="nav" id="nextWk" aria-label="الأسبوع التالي">‹</button>
+  </nav>
+  <section class="glance" id="glance"></section>
+  <div class="listhead"><span class="cnt"><b id="subjCount">٠</b> مواد منشورة</span>
+    <button class="toggle-all" id="toggleAll">توسيع الكل</button></div>
+  <main class="cards" id="cards"></main>
+  <footer class="foot">
+    <button class="pdf-btn" id="pdfBtn">⤓&nbsp; تنزيل خطة الأسبوع (PDF)</button>
+    <span class="sync"><span class="dot"></span> <span id="syncMsg">جارٍ التحميل…</span></span>
+    <div class="credits">
+      <div>مدرسة المعيريض للحلقة الثانية بنين</div>
+      <div class="ct">الخطة الأسبوعية الإلكترونية</div>
+      <div>تصميم وتطوير: جبران سيف</div>
+    </div>
+  </footer>
+</div>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-label="اختيار الصف والشعبة">
+  <div class="grab"></div><h3>اختر صف ابنك وشعبته</h3><div id="classOpts"></div>
+</div>
+<script>
+window.__FALLBACK__ = {"school": "مدرسة المعيريض للحلقة الثانية بنين", "term": "الفصل الأول ٢٦-٢٧", "currentWeekIndex": 2, "sectionOrder": [{"code": "5G", "label": "الخامس العام"}, {"code": "5A", "label": "الخامس المتقدم"}, {"code": "6G", "label": "السادس العام"}, {"code": "6A", "label": "السادس المتقدم"}, {"code": "7G", "label": "السابع العام"}, {"code": "7A", "label": "السابع المتقدم"}, {"code": "8G", "label": "الثامن العام"}, {"code": "8A", "label": "الثامن المتقدم"}], "weeks": [{"num": 1, "label": "الأسبوع ١", "range": "٣١ أغسطس – ٤ سبتمبر", "start": "2026-08-31", "sections": {"5G": [], "5A": [], "6G": [], "6A": [], "7G": [], "7A": [], "8G": [], "8A": []}}, {"num": 2, "label": "الأسبوع ٢", "range": "٧ – ١١ سبتمبر", "start": "2026-09-07", "sections": {"5G": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "سورة الِانْفِطار", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "منذر عبدالغني النصيرات", "lesson": "من الارض الى السماء", "emoji": "📖", "tint": "#0E5A54", "note": "واجب للصف الخامس وضع العبارات المظللة في جمل جديدة من إنشاء الطالب."}, {"subject": "اللغة الإنجليزية", "teacher": "مريم محمد عبدالله الهدية", "lesson": "Diagnostic Exam +Unit 1 lesson 1A&1B", "emoji": "🔤", "tint": "#2A6F97"}, {"subject": "الدراسات الاجتماعية", "teacher": "سهيلة محمد زيد الخنزوري", "lesson": "حضارات الوطن العربي", "emoji": "🌍", "tint": "#3A5A8C"}, {"subject": "Math", "teacher": "أسماء محمد الشاذلي", "lesson": "الوحدة الأولي : القيمة المكانية حتي منزلة الملايين - مقارنة الاعداد و الاعداد الكلية حتي منزلة الملايين و ترتيبها", "emoji": "➗", "tint": "#4B4B8F", "reminder": "Diagnostic exam will be this Thursday اختبار تشخيصي يوم الخميس"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Introduction to embdded system", "emoji": "⚙️", "tint": "#8A6D3B"}], "5A": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "سورة الِانْفِطارِ", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "منذر عبدالغني النصيرات", "lesson": "من الارض الى السماء", "emoji": "📖", "tint": "#0E5A54", "note": "واجب للصف الخامس وضع العبارات المظللة في جمل جديدة من إنشاء الطالب."}, {"subject": "اللغة الإنجليزية", "teacher": "مريم محمد عبدالله الهدية", "lesson": "Diagnostic Exam + Unit 1 Lesson !A", "emoji": "🔤", "tint": "#2A6F97"}, {"subject": "الدراسات الاجتماعية", "teacher": "سهيلة محمد زيد الخنزوري", "lesson": "حضارات الوطن العربي", "emoji": "🌍", "tint": "#3A5A8C"}, {"subject": "Math", "teacher": "أسماء محمد الشاذلي", "lesson": "UNIT 2- lesson 1 , 2 , 3", "emoji": "➗", "tint": "#4B4B8F", "reminder": "Diagnostic exam will be this Thursday اختبار تشخيصي يوم الخميس"}, {"subject": "Science", "teacher": "محمد جشار M.Jishar", "lesson": "Identify Properties of materials", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Introduction to embdded system", "emoji": "⚙️", "tint": "#8A6D3B"}], "6G": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "الكتاب الحق سورة السجدة (1-12)", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "نصر حسين العمري", "lesson": "النصوص حولنا -المسكية في مدح خير البرية عليه السلام", "emoji": "📖", "tint": "#0E5A54", "note": "حل الأنشطة في منصة ألف"}, {"subject": "اللغة الإنجليزية", "teacher": "مريم محمد عبدالله الهدية", "lesson": "Diagnostic Exam + Unit 1 Lesson 1A", "emoji": "🔤", "tint": "#2A6F97"}, {"subject": "الدراسات الاجتماعية", "teacher": "سهيلة محمد زيد الخنزوري", "lesson": "الحضارة", "emoji": "🌍", "tint": "#3A5A8C"}, {"subject": "الرياضيات", "teacher": "عامر علي سلامة", "lesson": "الوحدة الأولى :الدروس 1.1. 1.2. اختبار تشخيصي", "emoji": "➗", "tint": "#4B4B8F"}, {"subject": "الرياضيات", "teacher": "محمود محمد موسى النمرات", "lesson": "العوامل والمضاعفات ,النسب ,اختبار تشخيصي", "emoji": "➗", "tint": "#4B4B8F", "note": "واجب للصف الخامس صفحة 13 سؤال 18 وسؤال 22", "exam": "موعد الاختبار التشخيصي يوم الخميس 10/9"}, {"subject": "العلوم", "teacher": "حصة علي أحمد حشر", "lesson": "الوحدة 2 الدرس 1 أدوات النكنولوجيا", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Introduction to embdded system", "emoji": "⚙️", "tint": "#8A6D3B"}], "6A": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "الكتاب الحق سورة السجدة (1-12)", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "نصر حسين العمري", "lesson": "النصوص حولنا -المسكية في مدح خير البرية عليه السلام", "emoji": "📖", "tint": "#0E5A54", "note": "حل الأنشطة في منصة ألف"}, {"subject": "اللغة الإنجليزية", "teacher": "عماد شعبان حسن علي النجار", "lesson": "CourseBook - Unit 1 (Food For Life), pages 3-8 + Alef & LMS assignments/ activities", "emoji": "🔤", "tint": "#2A6F97"}, {"subject": "الدراسات الاجتماعية", "teacher": "سهيلة محمد زيد الخنزوري", "lesson": "الحضارة", "emoji": "🌍", "tint": "#3A5A8C"}, {"subject": "Math", "teacher": "Arpit Kapoor", "lesson": "Module 1 : Lesson1 : Understand Ratios Module 1: Lesson 2: Table of Equivalent Ratios.", "emoji": "➗", "tint": "#4B4B8F", "reminder": "Complete the Alef Lessons . Diagnostic exam will be this week on wednesday"}, {"subject": "Science", "teacher": "محمد جشار M.Jishar", "lesson": "cells and life", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Introduction to embdded system", "emoji": "⚙️", "tint": "#8A6D3B"}], "7G": [{"subject": "التربية الإسلامية", "teacher": "حسن مساعد رمضان", "lesson": "1.1: سورة ق ( البعث والنشور)", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "محمد عطا", "lesson": "النصوص حولنا - إلى شباب بلادي", "emoji": "📖", "tint": "#0E5A54", "note": "حل الأنشطة في منصة ألف"}, {"subject": "اللغة الإنجليزية", "teacher": "عماد شعبان حسن علي النجار", "lesson": "CourseBook - Unit 1 (Food For Life), pages 3-8 + Alef & LMS assignments/ activities", "emoji": "🔤", "tint": "#2A6F97"}, {"subject": "الرياضيات", "teacher": "محمود محمد موسى النمرات", "lesson": "المعدلات ,الكسور المركبة ,اختبار تشخيصي", "emoji": "➗", "tint": "#4B4B8F", "note": "واجب للصف الخامس صفحة 13 سؤال 18 وسؤال 22", "exam": "موعد الاختبار التشخيصي يوم الخميس 10/9"}, {"subject": "Math", "teacher": "Arpit Kapoor", "lesson": "Module 1: Lesson 1: Unit rates Module 1: Lesson 2:Understand Proportional relationships", "emoji": "➗", "tint": "#4B4B8F", "reminder": "Complete the Alef Lessons . Diagnostic exam will be this week on wednesday"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Introduction to AI", "emoji": "⚙️", "tint": "#8A6D3B"}], "7A": [{"subject": "التربية الإسلامية", "teacher": "حسن مساعد رمضان", "lesson": "1.1: سورة ق ( البعث والنشور)", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "نصر حسين العمري", "lesson": "النصوص حولنا - إلى شباب بلادي", "emoji": "📖", "tint": "#0E5A54", "note": "حل الأنشطة في منصة ألف"}, {"subject": "Math", "teacher": "محمد الكاس مياه - Miah", "lesson": "M1L1 - Unit Rates Involving Ratios of Fractions M1L2 - Understand Proportional Relationships LO: Find unit rates when one or both quantities are fractions Use models and ratio reasoning to understand how a proportional relationship can exist between quantities Use the Laws of Exponents to multiply and divide monomials with common bases", "emoji": "➗", "tint": "#4B4B8F", "reminder": "Complete Practice on Reveal, Textbook and ALEF Lesson."}, {"subject": "Science", "teacher": "ليلى جواد فايز حبش", "lesson": "Levels of organization", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Introduction to AI", "emoji": "⚙️", "tint": "#8A6D3B"}], "8G": [{"subject": "التربية الإسلامية", "teacher": "حسن مساعد رمضان", "lesson": "1.1 : سورة يس ( صدق الرسول صلى الله عليه وسلم )", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "محمد عطا", "lesson": "النصوص حولنا", "emoji": "📖", "tint": "#0E5A54", "note": "حل الأنشطة في منصة ألف"}, {"subject": "اللغة الإنجليزية", "teacher": "عماد شعبان حسن علي النجار", "lesson": "CourseBook - Unit 1 (The Ocean), pages 3-7 + Alef & LMS assignments/ activities", "emoji": "🔤", "tint": "#2A6F97"}, {"subject": "الرياضيات", "teacher": "عامر علي سلامة", "lesson": "الوحدة الأولى :الدروس 1.1. 1.2 اختبار تشخيصي", "emoji": "➗", "tint": "#4B4B8F"}, {"subject": "العلوم", "teacher": "يحيى ناجي يوسف محمد", "lesson": "الدرس الاول من وحدة الحرارة (الطاقة الحرارية ودرجة الحرارة والحرارة )", "emoji": "🔬", "tint": "#2E7D6B", "reminder": "حل التدريبات في البوابة ومنصة الف اولا بأول"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Introduction to AI", "emoji": "⚙️", "tint": "#8A6D3B"}], "8A": [{"subject": "التربية الإسلامية", "teacher": "حسن مساعد رمضان", "lesson": "1.1 : سورة يس ( صدق الرسول صلى الله عليه وسلم )", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "منذر عبدالغني النصيرات", "lesson": "النصوص حولنا", "emoji": "📖", "tint": "#0E5A54", "note": "واجب للصف الخامس وضع العبارات المظللة في جمل جديدة من إنشاء الطالب."}, {"subject": "Math", "teacher": "محمد الكاس مياه - Miah", "lesson": "M1L1 - Powers and Exponents M1L2 - Multiply and Divide Monomials LO: Use integer exponents to show repeated multiplication of rational numbers Use the Laws of Exponents to multiply and divide monomials with common bases\"", "emoji": "➗", "tint": "#4B4B8F", "reminder": "Complete Practice on Reveal, Textbook and ALEF Lesson."}, {"subject": "Science", "teacher": "ليلى جواد فايز حبش", "lesson": "magnetic forces", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Introduction to AI", "emoji": "⚙️", "tint": "#8A6D3B"}]}}, {"num": 3, "label": "الأسبوع ٣", "range": "١٤ – ١٨ سبتمبر", "start": "2026-09-14", "sections": {"5G": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "المفلس الحقيقي", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "منذر عبدالغني النصيرات", "lesson": "من الارض الى السماء - ركز على اهدافك", "emoji": "📖", "tint": "#0E5A54"}, {"subject": "اللغة الإنجليزية", "teacher": "مريم محمد عبدالله الهدية", "lesson": "Unit 1 Lesson 2A -2B", "emoji": "🔤", "tint": "#2A6F97"}, {"subject": "الدراسات الاجتماعية", "teacher": "سهيلة محمد زيد الخنزوري", "lesson": "حضارات الوطن العربي", "emoji": "🌍", "tint": "#3A5A8C"}, {"subject": "Math", "teacher": "أسماء محمد الشاذلي", "lesson": "الوحدة 1 الدرس 4 - 5-7-8", "emoji": "➗", "tint": "#4B4B8F", "reminder": "حل منصة ألف و الكتاب المدرسي (الواجبات المنزلية)Complete Alef lessons", "exam": "Diagnostic test for grade 6 A"}, {"subject": "العلوم", "teacher": "محمود محمد شحاته", "lesson": "الطريقة العلمية", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Learning from Data and Patterns", "emoji": "⚙️", "tint": "#8A6D3B"}], "5A": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "المفلس الحقيقي", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "منذر عبدالغني النصيرات", "lesson": "من الارض الى السماء - ركز على اهدافك", "emoji": "📖", "tint": "#0E5A54"}, {"subject": "اللغة الإنجليزية", "teacher": "مريم محمد عبدالله الهدية", "lesson": "Unit 1 Lessons 1B + 1C", "emoji": "🔤", "tint": "#2A6F97"}, {"subject": "الدراسات الاجتماعية", "teacher": "سهيلة محمد زيد الخنزوري", "lesson": "حضارات الوطن العربي", "emoji": "🌍", "tint": "#3A5A8C"}, {"subject": "Science", "teacher": "محمد جشار M.Jishar", "lesson": "Lesson 2 : Mixtures and solutions", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Learning from Data and Patterns", "emoji": "⚙️", "tint": "#8A6D3B"}], "6G": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "من وصايا الرسول صلى الله عليه وسلم", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "نصر حسين العمري", "lesson": "قصة : رحمة للعالمين - نص معلوماتي : كن أكثر وعياً بغضبك", "emoji": "📖", "tint": "#0E5A54", "note": "حل أنشطة منصة ألف - أنشطة في االبوابة"}, {"subject": "اللغة الإنجليزية", "teacher": "مريم محمد عبدالله الهدية", "lesson": "Unit 1 Lesson 1B + 1C", "emoji": "🔤", "tint": "#2A6F97"}, {"subject": "الدراسات الاجتماعية", "teacher": "سهيلة محمد زيد الخنزوري", "lesson": "الحضارة", "emoji": "🌍", "tint": "#3A5A8C"}, {"subject": "الرياضيات", "teacher": "عامر علي سلامة", "lesson": "الوحدة الأولى :الدروس 1.3 1.4 1.5 اختبار تشخيصي", "emoji": "➗", "tint": "#4B4B8F", "reminder": "الواجبات التمارين الذاتية التي لم تحل داخل الصف +مهمات LMS", "exam": "اختبار تشخيصي"}, {"subject": "الرياضيات", "teacher": "محمود محمد موسى النمرات", "lesson": "المعدلات , جداول النسب ,تمثيل جداول النسب بيانيا", "emoji": "➗", "tint": "#4B4B8F"}, {"subject": "العلوم", "teacher": "حصة علي أحمد حشر", "lesson": "الدرس 2: المواد وخواصها", "emoji": "🔬", "tint": "#2E7D6B", "reminder": "البوابة + منصة ألف + الكتاب المدرسي"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "How AI Learns From Data", "emoji": "⚙️", "tint": "#8A6D3B"}], "6A": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "من وصايا الرسول صلى الله عليه وسلم", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "نصر حسين العمري", "lesson": "قصة : رحمة للعالمين - نص معلوماتي : كن أكثر وعياً بغضبك", "emoji": "📖", "tint": "#0E5A54", "note": "حل أنشطة منصة ألف - أنشطة في االبوابة"}, {"subject": "اللغة الإنجليزية", "teacher": "عماد شعبان حسن علي النجار", "lesson": "CourseBook - Unit 1 (Food For Life), pages 9-15 + Alef & LMS assignments/ activities", "emoji": "🔤", "tint": "#2A6F97", "note": "Notebook + CB + Laptop always needed", "exam": "Diagnostic Tests (Tuesday, Wednesday, Thursday)"}, {"subject": "الدراسات الاجتماعية", "teacher": "سهيلة محمد زيد الخنزوري", "lesson": "الحضارة", "emoji": "🌍", "tint": "#3A5A8C"}, {"subject": "Math", "teacher": "Arpit Kapoor", "lesson": "Module 1 Lesson 3: Graphs of equivalent ratio Module 1 Lesson 4: Compare Ratio Relationships", "emoji": "➗", "tint": "#4B4B8F", "reminder": "Complete ALef lessons and homework sheets send in the group", "exam": "Wednesday 16/9/26 Grade 6A-1 6A-2 Lesson 1 ,2,3 Grade 7A-2-Lesson 1,2,3"}, {"subject": "Math", "teacher": "أسماء محمد الشاذلي", "lesson": "unit 1 lesson 3, 4, 5,6", "emoji": "➗", "tint": "#4B4B8F", "reminder": "حل منصة ألف و الكتاب المدرسي (الواجبات المنزلية)Complete Alef lessons", "exam": "Diagnostic test for grade 6 A"}, {"subject": "Science", "teacher": "محمد جشار M.Jishar", "lesson": "Lesson 2 : cell structure and function", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "How AI Learns From Data", "emoji": "⚙️", "tint": "#8A6D3B"}], "7G": [{"subject": "التربية الإسلامية", "teacher": "حسن مساعد رمضان", "lesson": "3.1 : من بشائر المصلين", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "محمد عطا", "lesson": "شعر : إلى شباب بلادي - القصة : الرهان", "emoji": "📖", "tint": "#0E5A54", "note": "حل أنشطة منصة ألف - أنشطة في االبوابة"}, {"subject": "اللغة الإنجليزية", "teacher": "عماد شعبان حسن علي النجار", "lesson": "CourseBook - Unit 1 (Food For Life), pages 9-15 + Alef & LMS assignments/ activities", "emoji": "🔤", "tint": "#2A6F97", "note": "Notebook + CB + Laptop always needed", "exam": "Diagnostic Tests (Tuesday, Wednesday, Thursday)"}, {"subject": "الرياضيات", "teacher": "محمود محمد موسى النمرات", "lesson": "تحويل معدلات الوحدة ,العلاقات التناسبية وغير التناسبية ,التمثيل البياني للعلاقات التناسبية", "emoji": "➗", "tint": "#4B4B8F"}, {"subject": "العلوم", "teacher": "محمود محمد شحاته", "lesson": "التأثيرات في المياة والغلاف الجوي", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Recommender system", "emoji": "⚙️", "tint": "#8A6D3B"}], "7A": [{"subject": "التربية الإسلامية", "teacher": "حسن مساعد رمضان", "lesson": "3.1 : من بشائر المصلين", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "نصر حسين العمري", "lesson": "شعر : إلى شباب بلادي - القصة : الرهان", "emoji": "📖", "tint": "#0E5A54", "note": "حل أنشطة منصة ألف - أنشطة في االبوابة"}, {"subject": "Math", "teacher": "محمد الكاس مياه - Miah", "lesson": "M1L3 - Tables of Proportional Relationships M1L4 - Determine whether two quantities shown in a table are in a proportional relationship by testing for equivalent ratios Determine if a relationship is proportional by analyzing its graph.", "emoji": "➗", "tint": "#4B4B8F", "reminder": "Complete Practice on Reveal, Textbook and ALEF Lesson."}, {"subject": "Math", "teacher": "Arpit Kapoor", "lesson": "Module 1: lesson 4 Graphs of proportional relationships Module 1: Lesson 5 Equations of proportional relationship", "emoji": "➗", "tint": "#4B4B8F", "reminder": "Complete ALef lessons and homework sheets send in the group", "exam": "Wednesday 16/9/26 Grade 6A-1 6A-2 Lesson 1 ,2,3 Grade 7A-2-Lesson 1,2,3"}, {"subject": "Science", "teacher": "ليلى جواد فايز حبش", "lesson": "Structure and Support", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Recommender system", "emoji": "⚙️", "tint": "#8A6D3B"}], "8G": [{"subject": "التربية الإسلامية", "teacher": "حسن مساعد رمضان", "lesson": "3.1 :الأعمال بالنيات", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "محمد عطا", "lesson": "الاحسان الى الوالدين - من تجارب الحياة", "emoji": "📖", "tint": "#0E5A54", "note": "حل أنشطة منصة ألف - أنشطة في االبوابة"}, {"subject": "اللغة الإنجليزية", "teacher": "عماد شعبان حسن علي النجار", "lesson": "CourseBook - Unit 1 (Ocean), pages 9-14 + Alef & LMS assignments/ activities", "emoji": "🔤", "tint": "#2A6F97", "note": "Notebook + CB + Laptop always needed", "exam": "Diagnostic Tests (Tuesday, Wednesday, Thursday)"}, {"subject": "الرياضيات", "teacher": "عامر علي سلامة", "lesson": "الوحدة الأولى :الدروس 1.3 1.4 1.5 اختبار تشخيصي", "emoji": "➗", "tint": "#4B4B8F", "reminder": "الواجبات التمارين الذاتية التي لم تحل داخل الصف +مهمات LMS", "exam": "اختبار تشخيصي"}, {"subject": "العلوم", "teacher": "يحيى ناجي يوسف محمد", "lesson": "انتقال الطاقة الحرارية - مع مراجعة وحدة الطاقة الحرارية", "emoji": "🔬", "tint": "#2E7D6B", "reminder": "حل الواجبات في البوابة ومنصة الف", "exam": "اختبار تشخيصي يوم الثلاثاء 15 - 9 -2026"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Training vs Testing AI Models", "emoji": "⚙️", "tint": "#8A6D3B"}], "8A": [{"subject": "التربية الإسلامية", "teacher": "حسن مساعد رمضان", "lesson": "3.1 :الأعمال بالنيات", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "منذر عبدالغني النصيرات", "lesson": "الاحسان الى الوالدين - من تجارب الحياة", "emoji": "📖", "tint": "#0E5A54"}, {"subject": "Math", "teacher": "محمد الكاس مياه - Miah", "lesson": "M1L3 - Powers of Monomials M1L4 - Zero and Negative Exponents LO: Use the Power of a Power Property and the Power of a Product Property to simplify expressions with integer exponents Use the Zero Exponent Rule and the Quotient of Powers Property to simplify expressions with zero and negative integer exponents", "emoji": "➗", "tint": "#4B4B8F", "reminder": "Complete Practice on Reveal, Textbook and ALEF Lesson."}, {"subject": "Science", "teacher": "ليلى جواد فايز حبش", "lesson": "Electric Forces", "emoji": "🔬", "tint": "#2E7D6B"}, {"subject": "CCDI", "teacher": "مراد عبدالله رشيد الجراح", "lesson": "Training vs Testing AI Models", "emoji": "⚙️", "tint": "#8A6D3B"}]}}, {"num": 4, "label": "الأسبوع ٤", "range": "٢١ – ٢٥ سبتمبر", "start": "2026-09-21", "sections": {"5G": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "المفلس الحقيقي - أحب العمل إلى الله", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة الإنجليزية", "teacher": "مريم محمد عبدالله الهدية", "lesson": "Unit 1 Exciting Adventures/ Lesson 2A & 2B", "emoji": "🔤", "tint": "#2A6F97", "note": "Dictation On Friday"}], "5A": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "المفلس الحقيقي -أحب العمل إلى الله", "emoji": "🕌", "tint": "#1F6E4E"}], "6G": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "من وصايا الرسول صلى الله عليه وسلم -حرمة المسلم", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "نصر حسين العمري", "lesson": "قصة : رحمة للعالمين - نص معلوماتي : المسجد النبوي تاريخ يتجدد", "emoji": "📖", "tint": "#0E5A54", "note": "حل أنشطة منصة ألف- بوابة التعلم"}, {"subject": "اللغة الإنجليزية", "teacher": "مريم محمد عبدالله الهدية", "lesson": "Unit 1 Leisure & Free time Lessons 1B & 2B", "emoji": "🔤", "tint": "#2A6F97", "note": "Dictation On Friday"}, {"subject": "الرياضيات", "teacher": "عامر علي سلامة", "lesson": "الوحدة الأولى :الدروس. 1.6 1.7 1.8", "emoji": "➗", "tint": "#4B4B8F", "note": "حل التمارين الذاتية والمهارات العليا على الدروس المستهدفة", "reminder": "متابعة المهمات على الدروس من خلال المنصات Alef. LMS"}, {"subject": "الرياضيات", "teacher": "محمود محمد موسى النمرات", "lesson": "النسب المكافئة , مسائل النسب والمعدلات", "emoji": "➗", "tint": "#4B4B8F"}, {"subject": "العلوم", "teacher": "حصة علي أحمد حشر", "lesson": "الوحدة 2 الدرس 3 عملية التصميم", "emoji": "🔬", "tint": "#2E7D6B", "reminder": "انجاز الواجبات lms+alef+الكتاب المدرسي"}], "6A": [{"subject": "التربية الإسلامية", "teacher": "محمد طه محمد أحمد الطحاوي", "lesson": "من وصايا الرسول صلى الله عليه وسلم -حرمة المسلم", "emoji": "🕌", "tint": "#1F6E4E"}, {"subject": "اللغة العربية", "teacher": "نصر حسين العمري", "lesson": "قصة : رحمة للعالمين - نص معلوماتي : المسجد النبوي تاريخ يتجدد", "emoji": "📖", "tint": "#0E5A54", "note": "حل أنشطة منصة ألف- بوابة التعلم"}], "7G": [{"subject": "اللغة العربية", "teacher": "محمد عطا", "lesson": "نص معلوماتي : أسواق شعبية - النحو : علامات الإعراب الأصلية والفرعية", "emoji": "📖", "tint": "#0E5A54"}, {"subject": "اللغة الإنجليزية", "teacher": "عماد شعبان حسن علي النجار", "lesson": "CourseBook - Unit 1 (Food For Life), pages 15-19 + Alef & LMS assignments/ activities", "emoji": "🔤", "tint": "#2A6F97", "note": "Notebook + CB + Laptop always needed"}, {"subject": "الرياضيات", "teacher": "محمود محمد موسى النمرات", "lesson": "حل العلاقات التناسبية,معدل التغير الثابت ,الميل ,التغير الطردي", "emoji": "➗", "tint": "#4B4B8F"}], "7A": [{"subject": "اللغة العربية", "teacher": "نصر حسين العمري", "lesson": "نص معلوماتي : أسواق شعبية - النحو : علامات الإعراب الأصلية والفرعية", "emoji": "📖", "tint": "#0E5A54", "note": "حل أنشطة منصة ألف- بوابة التعلم"}], "8G": [{"subject": "اللغة الإنجليزية", "teacher": "عماد شعبان حسن علي النجار", "lesson": "CourseBook - Unit 1 (Ocean), pages 15-20 + Alef & LMS assignments/ activities", "emoji": "🔤", "tint": "#2A6F97", "note": "Notebook + CB + Laptop always needed"}, {"subject": "الرياضيات", "teacher": "عامر علي سلامة", "lesson": "الوحدة الأولى :الدروس. 1.6 1.7 1.8", "emoji": "➗", "tint": "#4B4B8F", "note": "حل التمارين الذاتية والمهارات العليا على الدروس المستهدفة", "reminder": "متابعة المهمات على الدروس من خلال المنصات Alef. LMS"}, {"subject": "العلوم", "teacher": "يحيى ناجي يوسف محمد", "lesson": "الوحدة 2 العناصر والروابط الكيمائية ( 2.1 الالكترونات ومستويات الطاقة )", "emoji": "🔬", "tint": "#2E7D6B", "reminder": "حل الواجبات في البوابة ومنصة الف"}], "8A": [{"subject": "Math", "teacher": "محمد الكاس مياه - Miah", "lesson": "M1L5 - Compute with Scientific Notation M1L6 - Terminating and Repeating Decimals LO: Perform computations with numbers written in scientific notation Show how the decimal form of a rational number repeats eventually.", "emoji": "➗", "tint": "#4B4B8F"}]}}, {"num": 5, "label": "الأسبوع ٥", "range": "٢٨ سبتمبر – ٢ أكتوبر", "start": "2026-09-28", "sections": {"5G": [], "5A": [], "6G": [], "6A": [], "7G": [], "7A": [], "8G": [], "8A": []}}, {"num": 6, "label": "الأسبوع ٦", "range": "٥ – ٩ أكتوبر", "start": "2026-10-05", "sections": {"5G": [], "5A": [], "6G": [], "6A": [], "7G": [], "7A": [], "8G": [], "8A": []}}]};
+function initApp(){
+  "use strict";
+  var D=window.__PLAN__;
+  var sections=D.sectionOrder, weeks=D.weeks;
+  var selCode='6G', wkIndex=D.currentWeekIndex||0, expandedAll=false;
+  var $=function(id){return document.getElementById(id)};
+  var cardsEl=$('cards');
+  function ar(n){return String(n).replace(/[0-9]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'[+d]})}
+  function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+  function labelOf(c){for(var i=0;i<sections.length;i++)if(sections[i].code===c)return sections[i].label;return c}
+  function entries(){var w=weeks[wkIndex];return (w.sections&&w.sections[selCode])||[]}
+  function weekHasAny(){var s=weeks[wkIndex].sections,k;for(k in s)if(s[k].length)return true;return false}
+
+  // اتحاد معلّمي كل مادة داخل كل شعبة عبر جميع الأسابيع (لثبات الاختيار)
+  var unionTeachers={}, subjMetaMap={};
+  sections.forEach(function(sec){unionTeachers[sec.code]={}});
+  weeks.forEach(function(w){sections.forEach(function(sec){
+    (w.sections[sec.code]||[]).forEach(function(x){
+      var u=unionTeachers[sec.code];
+      if(!u[x.subject])u[x.subject]=[];
+      if(x.teacher && u[x.subject].indexOf(x.teacher)<0)u[x.subject].push(x.teacher);
+      if(!subjMetaMap[x.subject])subjMetaMap[x.subject]={emoji:x.emoji,tint:x.tint};
+    });
+  })});
+
+  // حفظ اختيار المعلّم على جهاز ولي الأمر
+  function loadChoices(){try{return JSON.parse(localStorage.getItem('ssuae_choices')||'{}')}catch(e){return {}}}
+  function saveChoices(o){try{localStorage.setItem('ssuae_choices',JSON.stringify(o))}catch(e){}}
+  var choices=loadChoices();
+  function getChoice(c,s){return choices[c]&&choices[c][s]}
+  function setChoice(c,s,t){if(!choices[c])choices[c]={};choices[c][s]=t;saveChoices(choices)}
+  function clearChoice(c,s){if(choices[c]){delete choices[c][s];saveChoices(choices)}}
+
+  function renderGlance(){
+    var e=entries(),tests=0,subs={};
+    e.forEach(function(x){if(x.exam)tests++;subs[x.subject]=1});
+    $('glance').innerHTML=
+      '<div class="stat hw"><span class="ic">📚</span><div><div class="num">'+ar(Object.keys(subs).length)+'</div><div class="cap">مواد لها خطة</div></div></div>'+
+      '<div class="stat tests"><span class="ic">📝</span><div><div class="num">'+ar(tests)+'</div><div class="cap">اختبارات هذا الأسبوع</div></div></div>';
+  }
+
+  function normalCard(x, multi){
+    var hasTest=!!x.exam, open=expandedAll||hasTest;
+    var card=document.createElement('article');
+    card.className='card'+(hasTest?' has-test':'')+(open?' open':'');
+    var badges='';
+    if(hasTest)badges+='<span class="badge test">اختبار</span>';
+    if(x.note)badges+='<span class="badge note">ملاحظة</span>';
+    if(x.reminder)badges+='<span class="badge note">تذكير</span>';
+    if(!badges)badges='<span class="badge none">درس</span>';
+    var head=document.createElement('button');head.className='card-head';
+    head.setAttribute('aria-expanded',open?'true':'false');
+    head.innerHTML='<span class="mono" style="background:'+x.tint+'">'+x.emoji+'</span>'+
+      '<span class="head-mid"><span class="sn">'+esc(x.subject)+'</span>'+
+      (x.teacher?'<span class="tch">معلم المادة: '+esc(x.teacher)+'</span>':'')+
+      '<span class="badges">'+badges+'</span></span><span class="chev">‹</span>';
+    var body=document.createElement('div');body.className='card-body';
+    var h='<div class="row"><div class="rl">الدرس / الخطة</div><div class="rv">'+esc(x.lesson)+'</div></div>';
+    if(x.note)h+='<div class="row"><div class="rl">ملاحظة</div><div class="rv">'+esc(x.note)+'</div></div>';
+    if(x.reminder)h+='<div class="row"><div class="rl">تذكير</div><div class="rv">'+esc(x.reminder)+'</div></div>';
+    if(x.exam)h+='<div class="alertbox"><span class="ai">📝</span><div><div class="at">موعد اختبار</div><div class="av">'+esc(x.exam)+'</div></div></div>';
+    body.innerHTML=h;
+    if(multi){
+      var chg=document.createElement('button');chg.className='change-teacher';
+      chg.textContent='↺ معلّم آخر لهذه المادة';
+      chg.addEventListener('click',function(ev){ev.stopPropagation();clearChoice(selCode,x.subject);renderCards()});
+      body.appendChild(chg);
+    }
+    head.addEventListener('click',function(){var o=card.classList.toggle('open');head.setAttribute('aria-expanded',o?'true':'false')});
+    card.appendChild(head);card.appendChild(body);return card;
+  }
+
+  function chooserCard(subject, teachers, thisWeek){
+    var m=subjMetaMap[subject]||{emoji:'📘',tint:'#556'};
+    var here={}; thisWeek.forEach(function(x){here[x.teacher]=1});
+    var card=document.createElement('article');card.className='card chooser';
+    var html='<div class="chooser-head"><span class="mono" style="background:'+m.tint+'">'+m.emoji+'</span>'+
+      '<div><div class="sn">'+esc(subject)+'</div><div class="tch">يدرّس هذه المادة أكثر من معلّم في هذه الشعبة</div></div></div>'+
+      '<div class="chooser-q">اختر معلّم ابنك — يُحفظ اختيارك ولن يُسأل مجدداً:</div>'+
+      '<div class="chooser-opts"></div>';
+    card.innerHTML=html;
+    var opts=card.querySelector('.chooser-opts');
+    teachers.forEach(function(t){
+      var b=document.createElement('button');b.className='tchoice';
+      b.innerHTML='<span>'+esc(t)+'</span>'+(here[t]?'<span class="has">خطة هذا الأسبوع</span>':'');
+      b.addEventListener('click',function(){setChoice(selCode,subject,t);renderCards()});
+      opts.appendChild(b);
+    });
+    return card;
+  }
+
+  function missingChosenCard(subject, teacher){
+    var m=subjMetaMap[subject]||{emoji:'📘',tint:'#556'};
+    var card=document.createElement('article');card.className='card open';
+    var head=document.createElement('div');head.className='card-head';head.style.cursor='default';
+    head.innerHTML='<span class="mono" style="background:'+m.tint+'">'+m.emoji+'</span>'+
+      '<span class="head-mid"><span class="sn">'+esc(subject)+'</span>'+
+      '<span class="tch">معلم المادة: '+esc(teacher)+'</span></span>';
+    var body=document.createElement('div');body.className='card-body';
+    body.innerHTML='<div class="soft-note">لم يُدخل الأستاذ '+esc(teacher)+' خطة هذه المادة هذا الأسبوع بعد.</div>';
+    var chg=document.createElement('button');chg.className='change-teacher';chg.textContent='↺ تغيير المعلّم';
+    chg.addEventListener('click',function(){clearChoice(selCode,subject);renderCards()});
+    body.appendChild(chg);
+    card.appendChild(head);card.appendChild(body);return card;
+  }
+
+  function renderCards(){
+    cardsEl.innerHTML='';
+    if(!weekHasAny()){cardsEl.innerHTML='<div class="empty-block"><span class="big">🗓️</span>لم تُنشر خطة هذا الأسبوع بعد.<br>ستظهر تلقائياً فور إدخال المعلمين لها في الملف.</div>';$('subjCount').textContent=ar(0);return;}
+    var e=entries();
+    if(!e.length){cardsEl.innerHTML='<div class="empty-block"><span class="big">📭</span>لا توجد مواد منشورة لهذه الشعبة هذا الأسبوع.</div>';$('subjCount').textContent=ar(0);return;}
+    var order=[],bySubj={};
+    e.forEach(function(x){if(!bySubj[x.subject]){bySubj[x.subject]=[];order.push(x.subject)}bySubj[x.subject].push(x)});
+    order.forEach(function(subject){
+      var union=unionTeachers[selCode][subject]||[];
+      var tw=bySubj[subject];
+      if(union.length<=1){tw.forEach(function(x){cardsEl.appendChild(normalCard(x,false))});return;}
+      var choice=getChoice(selCode,subject);
+      if(!choice){cardsEl.appendChild(chooserCard(subject,union,tw));return;}
+      var chosen=null;for(var i=0;i<tw.length;i++){if(tw[i].teacher===choice){chosen=tw[i];break}}
+      if(chosen)cardsEl.appendChild(normalCard(chosen,true));
+      else cardsEl.appendChild(missingChosenCard(subject,choice));
+    });
+    $('subjCount').textContent=ar(order.length);
+  }
+
+  function renderWeek(){
+    var w=weeks[wkIndex];
+    $('wkLabel').textContent=w.label;$('wkRange').textContent=w.range;
+    $('nowTag').style.display=(wkIndex===D.currentWeekIndex)?'inline-block':'none';
+    $('prevWk').disabled=(wkIndex===0);$('nextWk').disabled=(wkIndex===weeks.length-1);
+    $('printHead').innerHTML='<h2>'+labelOf(selCode)+' — '+w.label+'</h2><p>الخطة الأسبوعية · '+w.range+' · '+D.school+'</p>';
+  }
+  function renderAll(){$('classLabel').textContent=labelOf(selCode);renderWeek();renderGlance();renderCards()}
+  $('schoolLine').textContent=D.school+' · '+D.term;
+  $('prevWk').addEventListener('click',function(){if(wkIndex>0){wkIndex--;renderAll()}});
+  $('nextWk').addEventListener('click',function(){if(wkIndex<weeks.length-1){wkIndex++;renderAll()}});
+  $('toggleAll').addEventListener('click',function(){expandedAll=!expandedAll;this.textContent=expandedAll?'طيّ الكل':'توسيع الكل';renderCards()});
+  var scrim=$('scrim'),sheet=$('sheet');
+  function openSheet(){buildOpts();scrim.classList.add('on');sheet.classList.add('on')}
+  function closeSheet(){scrim.classList.remove('on');sheet.classList.remove('on')}
+  function buildOpts(){
+    var box=$('classOpts');box.innerHTML='';
+    sections.forEach(function(sec){
+      var subs={};(weeks[wkIndex].sections[sec.code]||[]).forEach(function(x){subs[x.subject]=1});
+      var n=Object.keys(subs).length;
+      var b=document.createElement('button');b.className='opt'+(sec.code===selCode?' sel':'');
+      b.innerHTML='<span>'+sec.label+'<small>'+sec.code+' · '+ar(n)+' مواد</small></span><span class="tick">✓</span>';
+      b.addEventListener('click',function(){selCode=sec.code;expandedAll=false;$('toggleAll').textContent='توسيع الكل';renderAll();closeSheet()});
+      box.appendChild(b);
+    });
+  }
+  $('classBtn').addEventListener('click',openSheet);scrim.addEventListener('click',closeSheet);
+  $('pdfBtn').addEventListener('click',function(){window.print()});
+  $('themeBtn').addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    var dark=cur?cur==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var next=dark?'light':'dark';document.documentElement.setAttribute('data-theme',next);
+    this.textContent=next==='dark'?'☀':'☾';
+  });
+  renderAll();
+}
+
+async function boot(){
+  var data=null, live=false;
+  try{
+    var ctrl=new AbortController(); var to=setTimeout(function(){ctrl.abort()},7000);
+    var r=await fetch('/.netlify/functions/plan',{signal:ctrl.signal, cache:'no-store'});
+    clearTimeout(to);
+    if(r.ok){ var j=await r.json(); if(j && j.weeks){ data=j; live=true; } }
+  }catch(e){}
+  if(!data){ data=window.__FALLBACK__; }
+  window.__PLAN__=data;
+  initApp();
+  var s=document.getElementById('syncMsg');
+  if(s) s.textContent = live ? 'محدّثة الآن مباشرة من ملف المدرسة'
+                              : 'عرض محفوظ — ستتحدّث تلقائياً عند توفّر الاتصال';
+}
+boot();
+</script>
+</body>
+</html>
