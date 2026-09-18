@@ -248,8 +248,9 @@ function initApp(){
   var selCode='6G', wkIndex=D.currentWeekIndex||0, expandedAll=false;
   var $=function(id){return document.getElementById(id)};
   var cardsEl=$('cards');
-  function ar(n){return String(n).replace(/[0-9]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'[+d]})}
-  function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]}).replace(/[0-9]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'[+d]})}
+  function ar(n){return String(n)}
+  function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+  function westify(s){return String(s).replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d)})}
   function labelOf(c){for(var i=0;i<sections.length;i++)if(sections[i].code===c)return sections[i].label;return c}
   function entries(){var w=weeks[wkIndex];return (w.sections&&w.sections[selCode])||[]}
   function weekHasAny(){var s=weeks[wkIndex].sections,k;for(k in s)if(s[k].length)return true;return false}
@@ -369,11 +370,11 @@ function initApp(){
 
   function renderWeek(){
     var w=weeks[wkIndex];
-    $('wkLabel').textContent=w.label;$('wkRange').textContent=w.range;
+    $('wkLabel').textContent=westify(w.label);$('wkRange').textContent=westify(w.range);
     $('nowTag').style.display=(wkIndex===D.currentWeekIndex)?'inline-block':'none';
     $('weekCenter').classList.toggle('is-now', wkIndex===D.currentWeekIndex);
     $('prevWk').disabled=(wkIndex===0);$('nextWk').disabled=(wkIndex===weeks.length-1);
-    $('printHead').innerHTML='<h2>'+labelOf(selCode)+' — '+w.label+'</h2><p>الخطة الأسبوعية · '+w.range+' · '+D.school+'</p>';
+    $('printHead').innerHTML='<h2>'+labelOf(selCode)+' — '+westify(w.label)+'</h2><p>الخطة الأسبوعية · '+westify(w.range)+' · '+D.school+'</p>';
   }
   function renderAll(){$('classLabel').textContent=labelOf(selCode);renderWeek();renderGlance();renderCards()}
   $('schoolLine').textContent=D.school;
