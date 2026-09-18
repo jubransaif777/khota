@@ -73,10 +73,19 @@ function pivot(buf){
     weeks.push({num,label:'الأسبوع '+adig(num),
       range:start?fmtRange(start):'', start:start?start.toISOString().slice(0,10):null, sections});
   }
+  // قراءة إعلان إدارة المدرسة من تبويب announcement (A1 عنوان، A2 نص) — يُقرأ ولو كان مخفيًّا
+  let announcement=null;
+  const annName=wb.SheetNames.find(n=>/^announcement$/i.test(n.trim()));
+  if(annName){
+    const aw=wb.Sheets[annName];
+    const title=clean(cell(aw,1,1));
+    const body =clean(cell(aw,2,1));
+    if(body) announcement={title:title||'إعلان', body};
+  }
   weeks.sort((a,b)=>a.num-b.num);
   const today=new Date(); today.setHours(0,0,0,0);
   let cur=0; weeks.forEach((w,i)=>{ if(w.start && new Date(w.start)<=today) cur=i; });
-  return {school:SCHOOL,term:TERM,currentWeekIndex:cur,
+  return {school:SCHOOL,term:TERM,currentWeekIndex:cur, announcement,
     sectionOrder:SECTIONS.map(([code,label])=>({code,label})), weeks};
 }
 
