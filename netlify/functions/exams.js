@@ -44,9 +44,16 @@ function readCards(wb){
   if(!name) return map;
   const ws=wb.Sheets[name]; if(!ws) return map; const ref=ws['!ref']; if(!ref) return map;
   const R=XLSX.utils.decode_range(ref);
-  // ترويسة الأعمدة (الصف الأول)
+  // اكتشاف صف الترويسة تلقائيًا (قد توجد صفوف فارغة في الأعلى)
+  let hr=-1;
+  for(let r=1;r<=Math.min(R.e.r+1,8);r++){
+    for(let c=1;c<=R.e.c+1;c++){ const t=clean(cell(ws,r,c)).toLowerCase();
+      if(/week|أسبوع/.test(t)||/subject/.test(t)||/class/.test(t)){ hr=r; break; } }
+    if(hr>0) break;
+  }
+  if(hr<0) return map;
   const H={};
-  for(let c=1;c<=R.e.c+1;c++){ const h=clean(cell(ws,1,c)); const hl=h.toLowerCase();
+  for(let c=1;c<=R.e.c+1;c++){ const h=clean(cell(ws,hr,c)); const hl=h.toLowerCase();
     // ترتيب دقيق: "الصفحات" تحوي "صف" فنفحص pages قبل class
     if(/week|أسبوع/.test(hl)) H.week=c;
     else if(/day|يوم/.test(hl)) H.day=c;
@@ -57,7 +64,7 @@ function readCards(wb){
     else if(/type|نوع/.test(hl)) H.type=c;
     else if(/resource|مصادر|مذاكر|تعلم/.test(hl)) H.src=c;
     else if(/score|درج|مدة/.test(hl)) H.marks=c; }
-  for(let r=2;r<=R.e.r+1;r++){
+  for(let r=hr+1;r<=R.e.r+1;r++){
     const wk=clean(cell(ws,r,H.week)); const dy=dayToken(cell(ws,r,H.day))||clean(cell(ws,r,H.day)).toUpperCase();
     const sec=clean(cell(ws,r,H.sec)); const code=clean(cell(ws,r,H.code)).toUpperCase();
     if(!wk||!dy||!sec||!code) continue;
