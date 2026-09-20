@@ -100,9 +100,9 @@
     $('cnt').textContent=total;
     var html='';
     days.forEach(function(d){
-      var has=d.exams.length>0, busy=d.exams.length>=2;
-      html+='<div class="day'+(busy?' busy':(has?' has':''))+'"><div class="dh"><span class="dname">'+d.label+'</span>'+
-        (busy?'<span class="busytag">يوم مزدحم: اختباران</span>':'<span class="dcount">'+(has?(d.exams.length+' اختبار'):'—')+'</span>')+'</div>';
+      var has=d.exams.length>0;
+      html+='<div class="day'+(has?' has':'')+'"><div class="dh"><span class="dname">'+d.label+'</span>'+
+        '<span class="dcount">'+(has?(d.exams.length+' اختبار'):'—')+'</span></div>';
       if(has){
         html+='<div class="slots">';
         d.exams.forEach(function(ex,i){
@@ -130,10 +130,11 @@
   function openCard(ex){
     var m=meta(ex.code), c=ex.card||{};
     var rows='';
-    if(c.title) rows+='<div class="frow"><span class="fl">عنوان الاختبار</span><span class="fv">'+esc(c.title)+'</span></div>';
-    if(c.duration) rows+='<div class="frow"><span class="fl">المدة</span><span class="fv">'+esc(c.duration)+'</span></div>';
+    if(c.title) rows+='<div class="frow"><span class="fl">مقرر الاختبار</span><span class="fv">'+esc(c.title)+'</span></div>';
+    if(c.pages) rows+='<div class="frow"><span class="fl">الصفحات</span><span class="fv">'+esc(c.pages)+'</span></div>';
+    if(c.type) rows+='<div class="frow"><span class="fl">نوع الاختبار</span><span class="fv">'+esc(c.type)+'</span></div>';
     if(c.marks) rows+='<div class="frow"><span class="fl">الدرجات</span><span class="fv">'+esc(c.marks)+'</span></div>';
-    if(c.sources) rows+='<div class="frow"><span class="fl">مصادر المذاكرة</span><span class="fv">'+esc(c.sources)+'</span></div>';
+    if(c.sources) rows+='<div class="frow"><span class="fl">مصادر التعلم</span><span class="fv">'+esc(c.sources)+'</span></div>';
     if(!rows) rows='<div class="frow"><span class="fv">لا توجد تفاصيل إضافية.</span></div>';
     $('modal').innerHTML='<div class="mhead" style="background:'+m[2]+'"><span class="em">'+m[1]+'</span><span><b>'+ex.subject+'</b><small>بطاقة الاختبار</small></span></div>'+
       '<div class="mbody">'+rows+'</div><button class="mclose" id="mclose">إغلاق</button>';
