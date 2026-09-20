@@ -18,7 +18,11 @@ const AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو',
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
 const cell=(ws,r,c)=>{const x=ws[XLSX.utils.encode_cell({r:r-1,c:c-1})];return x?x.v:null;};
 const isSection=s=>/^[5-8][GA][12]$/.test(s);
-function dayToken(s){const m=String(s).toUpperCase().match(/MON|TUE|WED|THU|FRI/);return m?m[0]:null;}
+function dayToken(s){s=String(s);
+  const m=s.toUpperCase().match(/MON|TUE|WED|THU|FRI/); if(m) return m[0];
+  if(/الاثن|الإثن/.test(s)) return 'MON'; if(/الثلاث/.test(s)) return 'TUE';
+  if(/الأربع|الاربع/.test(s)) return 'WED'; if(/الخميس/.test(s)) return 'THU';
+  if(/الجمع/.test(s)) return 'FRI'; return null;}
 
 function fmtRange(start){
   const e=new Date(start.getTime()+4*864e5);
@@ -42,17 +46,24 @@ function readCards(wb){
   const R=XLSX.utils.decode_range(ref);
   // ترويسة الأعمدة (الصف الأول)
   const H={};
-  for(let c=1;c<=R.e.c+1;c++){ const h=clean(cell(ws,1,c));
-    if(/أسبوع/.test(h)) H.week=c; else if(/يوم/.test(h)) H.day=c; else if(/شعب|صف/.test(h)) H.sec=c;
-    else if(/رمز|مادة/.test(h)) H.code=c; else if(/عنوان/.test(h)) H.title=c; else if(/مدة/.test(h)) H.dur=c;
-    else if(/درج/.test(h)) H.marks=c; else if(/مصادر|مذاكر/.test(h)) H.src=c; }
+  for(let c=1;c<=R.e.c+1;c++){ const h=clean(cell(ws,1,c)); const hl=h.toLowerCase();
+    // ترتيب دقيق: "الصفحات" تحوي "صف" فنفحص pages قبل class
+    if(/week|أسبوع/.test(hl)) H.week=c;
+    else if(/day|يوم/.test(hl)) H.day=c;
+    else if(/subject|رمز|مادة/.test(hl)) H.code=c;
+    else if(/page|صفح/.test(hl)) H.pages=c;
+    else if(/class|شعب|صف/.test(hl)) H.sec=c;
+    else if(/content|عنوان|مقرر/.test(hl)) H.title=c;
+    else if(/type|نوع/.test(hl)) H.type=c;
+    else if(/resource|مصادر|مذاكر|تعلم/.test(hl)) H.src=c;
+    else if(/score|درج|مدة/.test(hl)) H.marks=c; }
   for(let r=2;r<=R.e.r+1;r++){
     const wk=clean(cell(ws,r,H.week)); const dy=dayToken(cell(ws,r,H.day))||clean(cell(ws,r,H.day)).toUpperCase();
     const sec=clean(cell(ws,r,H.sec)); const code=clean(cell(ws,r,H.code)).toUpperCase();
     if(!wk||!dy||!sec||!code) continue;
     const key=wk+'|'+dy+'|'+sec+'|'+code;
-    map[key]={title:clean(cell(ws,r,H.title)),duration:clean(cell(ws,r,H.dur)),
-      marks:clean(cell(ws,r,H.marks)),sources:clean(cell(ws,r,H.src))};
+    map[key]={title:clean(cell(ws,r,H.title)),pages:clean(cell(ws,r,H.pages)),
+      type:clean(cell(ws,r,H.type)),marks:clean(cell(ws,r,H.marks)),sources:clean(cell(ws,r,H.src))};
   }
   return map;
 }
@@ -65,13 +76,14 @@ function parseWeek(ws){
   const start=parseDate(cell(ws,6,10));
   const bookings={}; SECTIONS.forEach(s=>bookings[s]={});
   // كتلتان: يسار (صف=1,اختبار=2,3) ويمين (صف=8,اختبار=9,10)
-  const blocks=[{cc:1,e1:2,e2:3},{cc:8,e1:9,e2:10}];
+  const blocks=[{cc:1,e1:2,e2:3,dcols:[1,2,3,4,5,6,7]},{cc:8,e1:9,e2:10,dcols:[8,9,10,11,12,13,14]}];
   for(const b of blocks){
     let day=null;
     for(let r=1;r<=maxRow;r++){
-      const lab=clean(cell(ws,r,b.cc));
-      const dt=dayToken(lab);
+      let dt=null;
+      for(const dc of b.dcols){ dt=dayToken(clean(cell(ws,r,dc))); if(dt) break; }
       if(dt){ day=dt; continue; }
+      const lab=clean(cell(ws,r,b.cc));
       if(day && isSection(lab)){
         const codes=[clean(cell(ws,r,b.e1)),clean(cell(ws,r,b.e2))].map(x=>x.toUpperCase()).filter(Boolean);
         if(codes.length){ bookings[lab][day]=(bookings[lab][day]||[]).concat(codes); }
