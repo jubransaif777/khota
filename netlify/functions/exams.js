@@ -38,7 +38,7 @@ function readCards(wb){
   const name=wb.SheetNames.find(n=>/^(cards|exam[_ ]?cards)$/i.test(n.trim()));
   const map={};
   if(!name) return map;
-  const ws=wb[name]; const ref=ws['!ref']; if(!ref) return map;
+  const ws=wb.Sheets[name]; if(!ws) return map; const ref=ws['!ref']; if(!ref) return map;
   const R=XLSX.utils.decode_range(ref);
   // ترويسة الأعمدة (الصف الأول)
   const H={};
@@ -58,6 +58,7 @@ function readCards(wb){
 }
 
 function parseWeek(ws){
+  if(!ws) return null;
   const ref=ws['!ref']; if(!ref) return null;
   const maxRow=XLSX.utils.decode_range(ref).e.r+1;
   const wknum=clean(cell(ws,6,13)) || '';
@@ -82,11 +83,12 @@ function parseWeek(ws){
 
 function build(buf){
   const wb=XLSX.read(buf,{type:'buffer'});
-  const cards=readCards(wb);
+  let cards={}; try{ cards=readCards(wb); }catch(e){ cards={}; }
   const weeks=[];
   for(const name of wb.SheetNames){
     if(!/^week/i.test(name)) continue;
-    const p=parseWeek(wb.Sheets[name]); if(!p) continue;
+    let p=null; try{ p=parseWeek(wb.Sheets[name]); }catch(e){ p=null; }
+    if(!p) continue;
     const num=p.num||weeks.length+1;
     // بناء أيام كل شعبة مع أسماء المواد والبطاقات
     const sections={};
