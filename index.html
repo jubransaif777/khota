@@ -437,8 +437,7 @@ async function boot(){
   initApp();
   showAnnouncement(data.announcement);
   var s=document.getElementById('syncMsg');
-  if(s) s.textContent = live ? 'محدّثة الآن مباشرة من ملف المدرسة'
-                              : 'عرض محفوظ — ستتحدّث تلقائياً عند توفّر الاتصال';
+  if(s) s.textContent = live ? 'محدّثة الآن' : 'عرض محفوظ — ستتحدّث تلقائياً عند توفّر الاتصال';
 }
 boot();
 </script>
