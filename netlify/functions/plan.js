@@ -82,10 +82,42 @@ function pivot(buf){
     const body =clean(cell(aw,2,1));
     if(body) announcement={title:title||'إعلان', body};
   }
+  // قراءة تبويب الروابط المفيدة links (title/url/category — بالعربية أو الإنجليزية)
+  let links=[];
+  const lname=wb.SheetNames.find(n=>/^links$/i.test(n.trim()));
+  if(lname){
+    const lw=wb.Sheets[lname];
+    if(lw && lw['!ref']){
+      const LR=XLSX.utils.decode_range(lw['!ref']);
+      // اكتشاف صف الترويسة
+      let hr=-1;
+      for(let r=1;r<=Math.min(LR.e.r+1,8);r++){
+        for(let c=1;c<=LR.e.c+1;c++){ const t=clean(cell(lw,r,c)).toLowerCase();
+          if(/url|رابط|link/.test(t)||/title|اسم|عنوان|وصف/.test(t)){ hr=r; break; } }
+        if(hr>0) break;
+      }
+      const H={};
+      if(hr>0){
+        for(let c=1;c<=LR.e.c+1;c++){ const h=clean(cell(lw,hr,c)).toLowerCase();
+          if(/url|رابط|link/.test(h)) H.url=c;
+          else if(/categ|تصنيف|قسم|فئة/.test(h)) H.cat=c;
+          else if(/desc|وصف/.test(h)) H.desc=c;
+          else if(/title|اسم|عنوان/.test(h)) H.title=c; }
+        for(let r=hr+1;r<=LR.e.r+1;r++){
+          const url=clean(cell(lw,r,H.url));
+          const title=clean(cell(lw,r,H.title));
+          if(!url && !title) continue;
+          if(!url) continue; // بلا رابط لا فائدة
+          links.push({title:title||url, url,
+            category:H.cat?clean(cell(lw,r,H.cat)):'', desc:H.desc?clean(cell(lw,r,H.desc)):''});
+        }
+      }
+    }
+  }
   weeks.sort((a,b)=>a.num-b.num);
   const today=new Date(); today.setHours(0,0,0,0);
   let cur=0; weeks.forEach((w,i)=>{ if(w.start && new Date(w.start)<=today) cur=i; });
-  return {school:SCHOOL,term:TERM,currentWeekIndex:cur, announcement,
+  return {school:SCHOOL,term:TERM,currentWeekIndex:cur, announcement, links,
     sectionOrder:SECTIONS.map(([code,label])=>({code,label})), weeks};
 }
 
