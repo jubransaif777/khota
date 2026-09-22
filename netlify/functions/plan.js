@@ -114,10 +114,46 @@ function pivot(buf){
       }
     }
   }
+  // قراءة تبويب الإعلانات المهمة news
+  let news=[];
+  const nname=wb.SheetNames.find(n=>/^news$/i.test(n.trim()));
+  if(nname){
+    const nw=wb.Sheets[nname];
+    if(nw && nw['!ref']){
+      const NR=XLSX.utils.decode_range(nw['!ref']);
+      let hr=-1;
+      for(let r=1;r<=Math.min(NR.e.r+1,8);r++){
+        for(let c=1;c<=NR.e.c+1;c++){ const t=clean(cell(nw,r,c)).toLowerCase();
+          if(/title|عنوان/.test(t)||/body|نص|محتوى/.test(t)||/date|تاريخ/.test(t)){ hr=r; break; } }
+        if(hr>0) break;
+      }
+      if(hr>0){
+        const H={};
+        for(let c=1;c<=NR.e.c+1;c++){ const h=clean(cell(nw,hr,c)).toLowerCase();
+          if(/date|تاريخ/.test(h)) H.date=c;
+          else if(/pin|مثبّت|مثبت|تثبيت/.test(h)) H.pin=c;
+          else if(/title|عنوان/.test(h)) H.title=c;
+          else if(/body|نص|محتوى|تفاصيل/.test(h)) H.body=c; }
+        for(let r=hr+1;r<=NR.e.r+1;r++){
+          const title=clean(cell(nw,r,H.title)); const body=clean(cell(nw,r,H.body));
+          if(!title && !body) continue;
+          let dv=cell(nw,r,H.date), diso='';
+          if(dv instanceof Date) diso=dv.toISOString().slice(0,10);
+          else { const ds=clean(dv); const m=ds.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/)||ds.match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+            if(m){ if(m[1].length===4) diso=m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2);
+                   else diso=m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2); } }
+          const pin=/^(نعم|yes|true|1|مثبّت|مثبت|✓|y)$/i.test(clean(cell(nw,r,H.pin)));
+          news.push({date:diso, title:title||'إعلان', body, pinned:pin});
+        }
+        // ترتيب: المثبّت أولاً ثم الأحدث تاريخًا
+        news.sort((a,b)=>{ if(a.pinned!==b.pinned) return a.pinned?-1:1; return (b.date||'').localeCompare(a.date||''); });
+      }
+    }
+  }
   weeks.sort((a,b)=>a.num-b.num);
   const today=new Date(); today.setHours(0,0,0,0);
   let cur=0; weeks.forEach((w,i)=>{ if(w.start && new Date(w.start)<=today) cur=i; });
-  return {school:SCHOOL,term:TERM,currentWeekIndex:cur, announcement, links,
+  return {school:SCHOOL,term:TERM,currentWeekIndex:cur, announcement, links, news,
     sectionOrder:SECTIONS.map(([code,label])=>({code,label})), weeks};
 }
 
