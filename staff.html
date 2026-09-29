@@ -32,7 +32,7 @@
   .secbtn{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
   .secbtn.on{background:var(--primary-soft);color:var(--primary-ink);border-color:var(--primary)}
   .stud{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:13px 14px;margin-bottom:10px}
-  .stud .sn{font-size:15px;font-weight:600;margin-bottom:9px}
+  .stud .sn{font-size:15px;font-weight:600;margin-bottom:9px} .stud .snum{font-size:12px;font-weight:400;color:var(--muted)}
   .chips{display:flex;flex-wrap:wrap;gap:7px}
   .chip{border:none;border-radius:10px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;color:#fff}
   .chip.empty{background:var(--surface-2);color:var(--muted);cursor:default}
@@ -100,7 +100,9 @@
     if(!students.length){ $('list').innerHTML='<div class="empty">لا يوجد طلاب مسجَّلون لهذه الشعبة بعد.</div>'; return; }
     var html='';
     students.forEach(function(st){
-      html+='<div class="stud"><div class="sn">'+esc(st.name)+'</div><div class="chips">';
+      html+='<div class="stud"><div class="sn">'+esc(st.name)+
+        (st.studentNo?' <span class="snum">— رقم الطالب: '+esc(st.studentNo)+'</span>':'')+
+        '</div><div class="chips">';
       D.subjectOrder.forEach(function(sub){
         var d=st.subjects[sub.code];
         if(d && d.level){

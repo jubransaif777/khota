@@ -101,7 +101,7 @@
       return '<button class="rtab'+(rn===curReport?' on':'')+'" data-rn="'+rn+'">التقرير '+rn+'</button>';
     }).join('')+'</div>') : '';
     $('out').innerHTML='<div class="result"><div class="rname">👤 '+esc(d.name)+'</div>'+
-      (d.section?'<div class="rsec">الشعبة: '+esc(d.section)+'</div>':'')+
+      (d.section||d.studentNo?'<div class="rsec">'+(d.section?'الشعبة: '+esc(d.section):'')+(d.section&&d.studentNo?' · ':'')+(d.studentNo?'رقم الطالب: '+esc(d.studentNo):'')+'</div>':'')+
       tabs+'<div id="itemsBox"></div></div>';
     Array.prototype.forEach.call(document.querySelectorAll('.rtab'),function(b){
       b.addEventListener('click',function(){ curReport=b.getAttribute('data-rn');
