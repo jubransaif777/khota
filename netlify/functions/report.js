@@ -29,6 +29,7 @@ function locateHeader(ws){
       if(/uaeid|هوية/.test(h)){H.id=c;hasId=true;}
       else if(/اسم/.test(h)) H.name=c;
       else if(/شعبة/.test(h)) H.section=c;
+      else if(/رقم\s*الطالب|studentid/i.test(h)) H.studentNo=c;
       else if(/تقرير/.test(h)) H.rnum=c;
       else if(/مستوى/.test(h)){H.level=c;hasLevel=true;}
       else if(/قوة/.test(h)) H.strengths=c;
@@ -54,6 +55,7 @@ function parseSheet(ws){
     out.push({
       id, name,
       section: H.section?clean(cell(ws,r,H.section)):'',
+      studentNo: H.studentNo?clean(cell(ws,r,H.studentNo)):'',
       reportNum: H.rnum?(clean(cell(ws,r,H.rnum))||'1'):'1',
       level: H.level?clean(cell(ws,r,H.level)):'',
       strengths: H.strengths?clean(cell(ws,r,H.strengths)):'',
@@ -68,7 +70,7 @@ function lookup(buf, idInput, nameInput){
   const wb=XLSX.read(buf,{type:'buffer'});
   const idQ=digits(idInput), nameQ=norm(nameInput);
   if(idQ.length<10 || !nameQ) return {status:'invalid'};
-  let found=false, nameOk=false, studentName='', section='';
+  let found=false, nameOk=false, studentName='', section='', studentNo='';
   const items=[];
   for(const [sheetKey, label, code, emoji, color] of SHEETS){
     const rows=parseSheet(wb.Sheets[sheetKey]);
@@ -77,14 +79,14 @@ function lookup(buf, idInput, nameInput){
       found=true;
       const first=norm((row.name||'').split(/\s+/)[0]||'');
       if(first!==nameQ) continue;
-      nameOk=true; studentName=row.name; section=row.section||section;
+      nameOk=true; studentName=row.name; section=row.section||section; studentNo=row.studentNo||studentNo;
       items.push({subject:label, code, emoji, color, reportNum:row.reportNum,
         level:row.level, strengths:row.strengths, improvement:row.improvement, notes:row.notes});
     }
   }
   if(!found) return {status:'notfound'};
   if(!nameOk) return {status:'namemismatch'};
-  return {status:'ok', data:{name:studentName, section, items}};
+  return {status:'ok', data:{name:studentName, section, studentNo, items}};
 }
 
 // تنزيل + كاش + حدّ محاولات (نفس نمط محرّك ألف)

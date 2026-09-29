@@ -29,6 +29,7 @@ function locateHeader(ws){
       if(/uaeid|هوية/.test(h)){H.id=c;hasId=true;}
       else if(/اسم/.test(h)) H.name=c;
       else if(/شعبة/.test(h)) H.section=c;
+      else if(/رقم\s*الطالب|studentid/i.test(h)) H.studentNo=c;
       else if(/تقرير/.test(h)) H.rnum=c;
       else if(/مستوى/.test(h)){H.level=c;hasLevel=true;}
       else if(/قوة/.test(h)) H.strengths=c;
@@ -52,6 +53,7 @@ function parseSheet(ws){
     out.push({
       id, name:clean(cell(ws,r,H.name)),
       section: H.section?clean(cell(ws,r,H.section)):'',
+      studentNo: H.studentNo?clean(cell(ws,r,H.studentNo)):'',
       reportNum: H.rnum?(parseInt(clean(cell(ws,r,H.rnum)),10)||1):1,
       level: H.level?clean(cell(ws,r,H.level)):'',
       strengths: H.strengths?clean(cell(ws,r,H.strengths)):'',
@@ -69,9 +71,9 @@ function build(buf){
   for(const [sheetKey, label, code, emoji, color] of SHEETS){
     const rows=parseSheet(wb.Sheets[sheetKey]);
     for(const row of rows){
-      if(!students[row.id]) students[row.id]={id:row.id,name:row.name,section:row.section,subjects:{}};
+      if(!students[row.id]) students[row.id]={id:row.id,name:row.name,section:row.section,studentNo:'',subjects:{}};
       const s=students[row.id];
-      if(row.name) s.name=row.name; if(row.section) s.section=row.section;
+      if(row.name) s.name=row.name; if(row.section) s.section=row.section; if(row.studentNo) s.studentNo=row.studentNo;
       const cur=s.subjects[code];
       if(!cur || row.reportNum>=cur.reportNum){
         s.subjects[code]={label,emoji,color,reportNum:row.reportNum,
