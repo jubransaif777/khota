@@ -7,12 +7,19 @@ const SHARE_URL = process.env.REPORT_SHARE_URL ||
   "https://emiratesschoolsese-my.sharepoint.com/:x:/g/personal/gubran_algumaei_moe_sch_ae/IQDWatQFXbUpTZuWcfKbG_0tAbAKwwfqofXVFUrnWnwiNwI?e=fZVhNi";
 
 const SHEETS = [
-  ['report_islamic','التربية الإسلامية','IS','🕌','#1F6E4E'],
-  ['report_arabic','اللغة العربية','AR','📖','#0E5A54'],
-  ['report_english','اللغة الإنجليزية','E','🔤','#2A6F97'],
-  ['report_social','الدراسات الاجتماعية','SS','🌍','#3A5A8C'],
-  ['report_math','الرياضيات','MA','➗','#4B4B8F'],
-  ['report_science','العلوم','SC','🔬','#2E7D6B'],
+  // مواد المجموعة A — المواد الأساسية
+  ['report_islamic','التربية الإسلامية','IS','🕌','#1F6E4E','A'],
+  ['report_arabic','اللغة العربية','AR','📖','#0E5A54','A'],
+  ['report_english','اللغة الإنجليزية','E','🔤','#2A6F97','A'],
+  ['report_social','الدراسات الاجتماعية','SS','🌍','#3A5A8C','A'],
+  ['report_math','الرياضيات','MA','➗','#4B4B8F','A'],
+  ['report_science','العلوم','SC','🔬','#2E7D6B','A'],
+  // مواد المجموعة B — النشاط والمهارات
+  ['report_ai','الذكاء الاصطناعي','AI','🤖','#6B4F9E','B'],
+  ['report_pe','التربية البدنية','PE','⚽','#4F7A3A','B'],
+  ['report_aa','الفنون السمعية','AA','🎵','#4A6D8C','B'],
+  ['report_va','الفنون البصرية','VA','🎨','#B5546A','B'],
+  ['report_dr','المسرح','DR','🎭','#7A4A78','B'],
 ];
 
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
@@ -30,6 +37,7 @@ function locateHeader(ws){
       else if(/اسم/.test(h)) H.name=c;
       else if(/شعبة/.test(h)) H.section=c;
       else if(/رقم\s*الطالب|studentid/i.test(h)) H.studentNo=c;
+      else if(/درجات|اختبار/.test(h)) H.examScores=c;
       else if(/تقرير/.test(h)) H.rnum=c;
       else if(/مستوى/.test(h)){H.level=c;hasLevel=true;}
       else if(/قوة/.test(h)) H.strengths=c;
@@ -56,6 +64,7 @@ function parseSheet(ws){
       id, name,
       section: H.section?clean(cell(ws,r,H.section)):'',
       studentNo: H.studentNo?clean(cell(ws,r,H.studentNo)):'',
+      examScores: H.examScores?clean(cell(ws,r,H.examScores)):'',
       reportNum: H.rnum?(clean(cell(ws,r,H.rnum))||'1'):'1',
       level: H.level?clean(cell(ws,r,H.level)):'',
       strengths: H.strengths?clean(cell(ws,r,H.strengths)):'',
@@ -72,7 +81,7 @@ function lookup(buf, idInput, nameInput){
   if(idQ.length<10 || !nameQ) return {status:'invalid'};
   let found=false, nameOk=false, studentName='', section='', studentNo='';
   const items=[];
-  for(const [sheetKey, label, code, emoji, color] of SHEETS){
+  for(const [sheetKey, label, code, emoji, color, group] of SHEETS){
     const rows=parseSheet(wb.Sheets[sheetKey]);
     for(const row of rows){
       if(row.id!==idQ) continue;
@@ -80,8 +89,8 @@ function lookup(buf, idInput, nameInput){
       const first=norm((row.name||'').split(/\s+/)[0]||'');
       if(first!==nameQ) continue;
       nameOk=true; studentName=row.name; section=row.section||section; studentNo=row.studentNo||studentNo;
-      items.push({subject:label, code, emoji, color, reportNum:row.reportNum,
-        level:row.level, strengths:row.strengths, improvement:row.improvement, notes:row.notes});
+      items.push({subject:label, code, emoji, color, group, reportNum:row.reportNum,
+        examScores:row.examScores, level:row.level, strengths:row.strengths, improvement:row.improvement, notes:row.notes});
     }
   }
   if(!found) return {status:'notfound'};
