@@ -34,6 +34,8 @@
   .stud{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:13px 14px;margin-bottom:10px}
   .stud .sn{font-size:15px;font-weight:600;margin-bottom:9px} .stud .snum{font-size:12px;font-weight:400;color:var(--muted)}
   .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .gtitle{font-size:10.5px;font-weight:700;color:var(--muted);margin:9px 0 5px}
+  .gtitle:first-of-type{margin-top:0}
   .chip{border:none;border-radius:10px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;color:#fff}
   .chip.empty{background:var(--surface-2);color:var(--muted);cursor:default}
   .empty{text-align:center;color:var(--muted);padding:26px;font-size:14px}
@@ -102,17 +104,24 @@
     students.forEach(function(st){
       html+='<div class="stud"><div class="sn">'+esc(st.name)+
         (st.studentNo?' <span class="snum">— رقم الطالب: '+esc(st.studentNo)+'</span>':'')+
-        '</div><div class="chips">';
-      D.subjectOrder.forEach(function(sub){
-        var d=st.subjects[sub.code];
-        if(d && d.level){
-          html+='<button class="chip" style="background:'+sub.color+'" data-id="'+esc(st.id)+'" data-code="'+sub.code+'">'+
-            sub.emoji+' '+esc(sub.label)+'</button>';
-        } else {
-          html+='<span class="chip empty">'+sub.emoji+' '+esc(sub.label)+'</span>';
-        }
+        '</div>';
+      var glabels={A:'مواد المجموعة A', B:'مواد المجموعة B'};
+      ['A','B'].forEach(function(g){
+        var subs=D.subjectOrder.filter(function(sub){return sub.group===g});
+        if(!subs.length) return;
+        html+='<div class="gtitle">'+glabels[g]+'</div><div class="chips">';
+        subs.forEach(function(sub){
+          var d=st.subjects[sub.code];
+          if(d && d.level){
+            html+='<button class="chip" style="background:'+sub.color+'" data-id="'+esc(st.id)+'" data-code="'+sub.code+'">'+
+              sub.emoji+' '+esc(sub.label)+'</button>';
+          } else {
+            html+='<span class="chip empty">'+sub.emoji+' '+esc(sub.label)+'</span>';
+          }
+        });
+        html+='</div>';
       });
-      html+='</div></div>';
+      html+='</div>';
     });
     $('list').innerHTML=html;
     Array.prototype.forEach.call(document.querySelectorAll('.chip[data-id]'),function(b){
@@ -126,6 +135,7 @@
   function openModal(st, d){
     var rows='';
     rows+='<div class="frow"><div class="fl">المستوى</div><div class="fv" style="color:'+lvlColor(d.level)+';font-weight:700">'+esc(d.level||'—')+'</div></div>';
+    if(d.examScores) rows+='<div class="frow"><div class="fl">درجات الاختبارات</div><div class="fv">'+esc(d.examScores)+'</div></div>';
     if(d.strengths) rows+='<div class="frow"><div class="fl">مجالات القوة</div><div class="fv">'+esc(d.strengths)+'</div></div>';
     if(d.improvement) rows+='<div class="frow"><div class="fl">مجالات التحسين</div><div class="fv">'+esc(d.improvement)+'</div></div>';
     if(d.notes) rows+='<div class="frow"><div class="fl">ملاحظات</div><div class="fv">'+esc(d.notes)+'</div></div>';

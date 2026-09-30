@@ -49,6 +49,8 @@
   .lvl.above{background:var(--done-soft);color:var(--done)}
   .srow{font-size:12.5px;line-height:1.7;padding-top:6px;border-top:1px solid var(--line);margin-top:6px}
   .srow b{color:var(--muted);font-weight:600}
+  .gtitle{font-size:12.5px;font-weight:700;color:var(--primary-ink);margin:16px 2px 8px}
+  .gtitle:first-child{margin-top:0}
   .back{display:block;text-align:center;margin-top:18px;color:var(--primary);text-decoration:none;font-size:13px}
 </style>
 </head>
@@ -81,15 +83,23 @@
     var box=$('itemsBox'); if(!box) return;
     var list=lastItems.filter(function(x){return String(x.reportNum)===curReport});
     if(!list.length){ box.innerHTML='<div class="note">لا توجد بيانات لهذا التقرير.</div>'; return; }
+    var groups={A:[],B:[]};
+    list.forEach(function(x){ (groups[x.group]||groups.A).push(x); });
+    var labels={A:'مواد المجموعة A', B:'مواد المجموعة B'};
     var h='';
-    list.forEach(function(x){
-      h+='<div class="sitem"><div class="sh"><span class="sic" style="background:'+x.color+'">'+x.emoji+'</span>'+
-        '<span class="sname">'+esc(x.subject)+'</span>'+
-        (x.level?'<span class="lvl '+lvlClass(x.level)+'">'+esc(x.level)+'</span>':'')+'</div>';
-      if(x.strengths) h+='<div class="srow"><b>مجالات القوة: </b>'+esc(x.strengths)+'</div>';
-      if(x.improvement) h+='<div class="srow"><b>مجالات التحسين: </b>'+esc(x.improvement)+'</div>';
-      if(x.notes) h+='<div class="srow"><b>ملاحظة: </b>'+esc(x.notes)+'</div>';
-      h+='</div>';
+    ['A','B'].forEach(function(g){
+      if(!groups[g].length) return;
+      h+='<div class="gtitle">'+labels[g]+'</div>';
+      groups[g].forEach(function(x){
+        h+='<div class="sitem"><div class="sh"><span class="sic" style="background:'+x.color+'">'+x.emoji+'</span>'+
+          '<span class="sname">'+esc(x.subject)+'</span>'+
+          (x.level?'<span class="lvl '+lvlClass(x.level)+'">'+esc(x.level)+'</span>':'')+'</div>';
+        if(x.examScores) h+='<div class="srow"><b>درجات الاختبارات: </b>'+esc(x.examScores)+'</div>';
+        if(x.strengths) h+='<div class="srow"><b>مجالات القوة: </b>'+esc(x.strengths)+'</div>';
+        if(x.improvement) h+='<div class="srow"><b>مجالات التحسين: </b>'+esc(x.improvement)+'</div>';
+        if(x.notes) h+='<div class="srow"><b>ملاحظة: </b>'+esc(x.notes)+'</div>';
+        h+='</div>';
+      });
     });
     box.innerHTML=h;
   }
