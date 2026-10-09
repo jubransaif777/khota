@@ -12,7 +12,7 @@ const SCHOOL="مدرسة المعيريض للحلقة الثانية بنين";
 const SECTIONS=['5G1','5A1','5A2','6G1','6G2','6A1','6A2','7G1','7G2','7A1','7A2','8G1','8G2','8A1','8A2'];
 const DAYS=[['MON','الاثنين'],['TUE','الثلاثاء'],['WED','الأربعاء'],['THU','الخميس'],['FRI','الجمعة']];
 const SUBJ={IS:'إسلامية',AR:'عربي',SS:'دراسات اجتماعية',E:'إنجليزي',MA:'رياضيات',SC:'علوم',
-  PE:'تربية بدنية',DT:'تصميم تكنولوجي',DR:'مسرح',VA:'فنية',AA:'موسيقى'};
+  PE:'تربية بدنية',DT:'تصميم تكنولوجي',DR:'مسرح',VA:'فنية',AA:'موسيقى',AI:'ذكاء اصطناعي'};
 const AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
@@ -65,8 +65,8 @@ function readCards(wb){
     else if(/resource|مصادر|مذاكر|تعلم/.test(hl)) H.src=c;
     else if(/score|درج|مدة/.test(hl)) H.marks=c; }
   for(let r=hr+1;r<=R.e.r+1;r++){
-    const wk=clean(cell(ws,r,H.week)); const dy=dayToken(cell(ws,r,H.day))||clean(cell(ws,r,H.day)).toUpperCase();
-    const sec=clean(cell(ws,r,H.sec)); const code=clean(cell(ws,r,H.code)).toUpperCase();
+    const wk=parseInt(clean(cell(ws,r,H.week)),10); const dy=dayToken(cell(ws,r,H.day))||clean(cell(ws,r,H.day)).toUpperCase();
+    const sec=clean(cell(ws,r,H.sec)).toUpperCase(); const code=clean(cell(ws,r,H.code)).toUpperCase();
     if(!wk||!dy||!sec||!code) continue;
     const key=wk+'|'+dy+'|'+sec+'|'+code;
     map[key]={title:clean(cell(ws,r,H.title)),pages:clean(cell(ws,r,H.pages)),
@@ -100,10 +100,10 @@ function parseWeek(ws){
   return {num:wknum?+wknum:null, start, bookings};
 }
 
-function build(buf){
+function build(buf, withAudit){
   const wb=XLSX.read(buf,{type:'buffer'});
   let cards={}; try{ cards=readCards(wb); }catch(e){ cards={}; }
-  const weeks=[];
+  const weeks=[]; const usedKeys=new Set();
   for(const name of wb.SheetNames){
     if(!/^week/i.test(name)) continue;
     let p=null; try{ p=parseWeek(wb.Sheets[name]); }catch(e){ p=null; }
@@ -116,6 +116,7 @@ function build(buf){
         const codes=(p.bookings[sec][tok]||[]);
         const exams=codes.map(code=>{
           const key=num+'|'+tok+'|'+sec+'|'+code;
+          usedKeys.add(key);
           const card=cards[key]||null;
           return {code, subject:SUBJ[code]||code, card};
         });
@@ -130,7 +131,18 @@ function build(buf){
   weeks.sort((a,b)=>a.num-b.num);
   const today=new Date(); today.setHours(0,0,0,0);
   let cur=0; weeks.forEach((w,i)=>{ if(w.start && new Date(w.start)<=today) cur=i; });
-  return {school:SCHOOL, currentWeekIndex:cur, sectionOrder:SECTIONS, dayOrder:DAYS, weeks};
+  const out={school:SCHOOL, currentWeekIndex:cur, sectionOrder:SECTIONS, dayOrder:DAYS, weeks};
+  if(withAudit){
+    const dayLabel={}; DAYS.forEach(([t,l])=>dayLabel[t]=l);
+    const orphans=[];
+    for(const [key,card] of Object.entries(cards)){
+      if(usedKeys.has(key)) continue;
+      const [wkS,day,section,code]=key.split('|');
+      orphans.push({week:+wkS, day, dayLabel:dayLabel[day]||day, section, code, subject:SUBJ[code]||code, card});
+    }
+    out.audit={orphans};
+  }
+  return out;
 }
 
 const UA={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36','Accept':'*/*'};
@@ -146,11 +158,13 @@ async function download(){
   for(const u of urls){const b=await tryFetch(u); if(b) return b;}
   return null;
 }
-exports.handler=async()=>{
+exports.handler=async(event)=>{
   try{
+    const q=(event&&event.queryStringParameters)||{};
+    const audit=!!process.env.ADMIN_PASSWORD && q.audit===process.env.ADMIN_PASSWORD;
     const buf=await download();
     if(!buf) return {statusCode:502,headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({error:'تعذّر تنزيل ملف الاختبارات'})};
-    return {statusCode:200,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'public, max-age=300'},body:JSON.stringify(build(buf))};
+    return {statusCode:200,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':audit?'no-store':'public, max-age=300'},body:JSON.stringify(build(buf,audit))};
   }catch(e){return {statusCode:500,headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({error:String(e&&e.message||e)})};}
 };
 exports._build=build;
