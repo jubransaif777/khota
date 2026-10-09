@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة متابعة المعلمين — مدرسة المعيريض</title>
+<title>لوحة الإدارة — مدرسة المعيريض</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,6 +59,65 @@
   .empty{text-align:center; color:var(--muted); padding:26px; font-size:14px}
   .foot{margin-top:16px; text-align:center; color:var(--muted); font-size:11px}
   .btn.small{width:auto; padding:8px 16px; font-size:13px; background:none; color:var(--primary); border:1px solid var(--line)}
+
+  /* ---- تبويبات اللوحة ---- */
+  .tabs{display:flex;gap:6px;background:var(--surface-2);border-radius:14px;padding:5px;margin:0 0 16px}
+  .tabs button{flex:1;border:none;background:none;color:var(--muted);font-family:inherit;font-size:13.5px;font-weight:600;padding:10px;border-radius:10px;cursor:pointer}
+  .tabs button.on{background:var(--surface);color:var(--primary-ink);box-shadow:var(--shadow)}
+  .actions{display:flex;gap:8px;margin:0 0 12px}
+  .btn.print{width:auto;padding:10px 18px;font-size:13.5px}
+  /* ---- خريطة الاختبارات ---- */
+  .mapwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+  table.map{width:100%;min-width:600px;border-collapse:collapse;border:none;border-radius:0}
+  table.map th,table.map td{border:1px solid var(--line);padding:6px 5px;text-align:center;font-size:12px;vertical-align:middle}
+  table.map thead th{background:var(--surface-2);font-weight:600;color:var(--muted);font-size:12px;padding:9px 5px}
+  table.map th.sec{background:var(--surface-2);font-weight:700;color:var(--ink);white-space:nowrap;font-size:12.5px}
+  table.map td.tot{font-variant-numeric:tabular-nums;font-weight:700;background:var(--surface-2)}
+  table.map tfoot td,table.map tfoot th{background:var(--surface-2);font-weight:700}
+  table.map tbody td.emp{color:var(--muted);opacity:.5}
+  .xc{display:inline-block;border:none;color:#fff;font-family:inherit;font-size:10.5px;font-weight:600;border-radius:7px;padding:4px 7px;margin:1px;cursor:pointer;white-space:nowrap}
+  .xc:active{transform:scale(.96)} .xc .nc{color:#FFE08A;font-weight:700}
+  .legend{font-size:11.5px;color:var(--muted);margin:8px 2px 14px}
+  .legend b{color:var(--partial)}
+  /* ---- التدقيق ---- */
+  .acard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+  .acard .ah{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .acard .at{font-size:14px;font-weight:700} .acard .an{font-size:12px;font-weight:700;padding:2px 11px;border-radius:20px;white-space:nowrap}
+  .an.ok{background:var(--done-soft);color:var(--done)} .an.warn{background:var(--partial-soft);color:var(--partial)}
+  .acard .ok-line{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .arow{font-size:13px;padding:8px 0;border-top:1px solid var(--line);margin-top:8px}
+  .arow small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+  .anote{font-size:11.5px;color:var(--muted);margin:2px 2px 10px;line-height:1.7}
+  /* ---- فقاعة الخلية ---- */
+  .mscrim{position:fixed;inset:0;background:rgba(10,20,18,.5);opacity:0;pointer-events:none;transition:.2s;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px}
+  .mscrim.on{opacity:1;pointer-events:auto}
+  .modal{background:var(--surface);border:1px solid var(--line);border-radius:20px;max-width:400px;width:100%;max-height:80vh;overflow:auto;box-shadow:0 24px 60px -20px rgba(0,0,0,.5)}
+  .mtitle{padding:14px 18px 4px;font-size:14px;font-weight:700}
+  .mex{margin:8px 14px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .mex .mh{color:#fff;padding:10px 14px;font-weight:700;font-size:14px}
+  .mex .mb{padding:4px 14px 8px}
+  .frow{display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px} .frow:first-child{border-top:none}
+  .frow .fl{color:var(--muted);font-size:11.5px;min-width:74px} .frow .fv{flex:1}
+  .nocard{color:var(--partial);font-size:12.5px;padding:8px 0}
+  .mclose{width:100%;border:none;border-top:1px solid var(--line);background:none;color:var(--primary);font-weight:600;font-size:14.5px;padding:13px;cursor:pointer;font-family:inherit}
+  /* ---- الطباعة (تظهر عند فتح تبويب الاختبارات فقط) ---- */
+  .printhead,.sign{display:none}
+  @page{size:A4 landscape;margin:9mm}
+  @media print{
+    body.px{background:#fff;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body.px .noprint,body.px .gate,body.px .tabs,body.px #tabTeachers,body.px .mscrim,body.px #panelHead{display:none!important}
+    body.px .wrap{max-width:none;padding:0}
+    body.px .printhead{display:block;margin-bottom:5mm}
+    body.px .printhead h2{margin:0;font-size:16pt} body.px .printhead p{margin:2px 0 0;font-size:10pt;color:#333}
+    body.px .mapwrap{border:none;overflow:visible}
+    body.px table.map{min-width:0;width:100%}
+    body.px table.map th,body.px table.map td{padding:2.5px 3px;font-size:9.5pt;border:1px solid #777;color:#000}
+    body.px table.map thead th,body.px table.map th.sec,body.px table.map td.tot,body.px table.map tfoot td,body.px table.map tfoot th{background:#EEE!important}
+    body.px .xc{font-size:8.5pt;padding:1px 5px;border:1px solid rgba(0,0,0,.45)}
+    body.px .legend{color:#000;font-size:9pt;margin:2mm 0 0}
+    body.px .sign{display:flex;justify-content:space-between;gap:10mm;margin-top:9mm;font-size:10.5pt}
+    body.px tr{break-inside:avoid}
+  }
 </style>
 </head>
 <body>
@@ -75,8 +134,10 @@
 
   <!-- اللوحة -->
   <div id="panel" class="hidden">
-    <h1>لوحة متابعة المعلمين</h1>
-    <div class="sub">مدرسة المعيريض للحلقة الثانية بنين · إدخال الخطة الأسبوعية</div>
+    <div id="panelHead"><h1>لوحة الإدارة</h1>
+    <div class="sub">مدرسة المعيريض للحلقة الثانية بنين</div></div>
+    <div class="tabs" id="tabs"><button data-t="teachers" class="on">متابعة المعلمين</button><button data-t="exams">الاختبارات</button></div>
+    <div id="tabTeachers">
     <div class="weeknav">
       <button id="prev">‹</button>
       <div class="mid" id="wkmid"><b id="wklbl"></b><span id="wkrng"></span></div>
@@ -89,8 +150,28 @@
     </div>
     <div id="tablebox"></div>
     <div class="foot">تُقرأ البيانات مباشرة من ملف المدرسة · لوحة إدارية</div>
+    </div>
+
+    <div id="tabExams" class="hidden">
+      <div class="printhead" id="phead"></div>
+      <div id="exstate"></div>
+      <div id="exmain" class="hidden">
+        <div class="weeknav noprint">
+          <button id="exprev">‹</button>
+          <div class="mid" id="exwkmid"><b id="exwklbl"></b><span id="exwkrng"></span></div>
+          <button id="exnext">›</button>
+        </div>
+        <div class="summary noprint" id="exsum"></div>
+        <div class="actions noprint"><button class="btn print" id="printBtn">🖨 طباعة خريطة الأسبوع</button></div>
+        <div class="mapwrap" id="exmap"></div>
+        <div class="legend"><b>*</b> اختبار لم تُدخل له بطاقة التفاصيل · انقر أي مادة لعرض تفاصيلها</div>
+        <div class="sign" id="sign"><span>اعتمد الإداري: ____________________</span><span>التوقيع: ______________</span><span>التاريخ: ______________</span></div>
+        <div class="audit noprint" id="exaudit"></div>
+      </div>
+    </div>
   </div>
 </div>
+<div class="mscrim" id="mscrim"><div class="modal" id="modal"></div></div>
 
 <script>
 (function(){
@@ -147,6 +228,182 @@
     html+='</tbody></table>';
     $('tablebox').innerHTML=html;
   }
+
+
+  /* ================= تبويب الاختبارات ================= */
+  var EX=null, SC=null, exWk=0, exLoaded=false, TIDX={};
+  var META={IS:['إسلامية','#1F6E4E'],AR:['عربي','#0E5A54'],E:['إنجليزي','#2A6F97'],SS:['دراسات','#3A5A8C'],
+    MA:['رياضيات','#4B4B8F'],SC:['علوم','#2E7D6B'],AI:['ذكاء اصطناعي','#6B4F9E'],PE:['بدنية','#4F7A3A'],
+    AA:['سمعية','#4A6D8C'],VA:['بصرية','#B5546A'],DR:['مسرح','#7A4A78'],DT:['تصميم','#8A6D3B']};
+  function meta(c){ return META[c]||[c,'#556B6A']; }
+  function escq(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
+  function normAr(s){ return String(s||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/\s+/g,' ').trim(); }
+  function codeOfSubject(subject){
+    var t=normAr(subject);
+    if(/اسلام/.test(t)) return 'IS'; if(/عرب/.test(t)) return 'AR'; if(/انجليز|english/.test(t)) return 'E';
+    if(/اجتماع|دراسات|social/.test(t)) return 'SS'; if(/ذكاء|\bai\b|ccdi/.test(t)) return 'AI';
+    if(/بدن|رياضيه|physical|\bpe\b/.test(t)) return 'PE'; if(/رياضيات|math/.test(t)) return 'MA';
+    if(/علوم|science/.test(t)) return 'SC'; if(/سمع|موسيق|music/.test(t)) return 'AA';
+    if(/بصر|فنون|فني|\bart\b/.test(t)) return 'VA'; if(/مسرح|drama/.test(t)) return 'DR';
+    if(/تصميم|تقني|design/.test(t)) return 'DT'; return null;
+  }
+  // فهرس: شعبة + مادة → أسماء المعلمين (من جدول الحصص إن كان مضبوطاً)
+  function buildTeacherIndex(){
+    TIDX={}; if(!SC||SC.status!=='ok') return false;
+    SC.sections.forEach(function(sec){
+      var by={}; var g=SC.grid[sec]||{};
+      Object.keys(g).forEach(function(d){ g[d].forEach(function(cell){ if(!cell) return;
+        cell.forEach(function(i){ var t=SC.teachers[i]; if(!t||!t.name||!t.subject) return;
+          var c=codeOfSubject(t.subject); if(!c) return; (by[c]=by[c]||{})[t.name]=1; }); }); });
+      TIDX[sec]=by;
+    });
+    return true;
+  }
+  function teachersFor(sec,code){ var b=TIDX[sec]&&TIDX[sec][code]; return b?Object.keys(b):[]; }
+
+  function loadExams(){
+    if(exLoaded) return; exLoaded=true;
+    $('exstate').innerHTML='<div class="empty">… جارٍ تحميل بيانات الاختبارات</div>';
+    var pE=fetch('/.netlify/functions/exams?audit='+encodeURIComponent(PW),{cache:'no-store'}).then(function(r){return r.json()});
+    var pS=fetch('/.netlify/functions/schedule',{cache:'no-store'}).then(function(r){return r.json()}).catch(function(){return null});
+    Promise.all([pE,pS]).then(function(res){
+      EX=res[0]; SC=res[1];
+      if(!EX||!EX.weeks){ exLoaded=false; $('exstate').innerHTML='<div class="empty">تعذّر تحميل بيانات الاختبارات. حدّث الصفحة.</div>'; return; }
+      buildTeacherIndex(); exWk=EX.currentWeekIndex||0;
+      $('exstate').innerHTML=''; $('exmain').classList.remove('hidden'); renderExams();
+    }).catch(function(){ exLoaded=false; $('exstate').innerHTML='<div class="empty">تعذّر الاتصال. حدّث الصفحة.</div>'; });
+  }
+
+  function dateStr(){ var d=new Date(); return ar(d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear()); }
+
+  function renderExams(){
+    var w=EX.weeks[exWk], days=EX.dayOrder, secs=EX.sectionOrder;
+    $('exwklbl').textContent=ar(w.label); $('exwkrng').textContent=ar(w.range||'');
+    $('exwkmid').classList.toggle('now', exWk===EX.currentWeekIndex);
+    $('exprev').disabled=(exWk===0); $('exnext').disabled=(exWk===EX.weeks.length-1);
+
+    var all=[], perDay={}, perSec={};
+    days.forEach(function(d){perDay[d[0]]=0}); secs.forEach(function(s){perSec[s]=0});
+    secs.forEach(function(s){ (w.sections[s]||[]).forEach(function(d){ d.exams.forEach(function(e){
+      all.push({sec:s,day:d.day,dayLabel:d.label,e:e}); perDay[d.day]=(perDay[d.day]||0)+1; perSec[s]++; }); }); });
+
+    // ---- التدقيق ----
+    var noCard=all.filter(function(x){return !x.e.card});
+    var haveAudit=!!(EX.audit&&EX.audit.orphans);
+    var allOrph=haveAudit?EX.audit.orphans:[];
+    var orph=allOrph.filter(function(o){return o.week===w.num});
+    var unknown=allOrph.filter(function(o){return !EX.weeks.some(function(ww){return ww.num===o.week})});
+    var repeats=[];
+    secs.forEach(function(s){ var by={}; (w.sections[s]||[]).forEach(function(d){ d.exams.forEach(function(e){ (by[e.code]=by[e.code]||[]).push(d.label); }); });
+      Object.keys(by).forEach(function(c){ if(by[c].length>1) repeats.push({sec:s,code:c,days:by[c]}); }); });
+    var issues=noCard.length+orph.length+unknown.length+repeats.length;
+
+    // ---- الملخص ----
+    var busy={tok:null,n:0}; days.forEach(function(d){ if(perDay[d[0]]>busy.n){busy={tok:d[0],n:perDay[d[0]],label:d[1]};} });
+    $('exsum').innerHTML=
+      '<div class="sc"><div class="n">'+ar(all.length)+'</div><div class="t">اختبارات الأسبوع</div></div>'+
+      '<div class="sc"><div class="n">'+ar(busy.n)+'</div><div class="t">'+(busy.n?('أكثر الأيام: '+busy.label):'لا اختبارات')+'</div></div>'+
+      '<div class="sc partial"><div class="n">'+ar(noCard.length)+'</div><div class="t">بلا بطاقة تفاصيل</div></div>'+
+      '<div class="sc '+(issues?'miss':'done')+'"><div class="n">'+ar(issues)+'</div><div class="t">ملاحظات تدقيق</div></div>';
+
+    // ---- الخريطة ----
+    var h='<table class="map"><thead><tr><th>الشعبة</th>';
+    days.forEach(function(d){ h+='<th>'+d[1]+'</th>'; });
+    h+='<th>المجموع</th></tr></thead><tbody>';
+    secs.forEach(function(s){
+      h+='<tr><th class="sec">'+s+'</th>';
+      days.forEach(function(d){
+        var dd=(w.sections[s]||[]).filter(function(x){return x.day===d[0]})[0];
+        if(!dd||!dd.exams.length){ h+='<td class="emp">—</td>'; return; }
+        h+='<td>'+dd.exams.map(function(e){ var m=meta(e.code);
+          return '<button class="xc" style="background:'+m[1]+'" data-s="'+s+'" data-d="'+d[0]+'">'+escq(m[0])+(e.card?'':'<span class="nc">*</span>')+'</button>'; }).join('')+'</td>';
+      });
+      h+='<td class="tot">'+ar(perSec[s])+'</td></tr>';
+    });
+    h+='</tbody><tfoot><tr><th>المجموع</th>';
+    days.forEach(function(d){ h+='<td>'+ar(perDay[d[0]]||0)+'</td>'; });
+    h+='<td>'+ar(all.length)+'</td></tr></tfoot></table>';
+    $('exmap').innerHTML=h;
+    Array.prototype.forEach.call(document.querySelectorAll('.xc'),function(b){
+      b.addEventListener('click',function(){ openCell(b.getAttribute('data-s'),b.getAttribute('data-d')); });
+    });
+
+    // ---- رأس الطباعة ----
+    $('phead').innerHTML='<h2>جدول الاختبارات الأسبوعي — '+escq(ar(w.label))+'</h2>'+
+      '<p>'+escq(ar(w.range||''))+' · مدرسة المعيريض للحلقة الثانية بنين · إجمالي الاختبارات: '+ar(all.length)+
+      ' · بلا بطاقة تفاصيل: '+ar(noCard.length)+' · طُبع في: '+dateStr()+'</p>';
+
+    // ---- بطاقات التدقيق ----
+    var tIdx=!!(SC&&SC.status==='ok');
+    function tname(sec,code){ if(!tIdx) return ''; var t=teachersFor(sec,code); return t.length?('المعلم: '+t.join(' / ')):'المعلم: غير محدد في جدول الحصص'; }
+    function card(title,count,rows,okText){
+      var c='<div class="acard"><div class="ah"><span class="at">'+title+'</span><span class="an '+(count?'warn':'ok')+'">'+(count?ar(count):'✓')+'</span></div>';
+      if(!count) c+='<div class="ok-line">'+okText+'</div>'; else c+=rows;
+      return c+'</div>';
+    }
+    var r1=noCard.map(function(x){ var m=meta(x.e.code);
+      return '<div class="arow"><b>'+x.sec+'</b> — '+escq(m[0])+' — '+x.dayLabel+(tIdx?'<small>'+escq(tname(x.sec,x.e.code))+'</small>':'')+'</div>'; }).join('');
+    function hintFor(o){
+      var secObj=w.sections[o.section]; if(!secObj) return 'الشعبة غير موجودة في ملف الحجز';
+      var other=[]; secObj.forEach(function(d){ d.exams.forEach(function(e){ if(e.code===o.code) other.push(d.label); }); });
+      if(other.length) return 'الحجز لهذه المادة في: '+other.join('، ');
+      var same=secObj.filter(function(d){return d.day===o.day})[0];
+      if(same&&same.exams.length) return 'المحجوز في هذا اليوم: '+same.exams.map(function(e){return meta(e.code)[0]}).join('، ');
+      return 'لا يوجد حجز لهذه الشعبة بهذه المادة في هذا الأسبوع';
+    }
+    var r2=orph.map(function(o){ var m=meta(o.code); var t=(o.card&&o.card.title)?('«'+escq(o.card.title)+'» · '):'';
+      return '<div class="arow"><b>'+escq(o.section)+'</b> — '+escq(m[0])+' — '+escq(o.dayLabel)+'<small>'+t+escq(hintFor(o))+(tIdx?' · '+escq(tname(o.section,o.code)):'')+'</small></div>'; }).join('')+
+      unknown.map(function(o){ var m=meta(o.code);
+      return '<div class="arow"><b>'+escq(o.section)+'</b> — '+escq(m[0])+' — '+escq(o.dayLabel)+'<small>رقم الأسبوع في البطاقة: '+ar(o.week)+' (غير موجود في الملف)'+((o.card&&o.card.title)?' · «'+escq(o.card.title)+'»':'')+'</small></div>'; }).join('');
+    var r3=repeats.map(function(x){ var m=meta(x.code);
+      return '<div class="arow"><b>'+x.sec+'</b> — '+escq(m[0])+' — '+x.days.join('، ')+(tIdx?'<small>'+escq(tname(x.sec,x.code))+'</small>':'')+'</div>'; }).join('');
+
+    var a='';
+    a+=card('اختبارات بلا بطاقة تفاصيل',noCard.length,r1,'كل اختبارات هذا الأسبوع لها بطاقات.');
+    a+= haveAudit ? card('بطاقات لا تطابق أي حجز',orph.length+unknown.length,r2,'كل البطاقات مطابقة لحجوزاتها.')
+                  : '<div class="acard"><div class="ah"><span class="at">بطاقات لا تطابق أي حجز</span><span class="an warn">!</span></div><div class="ok-line">تعذّر فحص هذا البند. تأكّد من تحديث exams.js على الموقع.</div></div>';
+    a+=card('المادة نفسها مرتين في الأسبوع',repeats.length,r3,'لا شعبة تكرّرت فيها مادة في هذا الأسبوع.');
+    if(!tIdx) a+='<div class="anote">أسماء المعلمين المسؤولين تظهر هنا تلقائياً بعد ضبط ملف جدول الحصص (تبويب teachers) ورابطه في الموقع.</div>';
+    $('exaudit').innerHTML=a;
+  }
+
+  function openCell(sec,dayTok){
+    var w=EX.weeks[exWk]; var tIdx=!!(SC&&SC.status==='ok');
+    var dd=(w.sections[sec]||[]).filter(function(x){return x.day===dayTok})[0]; if(!dd) return;
+    var h='<div class="mtitle">'+escq(sec)+' — '+escq(dd.label)+'</div>';
+    dd.exams.forEach(function(e){
+      var m=meta(e.code), t=tIdx?teachersFor(sec,e.code):[], c=e.card;
+      h+='<div class="mex"><div class="mh" style="background:'+m[1]+'">'+escq(e.subject||m[0])+'</div><div class="mb">';
+      if(tIdx) h+='<div class="frow"><span class="fl">المعلم</span><span class="fv">'+(t.length?escq(t.join(' / ')):'غير محدد في جدول الحصص')+'</span></div>';
+      if(c){
+        if(c.title) h+='<div class="frow"><span class="fl">المقرر</span><span class="fv">'+escq(c.title)+'</span></div>';
+        if(c.pages) h+='<div class="frow"><span class="fl">الصفحات</span><span class="fv">'+escq(c.pages)+'</span></div>';
+        if(c.type) h+='<div class="frow"><span class="fl">النوع</span><span class="fv">'+escq(c.type)+'</span></div>';
+        if(c.marks) h+='<div class="frow"><span class="fl">الدرجة</span><span class="fv">'+escq(c.marks)+'</span></div>';
+        if(c.sources) h+='<div class="frow"><span class="fl">المصادر</span><span class="fv">'+escq(c.sources)+'</span></div>';
+      } else h+='<div class="nocard">لم تُدخل بطاقة التفاصيل لهذا الاختبار بعد.</div>';
+      h+='</div></div>';
+    });
+    $('modal').innerHTML=h+'<button class="mclose" id="mclose">إغلاق</button>';
+    $('mscrim').classList.add('on'); $('mclose').addEventListener('click',closeModal);
+  }
+  function closeModal(){ $('mscrim').classList.remove('on'); }
+  $('mscrim').addEventListener('click',function(e){ if(e.target===$('mscrim')) closeModal(); });
+
+  $('exprev').addEventListener('click',function(){ if(exWk>0){exWk--;renderExams()} });
+  $('exnext').addEventListener('click',function(){ if(EX&&exWk<EX.weeks.length-1){exWk++;renderExams()} });
+  $('printBtn').addEventListener('click',function(){ window.print(); });
+
+  function showTab(t){
+    $('tabTeachers').classList.toggle('hidden',t!=='teachers');
+    $('tabExams').classList.toggle('hidden',t!=='exams');
+    document.body.classList.toggle('px',t==='exams');
+    Array.prototype.forEach.call(document.querySelectorAll('#tabs button'),function(b){ b.classList.toggle('on',b.getAttribute('data-t')===t); });
+    if(t==='exams') loadExams();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#tabs button'),function(b){
+    b.addEventListener('click',function(){ showTab(b.getAttribute('data-t')); });
+  });
 
   $('enter').addEventListener('click',auth);
   $('pw').addEventListener('keydown',function(e){ if(e.key==='Enter') auth(); });
