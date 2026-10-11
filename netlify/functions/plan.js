@@ -22,6 +22,17 @@ const AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو',
 const adig=x=>String(x).replace(/[0-9]/g,d=>'٠١٢٣٤٥٦٧٨٩'[+d]);
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
 
+// مؤشّر الأسبوع الحالي: بتوقيت الإمارات (لا توقيت الخادم UTC)، ويتحوّل يوم السبت منتصف الليل
+// استعداداً للأسبوع القادم (السبت+2 = الإثنين). upcoming=true حين يكون الأسبوع المعروض لم يبدأ بعد.
+function weekPointer(weeks, nowMs){
+  const dub=new Date(new Date(nowMs==null?Date.now():nowMs).toLocaleString('en-US',{timeZone:'Asia/Dubai'}));
+  const DAY=86400000, today=Date.UTC(dub.getFullYear(),dub.getMonth(),dub.getDate()), ref=today+2*DAY;
+  const t=iso=>{ const [y,m,d]=String(iso).split('-').map(Number); return Date.UTC(y,m-1,d); };
+  let cur=0; weeks.forEach((w,i)=>{ if(w.start && t(w.start)<=ref) cur=i; });
+  const upcoming=!!(weeks[cur] && weeks[cur].start && t(weeks[cur].start)>today);
+  return {cur, upcoming};
+}
+
 // قراءة تاريخ بداية الأسبوع بأي صيغة شائعة: نص (2-11-2026 / 02/11/2026 / 27-31/10/2026 / 29-03 / 9-10 / 2026 / 2026-11-02)
 // أو تاريخ إكسل حقيقي، وبأرقام عربية أو إنجليزية. rangeFirst: يفضّل صيغة المدى (أيام من-إلى).
 function parseStartDate(v, rangeFirst){
@@ -79,21 +90,27 @@ function pivot(buf){
     const mNum=title.match(/الأسبوع\s*(\d+)/); const num=mNum?+mNum[1]:weeks.length+1;
     const start=parseStartDate(title,false);
     const sections={}; SECTIONS.forEach(([c])=>sections[c]=[]);
+    // إعلانات الأسبوع: ملاحظة/تذكير/موعد مكتوب في صفّ لا يحمله أي درس (مثل «عطلة منتصف الفصل»)
+    const notices=[];
+    const addNotice=t=>{ t=clean(t); if(t.length>1 && !/^[-–—.\s]+$/.test(t) && !notices.includes(t)) notices.push(t); };
     for(let r=5;r<=maxRow;r++){
       const subject=fixSubject(cell(ws,r,C_SUBJECT));
       const teacher=clean(cell(ws,r,C_TEACHER));
-      if(!subject && !teacher) continue;
       const note=clean(cell(ws,r,C_NOTE)), exam=clean(cell(ws,r,C_EXAM)), rem=clean(cell(ws,r,C_REM));
+      const orphan=()=>{ addNotice(note); if(rem) addNotice('تذكير: '+rem); if(exam) addNotice('موعد اختبار: '+exam); };
+      if(!subject && !teacher){ orphan(); continue; }
       const [emoji,tint]=meta(subject);
+      let placed=false;
       for(const [code] of SECTIONS){
         const lesson=clean(cell(ws,r,COL[code]));
         if(!lesson) continue;
         const e={subject,teacher,lesson,emoji,tint};
         if(note) e.note=note; if(rem) e.reminder=rem; if(exam) e.exam=exam;
-        sections[code].push(e);
+        sections[code].push(e); placed=true;
       }
+      if(!placed) orphan();
     }
-    weeks.push({num,label:'الأسبوع '+adig(num),
+    weeks.push({num,label:'الأسبوع '+adig(num), notices,
       range:start?fmtRange(start):'', start:start?start.toISOString().slice(0,10):null, sections});
   }
   // قراءة إعلان إدارة المدرسة من تبويب announcement (A1 عنوان، A2 نص) — يُقرأ ولو كان مخفيًّا
@@ -174,9 +191,8 @@ function pivot(buf){
     }
   }
   weeks.sort((a,b)=>a.num-b.num);
-  const today=new Date(); today.setHours(0,0,0,0);
-  let cur=0; weeks.forEach((w,i)=>{ if(w.start && new Date(w.start)<=today) cur=i; });
-  return {school:SCHOOL,term:TERM,currentWeekIndex:cur, announcement, links, news,
+  const {cur,upcoming}=weekPointer(weeks);
+  return {school:SCHOOL,term:TERM,currentWeekIndex:cur, currentIsUpcoming:upcoming, announcement, links, news,
     sectionOrder:SECTIONS.map(([code,label])=>({code,label})), weeks};
 }
 
@@ -235,3 +251,4 @@ exports.handler = async (event) => {
   }
 };
 exports._pivot = pivot;
+exports._weekPointer = weekPointer;
