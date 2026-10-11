@@ -54,6 +54,24 @@ function fmtRange(start){
   return start.getMonth()===e.getMonth()?`${sd} – ${ed} ${AR_MONTHS[start.getMonth()]}`
     :`${sd} ${AR_MONTHS[start.getMonth()]} – ${ed} ${AR_MONTHS[e.getMonth()]}`;
 }
+// تصحيح تاريخ الأسبوع المقلوب (يوم/شهر): يحدث حين يُكتب 2/11/2026 فيقرؤه إكسل بترتيب الشهر أولاً (11 فبراير).
+// نقارن كل أسبوع بتسلسل الأسابيع المجاورة (≈ +7 أيام لكل أسبوع)، ونقلب اليوم والشهر إن كان القلب يوافق التسلسل والأصل لا يوافقه.
+function repairStartDates(weeks){
+  const DAY=86400000, tol=21*DAY;
+  const t=d=>Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());
+  weeks.forEach(w=>{
+    if(!w._d) return;
+    const day=w._d.getDate(), mon=w._d.getMonth()+1;
+    if(day>12 || day===mon) return;                               // لا يمكن القلب (اليوم لا يصلح شهراً) أو لا فرق
+    const alt=new Date(w._d.getFullYear(), day-1, mon);
+    const near=weeks.filter(x=>x!==w && x._d && Math.abs(x.num-w.num)<=3);
+    if(near.length<2) return;                                     // لا مرجع كافٍ: لا نغيّر شيئاً
+    const offs=near.map(x=>t(x._d)-7*DAY*x.num).sort((a,b)=>a-b); // الوسيط يتحمّل أسبوعاً أو اثنين خاطئين
+    const med=offs[Math.floor(offs.length/2)];
+    const expected=med+7*DAY*w.num;
+    if(Math.abs(t(w._d)-expected)>tol && Math.abs(t(alt)-expected)<=tol) w._d=alt;
+  });
+}
 function parseDate(s){
   const d=parseStartDate(s,true); if(!d) return null;
   if(d.getFullYear()<2026) d.setFullYear(2026); // تصحيح أمان: القالب القديم يكتب 2025 والصحيح 2026
@@ -147,11 +165,12 @@ function build(buf, withAudit){
       });
       sections[sec]=days;
     }
-    weeks.push({num, label:'الأسبوع '+num,
-      range:p.start?fmtRange(p.start):'', start:p.start?p.start.toISOString().slice(0,10):null,
-      sections});
+    weeks.push({num, label:'الأسبوع '+num, _d:p.start||null, range:'', start:null, sections});
   }
   weeks.sort((a,b)=>a.num-b.num);
+  repairStartDates(weeks);
+  const iso=d=>d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+  weeks.forEach(w=>{ w.range=w._d?fmtRange(w._d):''; w.start=w._d?iso(w._d):null; delete w._d; });
   const today=new Date(); today.setHours(0,0,0,0);
   let cur=0; weeks.forEach((w,i)=>{ if(w.start && new Date(w.start)<=today) cur=i; });
   const out={school:SCHOOL, currentWeekIndex:cur, sectionOrder:SECTIONS, dayOrder:DAYS, weeks};
