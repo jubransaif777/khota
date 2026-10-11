@@ -75,12 +75,14 @@
   table.map td.tot{font-variant-numeric:tabular-nums;font-weight:700;background:var(--surface-2)}
   table.map tfoot td,table.map tfoot th{background:var(--surface-2);font-weight:700}
   table.map tbody td.emp{color:var(--muted);opacity:.5}
-  .xc{display:inline-block;border:2px solid transparent;color:#fff;font-family:inherit;font-size:10.5px;font-weight:600;border-radius:8px;padding:3px 6px;margin:1px;cursor:pointer;white-space:nowrap}
-  .xc:active{transform:scale(.96)}
-  .xc.nocard{border-color:#C0392B}
-  .nc{display:inline-flex;align-items:center;justify-content:center;min-width:14px;height:14px;border-radius:50%;background:#C0392B;color:#fff;font-size:10px;font-weight:700;margin-inline-start:5px;padding:0 3px;line-height:1;vertical-align:middle}
-  .legend{font-size:11.5px;color:var(--muted);margin:8px 2px 14px}
-  .legend .nc{margin-inline-start:0;margin-inline-end:5px}
+  .xc{--sc:#556B6A;display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:11.5px;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-inline-start:5px solid var(--sc);border-radius:8px;padding:4px 7px;margin:2px;cursor:pointer;white-space:nowrap;line-height:1.3}
+  .xc:active{transform:scale(.97)}
+  .xc .st{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-size:10.5px;font-weight:700;line-height:1;flex:0 0 auto}
+  .xc.has .st{background:var(--done-soft);color:var(--done)}
+  .xc.miss{background:var(--partial-soft);border:1px dashed var(--partial);border-inline-start:5px solid var(--sc)}
+  .xc.miss .st{background:var(--partial);color:#fff}
+  .xc.demo{cursor:default;margin:0 3px;pointer-events:none}
+  .legend{font-size:11.5px;color:var(--muted);margin:8px 2px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px}
   .adesc{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.75}
   /* ---- التدقيق ---- */
   .acard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
@@ -101,7 +103,7 @@
   .mex .mb{padding:4px 14px 8px}
   .frow{display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px} .frow:first-child{border-top:none}
   .frow .fl{color:var(--muted);font-size:11.5px;min-width:74px} .frow .fv{flex:1}
-  .nocard{color:var(--partial);font-size:12.5px;padding:8px 0}
+  .nocard-note{color:var(--partial);font-size:12.5px;padding:8px 0}
   .mclose{width:100%;border:none;border-top:1px solid var(--line);background:none;color:var(--primary);font-weight:600;font-size:14.5px;padding:13px;cursor:pointer;font-family:inherit}
   /* ---- الطباعة (تظهر عند فتح تبويب الاختبارات فقط) ---- */
   .printhead,.sign{display:none}
@@ -116,9 +118,11 @@
     body.px table.map{min-width:0;width:100%}
     body.px table.map th,body.px table.map td{padding:2.5px 3px;font-size:9.5pt;border:1px solid #777;color:#000}
     body.px table.map thead th,body.px table.map th.sec,body.px table.map td.tot,body.px table.map tfoot td,body.px table.map tfoot th{background:#EEE!important}
-    body.px .xc{font-size:8.5pt;padding:1px 5px;border:1px solid rgba(0,0,0,.45)}
-    body.px .xc.nocard{border:1.5px solid #C0392B}
-    body.px .nc{background:#C0392B!important;color:#fff!important;min-width:11px;height:11px;font-size:8pt}
+    body.px .xc{font-size:8.5pt;padding:1px 4px;margin:1px;gap:3px;background:#fff!important;color:#000!important;border:1px solid #666;border-inline-start:3.5px solid var(--sc);border-radius:4px}
+    body.px .xc.miss{background:#E6E6E6!important;border:1px dashed #000;border-inline-start:3.5px solid var(--sc)}
+    body.px .xc .st{width:11px;height:11px;font-size:7.5pt;background:#fff!important;color:#000!important;border:1px solid #000}
+    body.px .xc.miss .st{background:#000!important;color:#fff!important}
+    body.px .xc.demo{margin:0 2px}
     body.px .legend{color:#000;font-size:9pt;margin:2mm 0 0}
     body.px .sign{display:flex;justify-content:space-between;gap:10mm;margin-top:9mm;font-size:10.5pt}
     body.px tr{break-inside:avoid}
@@ -169,7 +173,7 @@
         <div class="summary noprint" id="exsum"></div>
         <div class="actions noprint"><button class="btn print" id="printBtn">🖨 طباعة خريطة الأسبوع</button></div>
         <div class="mapwrap" id="exmap"></div>
-        <div class="legend"><span class="nc">؟</span>بإطار أحمر = اختبار لم تُدخل له بطاقة التفاصيل · انقر أي مادة لعرض تفاصيلها</div>
+        <div class="legend"><span><span class="xc has demo" style="--sc:#8892A0"><span>مادة</span><span class="st">✓</span></span>لها بطاقة تفاصيل</span><span><span class="xc miss demo" style="--sc:#8892A0"><span>مادة</span><span class="st">؟</span></span>بلا بطاقة (خلفية صفراء وإطار متقطع)</span><span>انقر أي مادة لعرض تفاصيلها</span></div>
         <div class="sign" id="sign"><span>اعتمد الإداري: ____________________</span><span>التوقيع: ______________</span><span>التاريخ: ______________</span></div>
         <div class="audit noprint" id="exaudit"></div>
       </div>
@@ -241,6 +245,7 @@
     MA:['رياضيات','#4B4B8F'],SC:['علوم','#2E7D6B'],AI:['ذكاء اصطناعي','#6B4F9E'],PE:['بدنية','#4F7A3A'],
     AA:['سمعية','#4A6D8C'],VA:['بصرية','#B5546A'],DR:['مسرح','#7A4A78'],DT:['تصميم','#8A6D3B']};
   function meta(c){ return META[c]||[c,'#556B6A']; }
+  function shortName(c){ return c==='AI'?'ذكاء':meta(c)[0]; }
   function escq(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
   function normAr(s){ return String(s||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/\s+/g,' ').trim(); }
   function codeOfSubject(subject){
@@ -321,7 +326,7 @@
         var dd=(w.sections[s]||[]).filter(function(x){return x.day===d[0]})[0];
         if(!dd||!dd.exams.length){ h+='<td class="emp">—</td>'; return; }
         h+='<td>'+dd.exams.map(function(e){ var m=meta(e.code);
-          return '<button class="xc'+(e.card?'':' nocard')+'" style="background:'+m[1]+'" data-s="'+s+'" data-d="'+d[0]+'">'+escq(m[0])+(e.card?'':'<span class="nc">؟</span>')+'</button>'; }).join('')+'</td>';
+          return '<button class="xc '+(e.card?'has':'miss')+'" style="--sc:'+m[1]+'" data-s="'+s+'" data-d="'+d[0]+'" title="'+(e.card?'لها بطاقة تفاصيل':'بلا بطاقة تفاصيل')+'"><span>'+escq(shortName(e.code))+'</span><span class="st">'+(e.card?'✓':'؟')+'</span></button>'; }).join('')+'</td>';
       });
       h+='<td class="tot">'+ar(perSec[s])+'</td></tr>';
     });
@@ -393,7 +398,7 @@
         if(c.type) h+='<div class="frow"><span class="fl">النوع</span><span class="fv">'+escq(c.type)+'</span></div>';
         if(c.marks) h+='<div class="frow"><span class="fl">الدرجة</span><span class="fv">'+escq(c.marks)+'</span></div>';
         if(c.sources) h+='<div class="frow"><span class="fl">المصادر</span><span class="fv">'+escq(c.sources)+'</span></div>';
-      } else h+='<div class="nocard">لم تُدخل بطاقة التفاصيل لهذا الاختبار بعد.</div>';
+      } else h+='<div class="nocard-note">لم تُدخل بطاقة التفاصيل لهذا الاختبار بعد.</div>';
       h+='</div></div>';
     });
     $('modal').innerHTML=h+'<button class="mclose" id="mclose">إغلاق</button>';
