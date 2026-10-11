@@ -22,6 +22,30 @@ const AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو',
 const adig=x=>String(x).replace(/[0-9]/g,d=>'٠١٢٣٤٥٦٧٨٩'[+d]);
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
 
+// قراءة تاريخ بداية الأسبوع بأي صيغة شائعة: نص (2-11-2026 / 02/11/2026 / 27-31/10/2026 / 29-03 / 9-10 / 2026 / 2026-11-02)
+// أو تاريخ إكسل حقيقي، وبأرقام عربية أو إنجليزية. rangeFirst: يفضّل صيغة المدى (أيام من-إلى).
+function parseStartDate(v, rangeFirst){
+  const mk=(y,m,d)=>{ y=+y;m=+m;d=+d; if(!(m>=1&&m<=12&&d>=1&&d<=31&&y>=2000&&y<=2100)) return null; return new Date(y,m-1,d); };
+  if(v instanceof Date && !isNaN(v)) return new Date(v.getFullYear(),v.getMonth(),v.getDate());
+  if(typeof v==='number' && v>20000 && v<80000){ const p=XLSX.SSF.parse_date_code(v); return p?mk(p.y,p.m,p.d):null; }
+  const s=String(v==null?'':v).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\s+/g,' ').trim();
+  if(!s) return null;
+  const SEP='[\\/\\-.]', DASH='[-–—]';
+  const iso=new RegExp('(\\d{4})\\s*'+SEP+'\\s*(\\d{1,2})\\s*'+SEP+'\\s*(\\d{1,2})');
+  const cross=new RegExp('(\\d{1,2})\\s*'+DASH+'\\s*\\d{1,2}\\s*'+SEP+'\\s*(\\d{1,2})\\s*'+DASH+'\\s*\\d{1,2}\\s*'+SEP+'\\s*(\\d{4})');
+  const range=new RegExp('(\\d{1,2})\\s*'+DASH+'\\s*\\d{1,2}\\s*'+SEP+'\\s*(\\d{1,2})\\s*'+SEP+'\\s*(\\d{4})');
+  const single=new RegExp('(\\d{1,2})\\s*'+SEP+'\\s*(\\d{1,2})\\s*'+SEP+'\\s*(\\d{4})');
+  let m;
+  if((m=s.match(iso))) return mk(m[1],m[2],m[3]);
+  const order=rangeFirst?['cross','range','single']:['single','cross','range'];
+  for(const t of order){
+    if(t==='cross' && (m=s.match(cross))) return mk(m[3],m[2],m[1]);
+    if(t==='range' && (m=s.match(range))) return mk(m[3],m[2],m[1]);
+    if(t==='single' && (m=s.match(single))) return mk(m[3],m[2],m[1]);
+  }
+  return null;
+}
+
 function meta(name){
   const n=name.toLowerCase();
   if(name.includes('إسلام')) return ['🕌','#1F6E4E'];
@@ -53,8 +77,7 @@ function pivot(buf){
     const maxRow=XLSX.utils.decode_range(ref).e.r+1;
     const title=clean(cell(ws,3,2));
     const mNum=title.match(/الأسبوع\s*(\d+)/); const num=mNum?+mNum[1]:weeks.length+1;
-    const mD=title.match(/(\d{2})-(\d{2})-(\d{4})/);
-    const start=mD? new Date(+mD[3],+mD[2]-1,+mD[1]) : null;
+    const start=parseStartDate(title,false);
     const sections={}; SECTIONS.forEach(([c])=>sections[c]=[]);
     for(let r=5;r<=maxRow;r++){
       const subject=fixSubject(cell(ws,r,C_SUBJECT));

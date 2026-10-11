@@ -16,6 +16,30 @@ const SUBJ={IS:'إسلامية',AR:'عربي',SS:'دراسات اجتماعية'
 const AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
+
+// قراءة تاريخ بداية الأسبوع بأي صيغة شائعة: نص (2-11-2026 / 02/11/2026 / 27-31/10/2026 / 29-03 / 9-10 / 2026 / 2026-11-02)
+// أو تاريخ إكسل حقيقي، وبأرقام عربية أو إنجليزية. rangeFirst: يفضّل صيغة المدى (أيام من-إلى).
+function parseStartDate(v, rangeFirst){
+  const mk=(y,m,d)=>{ y=+y;m=+m;d=+d; if(!(m>=1&&m<=12&&d>=1&&d<=31&&y>=2000&&y<=2100)) return null; return new Date(y,m-1,d); };
+  if(v instanceof Date && !isNaN(v)) return new Date(v.getFullYear(),v.getMonth(),v.getDate());
+  if(typeof v==='number' && v>20000 && v<80000){ const p=XLSX.SSF.parse_date_code(v); return p?mk(p.y,p.m,p.d):null; }
+  const s=String(v==null?'':v).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\s+/g,' ').trim();
+  if(!s) return null;
+  const SEP='[\\/\\-.]', DASH='[-–—]';
+  const iso=new RegExp('(\\d{4})\\s*'+SEP+'\\s*(\\d{1,2})\\s*'+SEP+'\\s*(\\d{1,2})');
+  const cross=new RegExp('(\\d{1,2})\\s*'+DASH+'\\s*\\d{1,2}\\s*'+SEP+'\\s*(\\d{1,2})\\s*'+DASH+'\\s*\\d{1,2}\\s*'+SEP+'\\s*(\\d{4})');
+  const range=new RegExp('(\\d{1,2})\\s*'+DASH+'\\s*\\d{1,2}\\s*'+SEP+'\\s*(\\d{1,2})\\s*'+SEP+'\\s*(\\d{4})');
+  const single=new RegExp('(\\d{1,2})\\s*'+SEP+'\\s*(\\d{1,2})\\s*'+SEP+'\\s*(\\d{4})');
+  let m;
+  if((m=s.match(iso))) return mk(m[1],m[2],m[3]);
+  const order=rangeFirst?['cross','range','single']:['single','cross','range'];
+  for(const t of order){
+    if(t==='cross' && (m=s.match(cross))) return mk(m[3],m[2],m[1]);
+    if(t==='range' && (m=s.match(range))) return mk(m[3],m[2],m[1]);
+    if(t==='single' && (m=s.match(single))) return mk(m[3],m[2],m[1]);
+  }
+  return null;
+}
 const cell=(ws,r,c)=>{const x=ws[XLSX.utils.encode_cell({r:r-1,c:c-1})];return x?x.v:null;};
 const isSection=s=>/^[5-8][GA][12]$/.test(s);
 function dayToken(s){s=String(s);
@@ -31,10 +55,9 @@ function fmtRange(start){
     :`${sd} ${AR_MONTHS[start.getMonth()]} – ${ed} ${AR_MONTHS[e.getMonth()]}`;
 }
 function parseDate(s){
-  const m=clean(s).match(/(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{4})/);
-  if(!m) return null;
-  let y=+m[3]; if(y<2026) y=2026; // تصحيح أمان: الملف يكتب 2025 والصحيح 2026
-  return new Date(y, +m[2]-1, +m[1]);
+  const d=parseStartDate(s,true); if(!d) return null;
+  if(d.getFullYear()<2026) d.setFullYear(2026); // تصحيح أمان: القالب القديم يكتب 2025 والصحيح 2026
+  return d;
 }
 
 // يقرأ بطاقات الاختبار من تبويب cards إن وُجد: مفتاح = week|DAY|section|code
