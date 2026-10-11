@@ -191,6 +191,11 @@
   .print-head{display:none; margin:0 4px 12px}
   .print-head h2{margin:0; font-size:18px}
   .print-head p{margin:3px 0 0; color:#555; font-size:13px}
+  .wnotice{margin-top:14px;display:flex;gap:12px;align-items:flex-start;background:var(--alert-soft);border:1px solid color-mix(in srgb,var(--alert) 40%,var(--line));border-radius:var(--radius);padding:14px 15px}
+  .wnotice .wi{font-size:22px;line-height:1.2}
+  .wnotice .wt{font-size:11.5px;font-weight:700;color:var(--alert-ink);margin-bottom:3px}
+  .wnotice .wtx{font-size:15.5px;font-weight:600;color:var(--ink);line-height:1.7}
+  .wnotice .wtx+.wtx{margin-top:4px;padding-top:4px;border-top:1px solid color-mix(in srgb,var(--alert) 25%,transparent)}
 </style>
 </head>
 <body>
@@ -216,6 +221,7 @@
     </div>
     <button class="nav" id="nextWk" aria-label="الأسبوع التالي">›</button>
   </nav>
+  <div id="weekNotice"></div>
   <section class="glance" id="glance"></section>
   <div class="listhead"><span class="cnt"><b id="subjCount">٠</b> مواد منشورة</span>
     <button class="toggle-all" id="toggleAll">توسيع الكل</button></div>
@@ -279,6 +285,13 @@ function initApp(){
   function setChoice(c,s,t){if(!choices[c])choices[c]={};choices[c][s]=t;saveChoices(choices)}
   function clearChoice(c,s){if(choices[c]){delete choices[c][s];saveChoices(choices)}}
 
+  function weekNotices(){ return (weeks[wkIndex].notices)||[]; }
+  function renderNotice(){
+    var n=weekNotices(), box=$('weekNotice');
+    if(!n.length){ box.innerHTML=''; return; }
+    box.innerHTML='<div class="wnotice"><span class="wi">📢</span><div><div class="wt">إعلان الأسبوع</div>'+
+      n.map(function(t){ return '<div class="wtx">'+esc(t)+'</div>'; }).join('')+'</div></div>';
+  }
   function renderGlance(){
     var e=entries(),tests=0,subs={};
     e.forEach(function(x){if(x.exam)tests++;subs[x.subject]=1});
@@ -354,7 +367,8 @@ function initApp(){
 
   function renderCards(){
     cardsEl.innerHTML='';
-    if(!weekHasAny()){cardsEl.innerHTML='<div class="empty-block"><span class="big">🗓️</span>لم تُنشر خطة هذا الأسبوع بعد.<br>ستظهر تلقائياً فور إدخال المعلمين لها في الملف.</div>';$('subjCount').textContent=ar(0);return;}
+    if(!weekHasAny()){ if(weekNotices().length){ $('subjCount').textContent=ar(0); return; }
+      cardsEl.innerHTML='<div class="empty-block"><span class="big">🗓️</span>لم تُنشر خطة هذا الأسبوع بعد.<br>ستظهر تلقائياً فور إدخال المعلمين لها في الملف.</div>';$('subjCount').textContent=ar(0);return;}
     var e=entries();
     if(!e.length){cardsEl.innerHTML='<div class="empty-block"><span class="big">📭</span>لا توجد مواد منشورة لهذه الشعبة هذا الأسبوع.</div>';$('subjCount').textContent=ar(0);return;}
     var order=[],bySubj={};
@@ -375,12 +389,16 @@ function initApp(){
   function renderWeek(){
     var w=weeks[wkIndex];
     $('wkLabel').textContent=westify(w.label);$('wkRange').textContent=westify(w.range);
+    $('nowTag').textContent=D.currentIsUpcoming?'الأسبوع القادم':'هذا الأسبوع';
     $('nowTag').style.display=(wkIndex===D.currentWeekIndex)?'inline-block':'none';
     $('weekCenter').classList.toggle('is-now', wkIndex===D.currentWeekIndex);
     $('prevWk').disabled=(wkIndex===0);$('nextWk').disabled=(wkIndex===weeks.length-1);
     $('printHead').innerHTML='<h2>'+labelOf(selCode)+' — '+westify(w.label)+'</h2><p>الخطة الأسبوعية · '+westify(w.range)+' · '+D.school+'</p>';
   }
-  function renderAll(){$('classLabel').textContent=labelOf(selCode);renderWeek();renderGlance();renderCards()}
+  function renderAll(){$('classLabel').textContent=labelOf(selCode);renderWeek();renderNotice();
+    var holiday=!weekHasAny()&&weekNotices().length>0;
+    $('glance').style.display=holiday?'none':''; document.querySelector('.listhead').style.display=holiday?'none':'';
+    renderGlance();renderCards()}
   $('schoolLine').textContent=D.school;
   $('prevWk').addEventListener('click',function(){if(wkIndex>0){wkIndex--;renderAll()}});
   $('nextWk').addEventListener('click',function(){if(wkIndex<weeks.length-1){wkIndex++;renderAll()}});
