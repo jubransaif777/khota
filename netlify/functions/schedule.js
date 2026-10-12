@@ -28,7 +28,7 @@ const isSection=s=>/^\d{1,2}[A-Za-z]{1,2}\d{0,2}$/.test(s);
 const periodNum=s=>{ const m=clean(s).match(/(\d+)/); return m?+m[1]:null; };
 
 // نمط كل مادة: أيقونة + لون (نفس ألوان بقية صفحات الموقع) + اسم مختصر للخلية
-function styleFor(subject){
+function builtinStyle(subject){
   const t=normAr(subject);
   if(/اسلام/.test(t)) return {short:'إسلامية',emoji:'🕌',color:'#1F6E4E'};
   if(/عرب/.test(t)) return {short:'عربي',emoji:'📖',color:'#0E5A54'};
@@ -42,7 +42,28 @@ function styleFor(subject){
   if(/بصر|فنون|فني|\bart\b/.test(t)) return {short:'بصرية',emoji:'🎨',color:'#B5546A'};
   if(/مسرح|drama/.test(t)) return {short:'مسرح',emoji:'🎭',color:'#7A4A78'};
   if(/تصميم|تقني|design/.test(t)) return {short:'تصميم',emoji:'⚙️',color:'#8A6D3B'};
-  return {short:clean(subject),emoji:'📘',color:'#556B6A'};
+  return null;
+}
+
+
+// مادة غير معروفة (كاللغة الصينية): اسم مختصر تلقائي + لون ثابت لكل مادة + أيقونة لغة للمواد اللغوية
+const PALETTE=['#8C4A2F','#2F7D8C','#7A5C99','#B07D2B','#4D7C5B','#9C4668','#4F6D7A','#A0522D'];
+function autoStyle(subject){
+  const sub=clean(subject);
+  let h=0; for(const ch of sub) h=(h*31+ch.codePointAt(0))>>>0;
+  const lang=/لغه|language|chinese|french|urdu|hindi|german|spanish|korean|japanese|صين|فرنس|اردو|هند|الماني|اسبان/.test(normAr(sub));
+  let short=sub.replace(/^(اللغة|لغة|التربية|الفنون|فنون|مادة)\s+/,'').replace(/^ال(?=\S{3,})/,'').trim();
+  if(!short) short=sub;
+  if(short.length>10) short=short.slice(0,9)+'…';
+  return {short, emoji:lang?'🗣️':'📘', color:PALETTE[h%PALETTE.length]};
+}
+// الأولوية: ما كتبه المستخدم في تبويب subjects ← النمط المضمَّن ← التلقائي
+function styleFor(subject,custom){
+  const base=builtinStyle(subject)||autoStyle(subject);
+  const c=custom&&custom[normAr(subject)];
+  if(!c) return base;
+  return {short:c.short||base.short, emoji:c.emoji||base.emoji,
+          color:/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c.color||'')?c.color:base.color};
 }
 
 function timeText(v){
@@ -58,22 +79,76 @@ function timeText(v){
 function rowsOf(ws){ return XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false,blankrows:true}); }
 function sheetNamed(wb,re){ const n=wb.SheetNames.find(x=>re.test(x.trim())); return n?wb.Sheets[n]:null; }
 
+// ---- أسماء المعلمين: تطبيع متسامح (مسافات/علامات/ترتيب كلمات) ----
+const nameKey=x=>normAr(x).replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim();
+const compactKey=x=>nameKey(x).replace(/\s/g,'');
+const tokensOf=x=>nameKey(x).split(' ').filter(Boolean);
+function lev(a,b){ const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){ const cur=[i]; for(let k=1;k<=n;k++){ cur[k]=Math.min(prev[k]+1,cur[k-1]+1,prev[k-1]+(a[i-1]===b[k-1]?0:1)); } prev=cur; }
+  return prev[n]; }
+
 function parseTeachersTab(wb){
-  const ws=sheetNamed(wb,/^teachers?$/i); const map={};
-  if(!ws||!ws['!ref']) return map;
+  const ws=sheetNamed(wb,/^teachers?$/i); const out=[];
+  if(!ws||!ws['!ref']) return out;
   const rows=rowsOf(ws);
   let hr=-1, cN=0, cS=1;
   for(let r=0;r<Math.min(rows.length,8);r++){
-    let n=-1,s=-1;
-    rows[r].forEach((v,c)=>{ const t=normAr(v); if(!t||t.length>40) return; if(/معلم|teacher/.test(t)) n=c; else if(/ماده|subject/.test(t)) s=c; });
-    if(n>=0 && s>=0 && n!==s){ hr=r; cN=n; cS=s; break; }
+    let n=-1,sc=-1;
+    rows[r].forEach((v,c)=>{ const t=normAr(v); if(!t||t.length>40) return; if(/معلم|teacher/.test(t)) n=c; else if(/ماده|subject/.test(t)) sc=c; });
+    if(n>=0 && sc>=0 && n!==sc){ hr=r; cN=n; cS=sc; break; }
+  }
+  // لو تغيّرت العناوين: نفترض العمودين الأول والثاني ونتجاوز الصفوف الطويلة (الملاحظات)
+  for(let r=hr+1;r<rows.length;r++){
+    const name=clean(rows[r][cN]), sub=clean(rows[r][cS]);
+    if(!name || !sub) continue;
+    if(hr<0 && name.length>40) continue;
+    out.push({name,subject:sub,key:nameKey(name),compact:compactKey(name),tokens:tokensOf(name),used:false});
+  }
+  return out;
+}
+
+// تبويب subjects (اختياري): المادة | الاختصار | الأيقونة | اللون — وهو أيضاً مصدر القائمة المنسدلة
+function parseSubjectsTab(wb){
+  const ws=sheetNamed(wb,/^subjects?$/i); const map={};
+  if(!ws||!ws['!ref']) return map;
+  const rows=rowsOf(ws);
+  let hr=-1, cS=-1, cH=-1, cE=-1, cC=-1;
+  for(let r=0;r<Math.min(rows.length,8);r++){
+    let s2=-1,h2=-1,e2=-1,c2=-1;
+    rows[r].forEach((v,c)=>{ const t=normAr(v); if(!t||t.length>40) return;
+      if(/ماده|subject/.test(t)) s2=c; else if(/اختصار|مختصر|short/.test(t)) h2=c; else if(/ايقونه|رمز|emoji|icon/.test(t)) e2=c; else if(/لون|color/.test(t)) c2=c; });
+    if(s2>=0){ hr=r; cS=s2; cH=h2; cE=e2; cC=c2; break; }
   }
   if(hr<0) return map;
   for(let r=hr+1;r<rows.length;r++){
-    const name=clean(rows[r][cN]), sub=clean(rows[r][cS]);
-    if(name && sub) map[normAr(name)]=sub;
+    const sub=clean(rows[r][cS]); if(!sub) continue;
+    map[normAr(sub)]={short:cH>=0?clean(rows[r][cH]):'', emoji:cE>=0?clean(rows[r][cE]):'', color:cC>=0?clean(rows[r][cC]):''};
   }
   return map;
+}
+
+// مطابقة اسم المعلم في الجدول بصفّه في teachers: دقيق ← بلا مسافات ← تقاطع كلمات (فريد فقط)
+function resolveTeacher(name, trows){
+  const k=nameKey(name), c=compactKey(name), t=tokensOf(name);
+  let hit=trows.filter(r=>r.key===k);
+  if(hit.length) return {row:hit[0], via:'exact'};
+  hit=trows.filter(r=>r.compact===c);
+  if(hit.length) return {row:hit[0], via:'spaces'};
+  const cand=trows.filter(r=>{
+    const a=t.length<=r.tokens.length?t:r.tokens, b=t.length<=r.tokens.length?r.tokens:t;
+    return a.length>0 && a.every(w=>b.includes(w));
+  });
+  const ok=cand.filter(r=>Math.min(t.length,r.tokens.length)>=2 || cand.length===1);
+  const subs=[...new Set(ok.map(r=>normAr(r.subject)))];
+  if(ok.length && subs.length===1) return {row:ok[0], via:'words'};
+  return {row:null, via:'none'};
+}
+function suggest(name, trows){
+  const c=compactKey(name), t=tokensOf(name);
+  return trows.map(r=>({r, shared:r.tokens.filter(w=>t.includes(w)).length, d:lev(c,r.compact)}))
+    .filter(x=>x.shared>0 || x.d<=3)
+    .sort((a,b)=>b.shared-a.shared || a.d-b.d).slice(0,2).map(x=>({name:x.r.name,subject:x.r.subject}));
 }
 
 function parseTimesTab(wb){
@@ -108,7 +183,8 @@ function sortSections(a,b){
 
 function build(buf){
   const wb=XLSX.read(buf,{type:'buffer'});
-  const subjOf=parseTeachersTab(wb);
+  const trows=parseTeachersTab(wb);
+  const custom=parseSubjectsTab(wb);
   const times=parseTimesTab(wb);
 
   // تبويب الجدول: schedule إن وُجد، وإلا أول تبويب ليس teachers/times
@@ -156,14 +232,21 @@ function build(buf){
   }
 
   // جدول المعلمين الموحّد
-  const unmapped=[];
+  const unmapped=[], unmappedDetail=[], fuzzy=[];
   const teachers=teacherNames.map(name=>{
     const vacant=/^(شاغر|vacan)/i.test(name);
-    const subject=subjOf[normAr(name)]||'';
-    if(!subject && !vacant) unmapped.push(name);
-    const st=subject?styleFor(subject):{short:vacant?'حصة':name.split(' ')[0],emoji:vacant?'📘':'👤',color:'#6B7A78'};
+    let subject='';
+    if(!vacant){
+      const m=resolveTeacher(name,trows);
+      if(m.row){ subject=m.row.subject; m.row.used=true; if(m.via!=='exact') fuzzy.push({schedule:name,teachers:m.row.name,subject,via:m.via}); }
+      else { unmapped.push(name); unmappedDetail.push({name,suggestions:suggest(name,trows)}); }
+    } else { const m=resolveTeacher(name,trows); if(m.row){ subject=m.row.subject; m.row.used=true; } }
+    const st=subject?styleFor(subject,custom):{short:vacant?'حصة':name.split(' ')[0],emoji:vacant?'📘':'👤',color:'#6B7A78'};
     return {name:vacant?'':name, subject, short:st.short, emoji:st.emoji, color:st.color, vacant};
   });
+  const unusedTeacherRows=trows.filter(r=>!r.used).map(r=>({name:r.name,subject:r.subject}));
+  const subjectsInUse=[...new Set(teachers.map(t=>t.subject).filter(Boolean))];
+  const extraSubjects=subjectsInUse.filter(x=>!builtinStyle(x)).map(x=>({subject:x,short:styleFor(x,custom).short,inSubjectsTab:!!custom[normAr(x)]}));
   const idx={}; teacherNames.forEach((n,i)=>idx[n]=i);
 
   const sections=Object.keys(grid).sort(sortSections);
@@ -180,7 +263,10 @@ function build(buf){
       outGrid[sec][d.token]=arr;
     }
   }
-  return {status:'ok', school:SCHOOL, sections, days, teachers, grid:outGrid, times, warnings:{unmapped}};
+  let slots=0, noTime=0;
+  for(const d of days){ for(let p=1;p<=d.periods;p++){ slots++; const t=(times.byDay[d.token]&&times.byDay[d.token][p])||times.default[p]; if(!t) noTime++; } }
+  const warnings={unmapped, unmappedDetail, fuzzy, unusedTeacherRows, extraSubjects, times:{missing:noTime,total:slots}, hasTeachersTab:trows.length>0, hasSubjectsTab:Object.keys(custom).length>0};
+  return {status:'ok', school:SCHOOL, sections, days, teachers, grid:outGrid, times, warnings};
 }
 
 // ---------- تنزيل الملف من SharePoint (نفس أسلوب بقية المحرّكات) ----------
