@@ -88,7 +88,7 @@
   .acard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
   .acard .ah{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .acard .at{font-size:14px;font-weight:700} .acard .an{font-size:12px;font-weight:700;padding:2px 11px;border-radius:20px;white-space:nowrap}
-  .an.ok{background:var(--done-soft);color:var(--done)} .an.warn{background:var(--partial-soft);color:var(--partial)}
+  .an.ok{background:var(--done-soft);color:var(--done)} .an.warn{background:var(--partial-soft);color:var(--partial)} .an.info{background:var(--primary-soft);color:var(--primary-ink)}
   .acard .ok-line{font-size:12.5px;color:var(--muted);margin-top:6px}
   .arow{font-size:13px;padding:8px 0;border-top:1px solid var(--line);margin-top:8px}
   .arow small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
@@ -145,7 +145,7 @@
   <div id="panel" class="hidden">
     <div id="panelHead"><h1>لوحة الإدارة</h1>
     <div class="sub">مدرسة المعيريض للحلقة الثانية بنين</div></div>
-    <div class="tabs" id="tabs"><button data-t="teachers" class="on">متابعة المعلمين</button><button data-t="exams">الاختبارات</button></div>
+    <div class="tabs" id="tabs"><button data-t="teachers" class="on">متابعة المعلمين</button><button data-t="exams">الاختبارات</button><button data-t="sched">جدول الحصص</button></div>
     <div id="tabTeachers">
     <div class="weeknav">
       <button id="prev">‹</button>
@@ -178,6 +178,7 @@
         <div class="audit noprint" id="exaudit"></div>
       </div>
     </div>
+    <div id="tabSched" class="hidden"></div>
   </div>
 </div>
 <div class="mscrim" id="mscrim"><div class="modal" id="modal"></div></div>
@@ -414,13 +415,61 @@
   function showTab(t){
     $('tabTeachers').classList.toggle('hidden',t!=='teachers');
     $('tabExams').classList.toggle('hidden',t!=='exams');
+    $('tabSched').classList.toggle('hidden',t!=='sched');
     document.body.classList.toggle('px',t==='exams');
     Array.prototype.forEach.call(document.querySelectorAll('#tabs button'),function(b){ b.classList.toggle('on',b.getAttribute('data-t')===t); });
     if(t==='exams') loadExams();
+    if(t==='sched') loadSched();
   }
   Array.prototype.forEach.call(document.querySelectorAll('#tabs button'),function(b){
     b.addEventListener('click',function(){ showTab(b.getAttribute('data-t')); });
   });
+
+
+  /* ================= تبويب جدول الحصص (تشخيص) ================= */
+  var SCH=null, schLoaded=false;
+  function loadSched(){
+    if(schLoaded) return; schLoaded=true;
+    $('tabSched').innerHTML='<div class="empty">… جارٍ فحص ملف جدول الحصص</div>';
+    fetch('/.netlify/functions/schedule',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+      SCH=j; renderSched();
+    }).catch(function(){ schLoaded=false; $('tabSched').innerHTML='<div class="empty">تعذّر الاتصال. حدّث الصفحة.</div>'; });
+  }
+  function renderSched(){
+    var j=SCH, box=$('tabSched');
+    if(!j||j.status==='nourl'){ box.innerHTML='<div class="acard"><div class="ah"><span class="at">رابط الجدول غير مضبوط</span><span class="an warn">!</span></div><div class="adesc">ضع رابط مشاركة ملف الجدول في Netlify باسم SCHEDULE_SHARE_URL ثم أعد النشر (Trigger deploy).</div></div>'; return; }
+    if(j.status!=='ok'){ box.innerHTML='<div class="acard"><div class="ah"><span class="at">تعذّرت قراءة ملف الجدول</span><span class="an warn">!</span></div><div class="adesc">'+(j.status==='badformat'?'لم يُعثر على تبويب schedule أو على صفّ الأيام والحصص. تأكّد أن الجدول يبدأ من الخلية A1.':'تحقّق من رابط المشاركة وصلاحيته (Anyone with the link).')+'</div></div>'; return; }
+    var w=j.warnings||{}, um=w.unmappedDetail||[], unused=w.unusedTeacherRows||[], fz=w.fuzzy||[], ex=w.extraSubjects||[], tm=w.times||{missing:0,total:0};
+    var weekly=0; (j.days||[]).forEach(function(d){ weekly+=d.periods; });
+    var issues=um.length+unused.length+(tm.missing>0?1:0)+(w.hasTeachersTab?0:1);
+    function card(title,badge,kind,desc,rows,okText){
+      return '<div class="acard"><div class="ah"><span class="at">'+title+'</span><span class="an '+kind+'">'+badge+'</span></div>'+
+        (desc?'<div class="adesc">'+desc+'</div>':'')+(rows||('<div class="ok-line">'+okText+'</div>'))+'</div>';
+    }
+    var h='<div class="summary">'+
+      '<div class="sc"><div class="n">'+ar((j.sections||[]).length)+'</div><div class="t">شعبة</div></div>'+
+      '<div class="sc"><div class="n">'+ar((j.teachers||[]).filter(function(t){return !t.vacant}).length)+'</div><div class="t">معلم في الجدول</div></div>'+
+      '<div class="sc"><div class="n">'+ar(weekly)+'</div><div class="t">حصة أسبوعياً لكل شعبة</div></div>'+
+      '<div class="sc '+(issues?'miss':'done')+'"><div class="n">'+ar(issues)+'</div><div class="t">ملاحظات</div></div></div>';
+    if(!w.hasTeachersTab) h+=card('تبويب teachers غير موجود','!','warn','بدونه لا يعرف الموقع مادة كل معلم، فيعرض اسم المعلم في الخانة بدل المادة. أضف تبويباً باسم teachers: عمود لاسم المعلم كما في الجدول، وعمود للمادة.','<span></span>','');
+    h+=card('معلمون بلا مادة',um.length?ar(um.length):'✓',um.length?'warn':'ok',
+      um.length?'اسم المعلم في جدول الحصص لا يطابق أي اسم في تبويب teachers، فيظهر اسمه في الخانة بدل المادة. صحّح الاسم في teachers ليطابق الجدول.':'',
+      um.length?um.map(function(u){ var sg=(u.suggestions||[]).map(function(x){return '«'+escq(x.name)+'» (مادته: '+escq(x.subject)+')'}).join(' أو ');
+        return '<div class="arow"><b>'+escq(u.name)+'</b><small>'+(sg?'الأقرب في teachers: '+sg:'لا يوجد اسم قريب في teachers — أضف هذا المعلم ومادته')+'</small></div>'; }).join(''):'',
+      'كل معلم في الجدول مربوط بمادته.');
+    h+=card('أسماء في teachers لا توجد في الجدول',unused.length?ar(unused.length):'✓',unused.length?'warn':'ok',
+      unused.length?'قد تكون أخطاء إملائية في الاسم (فتلك سبب «معلمون بلا مادة» أعلاه) أو معلمين غادروا ويمكن حذفهم.':'',
+      unused.length?unused.map(function(u){ return '<div class="arow"><b>'+escq(u.name)+'</b><small>المادة: '+escq(u.subject)+'</small></div>'; }).join(''):'',
+      'كل الأسماء في teachers تطابق معلمين في الجدول.');
+    if(fz.length) h+=card('مطابقات تقريبية',ar(fz.length),'info','طابق الموقع هذه الأسماء رغم اختلاف بسيط (مسافة أو كلمة زائدة). تأكّد أنها للشخص نفسه.',
+      fz.map(function(f){ return '<div class="arow"><b>'+escq(f.schedule)+'</b><small>طُبّقت عليه مادة «'+escq(f.teachers)+'»: '+escq(f.subject)+'</small></div>'; }).join(''),'');
+    if(ex.length) h+=card('مواد خارج القائمة المعتادة',ar(ex.length),'info','تظهر باسمها المختصر. لتخصيص الاختصار أو الأيقونة أو اللون أضفها في تبويب subjects.',
+      ex.map(function(x){ return '<div class="arow"><b>'+escq(x.subject)+'</b><small>تظهر في الخانة: «'+escq(x.short)+'» '+(x.inSubjectsTab?'· معرَّفة في subjects':'· اختصار تلقائي')+'</small></div>'; }).join(''),'');
+    h+=card('أوقات الحصص',tm.missing?ar(tm.missing):'✓',tm.missing?'warn':'ok',
+      tm.missing?'حصص بلا وقت بداية ونهاية. اكتب أوقاتها في تبويب times (عدد الحصص الناقصة '+ar(tm.missing)+' من '+ar(tm.total)+').':'',
+      tm.missing?'<span></span>':'', 'أوقات كل الحصص مضبوطة.');
+    box.innerHTML=h;
+  }
 
   $('enter').addEventListener('click',auth);
   $('pw').addEventListener('keydown',function(e){ if(e.key==='Enter') auth(); });
