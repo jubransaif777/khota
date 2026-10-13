@@ -127,6 +127,16 @@
     body.px .sign{display:flex;justify-content:space-between;gap:10mm;margin-top:9mm;font-size:10.5pt}
     body.px tr{break-inside:avoid}
   }
+
+  /* تبويبات اللوحة تلتفّ على صفّين في الهاتف */
+  .tabs{flex-wrap:wrap}.tabs button{flex:1 1 calc(25% - 6px);min-width:0;line-height:1.3}
+  @media (max-width:520px){.tabs button{flex-basis:calc(50% - 6px)}}
+  /* التقييمات */
+  .rbar{height:12px;border-radius:6px;background:var(--surface-2);overflow:hidden;flex:1}.rbar>i{display:block;height:100%;background:#E0A526;border-radius:6px}
+  .rrow{display:flex;align-items:center;gap:10px;margin-top:9px;font-size:13px}.rrow .rl{min-width:44px;font-weight:700}.rrow .rn{min-width:40px;text-align:left;color:var(--muted)}
+  .rstars{color:#E0A526;letter-spacing:1px;font-size:15px}.rstars .off{color:var(--line)}
+  .fchips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 4px}.fchip{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:20px;padding:7px 14px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer}.fchip.on{background:var(--primary);border-color:var(--primary);color:#fff}
+  .rcom{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:14px;line-height:1.7}.rcom small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}.rcom .none{color:var(--muted);font-size:12.5px}
 </style>
 </head>
 <body>
@@ -145,7 +155,7 @@
   <div id="panel" class="hidden">
     <div id="panelHead"><h1>لوحة الإدارة</h1>
     <div class="sub">مدرسة المعيريض للحلقة الثانية بنين</div></div>
-    <div class="tabs" id="tabs"><button data-t="teachers" class="on">متابعة المعلمين</button><button data-t="exams">الاختبارات</button><button data-t="sched">جدول الحصص</button></div>
+    <div class="tabs" id="tabs"><button data-t="teachers" class="on">متابعة المعلمين</button><button data-t="exams">الاختبارات</button><button data-t="sched">جدول الحصص</button><button data-t="rate">التقييمات</button></div>
     <div id="tabTeachers">
     <div class="weeknav">
       <button id="prev">‹</button>
@@ -179,6 +189,7 @@
       </div>
     </div>
     <div id="tabSched" class="hidden"></div>
+    <div id="tabRate" class="hidden"></div>
   </div>
 </div>
 <div class="mscrim" id="mscrim"><div class="modal" id="modal"></div></div>
@@ -416,10 +427,12 @@
     $('tabTeachers').classList.toggle('hidden',t!=='teachers');
     $('tabExams').classList.toggle('hidden',t!=='exams');
     $('tabSched').classList.toggle('hidden',t!=='sched');
+    $('tabRate').classList.toggle('hidden',t!=='rate');
     document.body.classList.toggle('px',t==='exams');
     Array.prototype.forEach.call(document.querySelectorAll('#tabs button'),function(b){ b.classList.toggle('on',b.getAttribute('data-t')===t); });
     if(t==='exams') loadExams();
     if(t==='sched') loadSched();
+    if(t==='rate') loadRate();
   }
   Array.prototype.forEach.call(document.querySelectorAll('#tabs button'),function(b){
     b.addEventListener('click',function(){ showTab(b.getAttribute('data-t')); });
@@ -469,6 +482,50 @@
       tm.missing?'حصص بلا وقت بداية ونهاية. اكتب أوقاتها في تبويب times (عدد الحصص الناقصة '+ar(tm.missing)+' من '+ar(tm.total)+').':'',
       tm.missing?'<span></span>':'', 'أوقات كل الحصص مضبوطة.');
     box.innerHTML=h;
+  }
+
+
+  /* ================= تبويب التقييمات ================= */
+  var RT=null, rtLoaded=false, rtFilter='all';
+  var PAGE_LABEL={'/':'الخطة الأسبوعية','/schedule':'جدول الحصص','/exams':'مواعيد الاختبارات','/news':'إعلانات مهمة','/links':'روابط مفيدة','other':'أخرى'};
+  function starStr(n){ var s=''; for(var i=1;i<=5;i++) s+=(i<=n?'★':'<span class="off">★</span>'); return s; }
+  function rtDate(ts){ try{ return ar(new Date(ts).toLocaleString('en-GB',{timeZone:'Asia/Dubai',day:'numeric',month:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})); }catch(e){ return ''; } }
+  function loadRate(force){
+    if(rtLoaded&&!force) return; rtLoaded=true;
+    $('tabRate').innerHTML='<div class="empty">… جارٍ تحميل التقييمات</div>';
+    fetch('/.netlify/functions/rating',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list',pw:PW}),cache:'no-store'})
+      .then(function(r){ return r.json().then(function(j){ return {s:r.status,j:j}; }); })
+      .then(function(x){
+        if(!x.j||!x.j.ok){ rtLoaded=false;
+          $('tabRate').innerHTML='<div class="acard"><div class="ah"><span class="at">تعذّر قراءة التقييمات</span><span class="an warn">!</span></div><div class="adesc">'+
+            (x.j&&x.j.error==='storage'?'مخزن التقييمات غير متاح. أضِف "@netlify/blobs" إلى package.json ثم أعد النشر (Trigger deploy).':(x.s===401?'كلمة المرور غير مقبولة.':'خطأ غير متوقع.'))+'</div></div>'; return; }
+        RT=x.j; renderRate();
+      }).catch(function(){ rtLoaded=false; $('tabRate').innerHTML='<div class="acard"><div class="ah"><span class="at">دالة التقييم غير متاحة</span><span class="an warn">!</span></div><div class="adesc">تأكّد من رفع rating.js إلى netlify/functions وإضافة "@netlify/blobs" إلى package.json، ثم أعد النشر.</div></div>'; });
+  }
+  function renderRate(){
+    var j=RT, box=$('tabRate');
+    var head='<div class="actions"><button class="btn print" id="rtRefresh">↻ تحديث</button></div>';
+    if(!j.count){ box.innerHTML=head+'<div class="empty">لا توجد تقييمات بعد. ستظهر هنا فور أول تقييم من الزوّار.</div>'; $('rtRefresh').addEventListener('click',function(){loadRate(true)}); return; }
+    var kind=j.avg>=4?'done':(j.avg>=3?'partial':'miss');
+    var h=head+'<div class="summary">'+
+      '<div class="sc '+kind+'"><div class="n">'+ar(j.avg.toFixed(1).replace('.','٫'))+' ★</div><div class="t">متوسط التقييم</div></div>'+
+      '<div class="sc"><div class="n">'+ar(j.count)+'</div><div class="t">تقييم</div></div>'+
+      '<div class="sc"><div class="n">'+ar(j.withComment)+'</div><div class="t">بملاحظة</div></div>'+
+      '<div class="sc"><div class="n">'+ar(j.last7)+'</div><div class="t">آخر ٧ أيام</div></div></div>';
+    var mx=Math.max.apply(null,j.dist.concat([1])), d='';
+    for(var s=5;s>=1;s--){ var n=j.dist[s-1]; d+='<div class="rrow"><span class="rl">'+ar(s)+' ★</span><span class="rbar"><i style="width:'+Math.round(n/mx*100)+'%"></i></span><span class="rn">'+ar(n)+'</span></div>'; }
+    h+='<div class="acard"><div class="ah"><span class="at">توزيع النجوم</span></div>'+d+'</div>';
+    var pg=Object.keys(j.byPage).sort(function(a,b){return j.byPage[b].count-j.byPage[a].count}).map(function(k){
+      return '<div class="rrow"><span class="rl" style="min-width:130px">'+escq(PAGE_LABEL[k]||k)+'</span><span class="rstars">'+starStr(Math.round(j.byPage[k].avg))+'</span><span class="rn">'+ar(j.byPage[k].avg.toFixed(1).replace('.','٫'))+' ('+ar(j.byPage[k].count)+')</span></div>'; }).join('');
+    h+='<div class="acard"><div class="ah"><span class="at">التقييم حسب الصفحة</span></div><div class="adesc">الصفحة التي كان الزائر فيها حين قيّم.</div>'+pg+'</div>';
+    var list=j.recent.filter(function(x){ return rtFilter==='com'?!!x.comment:(rtFilter==='low'?x.stars<=3:true); });
+    h+='<div class="acard"><div class="ah"><span class="at">أحدث التقييمات</span><span class="an info">'+ar(list.length)+'</span></div>'+
+      '<div class="fchips"><button class="fchip'+(rtFilter==='all'?' on':'')+'" data-f="all">الكل</button><button class="fchip'+(rtFilter==='com'?' on':'')+'" data-f="com">بملاحظة</button><button class="fchip'+(rtFilter==='low'?' on':'')+'" data-f="low">٣ نجوم فأقل</button></div>'+
+      (list.length?list.map(function(x){ return '<div class="rcom"><span class="rstars">'+starStr(x.stars)+'</span> '+(x.comment?escq(x.comment).replace(/\n/g,'<br>'):'<span class="none">بلا ملاحظة</span>')+
+        '<small>'+rtDate(x.ts)+' · '+escq(PAGE_LABEL[x.page]||x.page)+' · '+(x.dev==='m'?'📱 هاتف':'💻 حاسوب')+'</small></div>'; }).join(''):'<div class="ok-line">لا توجد عناصر بهذا الفلتر.</div>')+'</div>';
+    box.innerHTML=h;
+    $('rtRefresh').addEventListener('click',function(){ loadRate(true); });
+    Array.prototype.forEach.call(box.querySelectorAll('.fchip'),function(b){ b.addEventListener('click',function(){ rtFilter=b.getAttribute('data-f'); renderRate(); }); });
   }
 
   $('enter').addEventListener('click',auth);
