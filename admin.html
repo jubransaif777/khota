@@ -168,6 +168,8 @@
       <button data-f="late">المتأخرون فقط</button>
     </div>
     <div id="tablebox"></div>
+    <div id="strayBox"></div>
+    <div id="nameBox"></div>
     <div class="foot">تُقرأ البيانات مباشرة من ملف المدرسة · لوحة إدارية</div>
     </div>
 
@@ -218,8 +220,26 @@
       .catch(function(){ $('err').textContent='تعذّر الاتصال، حاول مجدداً'; });
   }
 
+  function renderStrays(w){
+    var box=$('strayBox'), st=w.strays||[]; if(!st.length){ box.innerHTML=''; return; }
+    var KL={note:'ملاحظات',exam:'موعد الاختبار',reminder:'التذكير'};
+    box.innerHTML='<div class="acard" style="margin-top:14px"><div class="ah"><span class="at">نصوص كُتبت بلا درس</span><span class="an warn">'+ar(st.length)+'</span></div>'+
+      '<div class="adesc">كُتبت في عمود (ملاحظات / موعد الاختبار / تذكير) لكن لا توجد دروس لهذا المعلّم في خانات الشعب، فلا تظهر لأولياء الأمور. اطلب منه نقلها إلى خانات الشعب المعنية. وللإعلان العام اكتبه في صفّ ليس فيه اسم معلم ولا مادة.</div>'+
+      st.map(function(x){ return '<div class="arow"><b>'+esc(x.teacher)+'</b>'+(x.subject?' — '+esc(x.subject):'')+'<small>'+KL[x.kind]+': «'+esc(x.text)+'»</small></div>'; }).join('')+'</div>';
+  }
+  function renderNames(){
+    var box=$('nameBox'), mg=DATA.nameMerges||[], sp=DATA.nameSuspects||[]; if(!mg.length&&!sp.length){ box.innerHTML=''; return; }
+    var h='';
+    if(mg.length) h+='<div class="acard" style="margin-top:14px"><div class="ah"><span class="at">أسماء دُمجت تلقائياً</span><span class="an info">'+ar(mg.length)+'</span></div>'+
+      '<div class="adesc">ظهر الاسم بصيغتين لمعلّم واحد (اختصار أو مسافة)، فوحّدهما الموقع تحت الاسم الأقصر، فلا يُسأل ولي الأمر «اختر معلم ابنك» خطأً. تأكّد أنهما الشخص نفسه.</div>'+
+      mg.map(function(m){ return '<div class="arow"><b>'+esc(m.from)+'</b> ← '+esc(m.to)+'<small>'+esc(m.subject)+'</small></div>'; }).join('')+'</div>';
+    if(sp.length) h+='<div class="acard" style="margin-top:14px"><div class="ah"><span class="at">أسماء متشابهة لم تُدمج</span><span class="an warn">'+ar(sp.length)+'</span></div>'+
+      '<div class="adesc">قد يكونان المعلّم نفسه لكن الموقع لم يجزم. إن كانا شخصاً واحداً فاكتب الاسم بصيغة واحدة في ملف الخطة.</div>'+
+      sp.map(function(m){ return '<div class="arow"><b>'+esc(m.a)+'</b> و <b>'+esc(m.b)+'</b><small>'+esc(m.subject)+'</small></div>'; }).join('')+'</div>';
+    box.innerHTML=h;
+  }
   function render(){
-    var w=DATA.weeks[wk];
+    var w=DATA.weeks[wk]; renderStrays(w); renderNames();
     $('wklbl').textContent=w.label; $('wkrng').textContent=w.range;
     $('wkmid').classList.toggle('now', wk===DATA.currentWeekIndex);
     $('prev').disabled=(wk===0); $('next').disabled=(wk===DATA.weeks.length-1);
