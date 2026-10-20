@@ -14,10 +14,59 @@ const SECTIONS = [['5G','الخامس العام'],['5A','الخامس المت�
   ['7G','السابع العام'],['7A','السابع المتقدم'],
   ['8G','الثامن العام'],['8A','الثامن المتقدم']];
 const COL = {'5G':3,'5A':4,'6G':5,'6A':6,'7G':7,'7A':8,'8G':9,'8A':10};
-const C_TEACHER=1, C_SUBJECT=2;
+const C_TEACHER=1, C_SUBJECT=2, C_NOTE=11, C_EXAM=12, C_REM=13;
 
 const adig=x=>String(x).replace(/[0-9]/g,d=>'٠١٢٣٤٥٦٧٨٩'[+d]);
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
+
+// توحيد أسماء المعلمين: الاسم نفسه بصيغ مختلفة (اختصار الاسم الرباعي/الخماسي، أو اختلاف المسافات) = معلّم واحد.
+// القواعد (داخل المادة الواحدة فقط): تطابق بلا مسافات ← دمج · اسم أقصر يطابق الأطول في أول كلمة وآخر كلمة ← دمج
+// · الاسمان في أسبوع واحد للمادة نفسها ← شخصان مختلفان (لا دمج) · تشابه أضعف ← لا دمج، ويُعرض كاقتراح للإدارة.
+function buildNameMap(recs){
+  const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim();
+  const toks=s=>norm(s).split(' ').filter(Boolean), compact=s=>norm(s).replace(/\s/g,'');
+  const bySub=new Map();
+  recs.forEach(r=>{ if(!r.teacher||!r.subject) return;
+    let o=bySub.get(r.subject); if(!o){ o={names:new Map(),weeks:new Map()}; bySub.set(r.subject,o); }
+    const n=o.names.get(r.teacher)||{count:0,last:0}; n.count++; n.last=Math.max(n.last,r.week||0); o.names.set(r.teacher,n);
+    if(!o.weeks.has(r.week)) o.weeks.set(r.week,new Set()); o.weeks.get(r.week).add(r.teacher); });
+  const map=new Map(), merges=[], suspects=[];
+  for(const [sub,o] of bySub){
+    const names=[...o.names.keys()]; if(names.length<2) continue;
+    const together=(a,b)=>{ for(const s of o.weeks.values()) if(s.has(a)&&s.has(b)) return true; return false; };
+    const parent={}; names.forEach(n=>parent[n]=n);
+    const find=x=>{ while(parent[x]!==x){ parent[x]=parent[parent[x]]; x=parent[x]; } return x; };
+    const union=(a,b)=>{ parent[find(a)]=find(b); };
+    for(let i=0;i<names.length;i++) for(let j=i+1;j<names.length;j++){
+      const a=names[i], b=names[j];
+      if(compact(a)===compact(b)){ union(a,b); continue; }
+      const ta=toks(a), tb=toks(b), S=ta.length<=tb.length?ta:tb, L=ta.length<=tb.length?tb:ta;
+      if(!(S.length>=2 && S.length<L.length && S.every(w=>L.includes(w)))) continue;
+      if(together(a,b)) continue;
+      if(S[0]===L[0] && S[S.length-1]===L[L.length-1]) union(a,b); else suspects.push({subject:sub,a,b});
+    }
+    const groups={}; names.forEach(n=>{ const k=find(n); (groups[k]=groups[k]||[]).push(n); });
+    for(const g of Object.values(groups)){
+      if(g.length<2) continue;
+      g.sort((x,y)=>toks(x).length-toks(y).length || o.names.get(y).count-o.names.get(x).count || o.names.get(y).last-o.names.get(x).last || x.length-y.length);
+      g.slice(1).forEach(n=>{ map.set(sub+'||'+n,g[0]); merges.push({subject:sub,from:n,to:g[0]}); });
+    }
+  }
+  // اقتراح لا يتكرر لزوج دُمج أصلاً
+  const merged=new Set(merges.map(m=>m.subject+'||'+m.from+'||'+m.to));
+  return {map,merges,suspects:suspects.filter(s=>!map.has(s.subject+'||'+s.a)&&!map.has(s.subject+'||'+s.b))};
+}
+
+// مؤشّر الأسبوع الحالي: بتوقيت الإمارات (لا توقيت الخادم UTC)، ويتحوّل يوم السبت منتصف الليل
+// استعداداً للأسبوع القادم (السبت+2 = الإثنين). upcoming=true حين يكون الأسبوع المعروض لم يبدأ بعد.
+function weekPointer(weeks, nowMs){
+  const dub=new Date(new Date(nowMs==null?Date.now():nowMs).toLocaleString('en-US',{timeZone:'Asia/Dubai'}));
+  const DAY=86400000, today=Date.UTC(dub.getFullYear(),dub.getMonth(),dub.getDate()), ref=today+2*DAY;
+  const t=iso=>{ const [y,m,d]=String(iso).split('-').map(Number); return Date.UTC(y,m-1,d); };
+  let cur=0; weeks.forEach((w,i)=>{ if(w.start && t(w.start)<=ref) cur=i; });
+  const upcoming=!!(weeks[cur] && weeks[cur].start && t(weeks[cur].start)>today);
+  return {cur, upcoming};
+}
 
 // قراءة تاريخ بداية الأسبوع بأي صيغة شائعة: نص (2-11-2026 / 02/11/2026 / 27-31/10/2026 / 29-03 / 9-10 / 2026 / 2026-11-02)
 // أو تاريخ إكسل حقيقي، وبأرقام عربية أو إنجليزية. rangeFirst: يفضّل صيغة المدى (أيام من-إلى).
@@ -75,23 +124,37 @@ function follow(buf){
     if(start){const e=new Date(start.getTime()+4*864e5);
       range=start.getMonth()===e.getMonth()?`${adig(start.getDate())} – ${adig(e.getDate())} ${AR_MONTHS[start.getMonth()]}`
         :`${adig(start.getDate())} ${AR_MONTHS[start.getMonth()]} – ${adig(e.getDate())} ${AR_MONTHS[e.getMonth()]}`;}
-    const rows=[];
+    const rows=[], strayRows=[];
     for(let r=5;r<=maxRow;r++){
       const subject=fixSubject(cell(ws,r,C_SUBJECT));
       const teacher=clean(cell(ws,r,C_TEACHER));
       if(!teacher && !subject) continue;
+      { let any=0; for(const [code] of SECTIONS) if(clean(cell(ws,r,COL[code]))) any++;      // صفّ تدريس بلا دروس: نحتفظ بنصوصه للتنبيه
+        if(!any) strayRows.push({teacher,subject,note:clean(cell(ws,r,C_NOTE)),exam:clean(cell(ws,r,C_EXAM)),rem:clean(cell(ws,r,C_REM))}); }
       if(!teacher || /^شاغر/.test(teacher)) continue; // تجاهل الصفوف الشاغرة
       const cells={}; let filled=0, teaches=0;
       for(const [code] of SECTIONS){
         const v=clean(cell(ws,r,COL[code]));
-        // نعتبر الشعبة "مطلوبة" لهذا المعلّم إن كان يدرّسها في أي أسبوع — نحسبها لاحقًا
+        // نعتبر الشعبة \"مطلوبة\" لهذا المعلّم إن كان يدرّسها في أي أسبوع — نحسبها لاحقًا
         cells[code]=v?1:0; if(v){filled++;}
       }
       rows.push({teacher,subject,cells,filled});
     }
-    weeks.push({num,label:'الأسبوع '+adig(num),range,start:start?start.toISOString().slice(0,10):null,rows});
+    // نصوص كُتبت في عمود (ملاحظات/موعد/تذكير) بلا دروس في خانات الشعب، في أسبوع فيه دروس: لا تظهر لأولياء الأمور فيُنبَّه عليها
+    const strays=[]; const okT=t=>t.length>1 && !/^[-–—.\s]+$/.test(t);
+    if(rows.some(x=>x.filled>0)) strayRows.forEach(x=>{
+      if(okT(x.note)) strays.push({teacher:x.teacher,subject:x.subject,kind:'note',text:x.note});
+      if(okT(x.exam)) strays.push({teacher:x.teacher,subject:x.subject,kind:'exam',text:x.exam});
+      if(okT(x.rem))  strays.push({teacher:x.teacher,subject:x.subject,kind:'reminder',text:x.rem});
+    });
+    weeks.push({num,label:'الأسبوع '+adig(num),range,start:start?start.toISOString().slice(0,10):null,rows,strays});
   }
   weeks.sort((a,b)=>a.num-b.num);
+  // توحيد أسماء المعلمين (نفس القواعد في plan.js) حتى لا يظهر معلّم واحد كمعلّمين: أحدهما «متأخّر» خطأً
+  const recs=[]; weeks.forEach(w=>w.rows.forEach(r=>recs.push({week:w.num,subject:r.subject,teacher:r.teacher})));
+  const nm=buildNameMap(recs);
+  if(nm.map.size) weeks.forEach(w=>{ w.rows.forEach(r=>{ const c=nm.map.get(r.subject+'||'+r.teacher); if(c) r.teacher=c; });
+    (w.strays||[]).forEach(x=>{ const c=nm.map.get(x.subject+'||'+x.teacher); if(c) x.teacher=c; }); });
   // الشعب التي "يدرّسها" كل معلّم/مادة = اتحاد الشعب المعبأة له عبر كل الأسابيع
   const taughtKey={}; // teacher||subject -> Set(codes)
   for(const w of weeks) for(const row of w.rows){
@@ -112,9 +175,8 @@ function follow(buf){
       partial:active.filter(r=>r.status==='partial').length,
       missing:active.filter(r=>r.status==='missing').length};
   }
-  const today=new Date();today.setHours(0,0,0,0);let cur=0;
-  weeks.forEach((w,i)=>{if(w.start&&new Date(w.start)<=today)cur=i;});
-  return {sectionOrder:SECTIONS.map(([code,label])=>({code,label})),currentWeekIndex:cur,weeks};
+  const {cur,upcoming}=weekPointer(weeks);
+  return {sectionOrder:SECTIONS.map(([code,label])=>({code,label})),currentWeekIndex:cur,currentIsUpcoming:upcoming,weeks,nameMerges:nm.merges,nameSuspects:nm.suspects};
 }
 
 exports.handler = async (event) => {
@@ -128,3 +190,4 @@ exports.handler = async (event) => {
   }catch(e){return {statusCode:500,headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({error:String(e&&e.message||e)})};}
 };
 exports._follow = follow;
+exports._weekPointer = weekPointer;

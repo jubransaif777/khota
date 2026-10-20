@@ -22,6 +22,44 @@ const AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو',
 const adig=x=>String(x).replace(/[0-9]/g,d=>'٠١٢٣٤٥٦٧٨٩'[+d]);
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
 
+// توحيد أسماء المعلمين: الاسم نفسه بصيغ مختلفة (اختصار الاسم الرباعي/الخماسي، أو اختلاف المسافات) = معلّم واحد.
+// القواعد (داخل المادة الواحدة فقط): تطابق بلا مسافات ← دمج · اسم أقصر يطابق الأطول في أول كلمة وآخر كلمة ← دمج
+// · الاسمان في أسبوع واحد للمادة نفسها ← شخصان مختلفان (لا دمج) · تشابه أضعف ← لا دمج، ويُعرض كاقتراح للإدارة.
+function buildNameMap(recs){
+  const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim();
+  const toks=s=>norm(s).split(' ').filter(Boolean), compact=s=>norm(s).replace(/\s/g,'');
+  const bySub=new Map();
+  recs.forEach(r=>{ if(!r.teacher||!r.subject) return;
+    let o=bySub.get(r.subject); if(!o){ o={names:new Map(),weeks:new Map()}; bySub.set(r.subject,o); }
+    const n=o.names.get(r.teacher)||{count:0,last:0}; n.count++; n.last=Math.max(n.last,r.week||0); o.names.set(r.teacher,n);
+    if(!o.weeks.has(r.week)) o.weeks.set(r.week,new Set()); o.weeks.get(r.week).add(r.teacher); });
+  const map=new Map(), merges=[], suspects=[];
+  for(const [sub,o] of bySub){
+    const names=[...o.names.keys()]; if(names.length<2) continue;
+    const together=(a,b)=>{ for(const s of o.weeks.values()) if(s.has(a)&&s.has(b)) return true; return false; };
+    const parent={}; names.forEach(n=>parent[n]=n);
+    const find=x=>{ while(parent[x]!==x){ parent[x]=parent[parent[x]]; x=parent[x]; } return x; };
+    const union=(a,b)=>{ parent[find(a)]=find(b); };
+    for(let i=0;i<names.length;i++) for(let j=i+1;j<names.length;j++){
+      const a=names[i], b=names[j];
+      if(compact(a)===compact(b)){ union(a,b); continue; }
+      const ta=toks(a), tb=toks(b), S=ta.length<=tb.length?ta:tb, L=ta.length<=tb.length?tb:ta;
+      if(!(S.length>=2 && S.length<L.length && S.every(w=>L.includes(w)))) continue;
+      if(together(a,b)) continue;
+      if(S[0]===L[0] && S[S.length-1]===L[L.length-1]) union(a,b); else suspects.push({subject:sub,a,b});
+    }
+    const groups={}; names.forEach(n=>{ const k=find(n); (groups[k]=groups[k]||[]).push(n); });
+    for(const g of Object.values(groups)){
+      if(g.length<2) continue;
+      g.sort((x,y)=>toks(x).length-toks(y).length || o.names.get(y).count-o.names.get(x).count || o.names.get(y).last-o.names.get(x).last || x.length-y.length);
+      g.slice(1).forEach(n=>{ map.set(sub+'||'+n,g[0]); merges.push({subject:sub,from:n,to:g[0]}); });
+    }
+  }
+  // اقتراح لا يتكرر لزوج دُمج أصلاً
+  const merged=new Set(merges.map(m=>m.subject+'||'+m.from+'||'+m.to));
+  return {map,merges,suspects:suspects.filter(s=>!map.has(s.subject+'||'+s.a)&&!map.has(s.subject+'||'+s.b))};
+}
+
 // مؤشّر الأسبوع الحالي: بتوقيت الإمارات (لا توقيت الخادم UTC)، ويتحوّل يوم السبت منتصف الليل
 // استعداداً للأسبوع القادم (السبت+2 = الإثنين). upcoming=true حين يكون الأسبوع المعروض لم يبدأ بعد.
 function weekPointer(weeks, nowMs){
@@ -90,15 +128,16 @@ function pivot(buf){
     const mNum=title.match(/الأسبوع\s*(\d+)/); const num=mNum?+mNum[1]:weeks.length+1;
     const start=parseStartDate(title,false);
     const sections={}; SECTIONS.forEach(([c])=>sections[c]=[]);
-    // إعلانات الأسبوع: ملاحظة/تذكير/موعد مكتوب في صفّ لا يحمله أي درس (مثل «عطلة منتصف الفصل»)
-    const notices=[];
-    const addNotice=t=>{ t=clean(t); if(t.length>1 && !/^[-–—.\s]+$/.test(t) && !notices.includes(t)) notices.push(t); };
+    // إعلانات الأسبوع: نصٌّ في عمود (ملاحظات/موعد/تذكير) لا يحمله أي درس.
+    //  • صفّ بلا اسم معلم ولا مادة  → إعلان عام لكل الأولياء دائماً.
+    //  • صفّ معلم/مادة بلا دروس      → إعلان عام فقط إن كان الأسبوع كله بلا دروس (عطلة)؛ وإلا يُحجب (غالباً أُدخل في العمود الخطأ) ويظهر للإدارة في لوحة المتابعة.
+    const general=[], stray=[];
     for(let r=5;r<=maxRow;r++){
       const subject=fixSubject(cell(ws,r,C_SUBJECT));
       const teacher=clean(cell(ws,r,C_TEACHER));
       const note=clean(cell(ws,r,C_NOTE)), exam=clean(cell(ws,r,C_EXAM)), rem=clean(cell(ws,r,C_REM));
-      const orphan=()=>{ addNotice(note); if(rem) addNotice('تذكير: '+rem); if(exam) addNotice('موعد اختبار: '+exam); };
-      if(!subject && !teacher){ orphan(); continue; }
+      const texts=()=>[note, rem?'تذكير: '+rem:'', exam?'موعد اختبار: '+exam:''];
+      if(!subject && !teacher){ texts().forEach(t=>general.push(t)); continue; }
       const [emoji,tint]=meta(subject);
       let placed=false;
       for(const [code] of SECTIONS){
@@ -108,8 +147,11 @@ function pivot(buf){
         if(note) e.note=note; if(rem) e.reminder=rem; if(exam) e.exam=exam;
         sections[code].push(e); placed=true;
       }
-      if(!placed) orphan();
+      if(!placed) texts().forEach(t=>stray.push(t));
     }
+    const weekHasLessons=Object.values(sections).some(a=>a.length>0);
+    const notices=[];
+    (weekHasLessons?general:general.concat(stray)).forEach(t=>{ t=clean(t); if(t.length>1 && !/^[-–—.\s]+$/.test(t) && !notices.includes(t)) notices.push(t); });
     weeks.push({num,label:'الأسبوع '+adig(num), notices,
       range:start?fmtRange(start):'', start:start?start.toISOString().slice(0,10):null, sections});
   }
@@ -191,6 +233,11 @@ function pivot(buf){
     }
   }
   weeks.sort((a,b)=>a.num-b.num);
+  { // توحيد أسماء المعلمين عبر الأسابيع كلها قبل أن تجمعها الصفحة (مُحدِّد «اختر معلم ابنك»)
+    const recs=[]; weeks.forEach(w=>Object.values(w.sections).forEach(a=>a.forEach(e=>recs.push({week:w.num,subject:e.subject,teacher:e.teacher}))));
+    const nm=buildNameMap(recs);
+    if(nm.map.size) weeks.forEach(w=>Object.values(w.sections).forEach(a=>a.forEach(e=>{ const c=nm.map.get(e.subject+'||'+e.teacher); if(c) e.teacher=c; })));
+  }
   const {cur,upcoming}=weekPointer(weeks);
   return {school:SCHOOL,term:TERM,currentWeekIndex:cur, currentIsUpcoming:upcoming, announcement, links, news,
     sectionOrder:SECTIONS.map(([code,label])=>({code,label})), weeks};
@@ -252,3 +299,4 @@ exports.handler = async (event) => {
 };
 exports._pivot = pivot;
 exports._weekPointer = weekPointer;
+exports._buildNameMap = buildNameMap;
