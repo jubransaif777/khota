@@ -228,14 +228,17 @@
       st.map(function(x){ return '<div class="arow"><b>'+esc(x.teacher)+'</b>'+(x.subject?' — '+esc(x.subject):'')+'<small>'+KL[x.kind]+': «'+esc(x.text)+'»</small></div>'; }).join('')+'</div>';
   }
   function renderNames(){
-    var box=$('nameBox'), mg=DATA.nameMerges||[], sp=DATA.nameSuspects||[]; if(!mg.length&&!sp.length){ box.innerHTML=''; return; }
+    var box=$('nameBox'), mg=DATA.nameMerges||[], sp=DATA.nameSuspects||[], rt=DATA.retired||[]; if(!mg.length&&!sp.length&&!rt.length){ box.innerHTML=''; return; }
     var h='';
-    if(mg.length) h+='<div class="acard" style="margin-top:14px"><div class="ah"><span class="at">أسماء دُمجت تلقائياً</span><span class="an info">'+ar(mg.length)+'</span></div>'+
-      '<div class="adesc">ظهر الاسم بصيغتين لمعلّم واحد (اختصار أو مسافة)، فوحّدهما الموقع تحت الاسم الأقصر، فلا يُسأل ولي الأمر «اختر معلم ابنك» خطأً. تأكّد أنهما الشخص نفسه.</div>'+
-      mg.map(function(m){ return '<div class="arow"><b>'+esc(m.from)+'</b> ← '+esc(m.to)+'<small>'+esc(m.subject)+'</small></div>'; }).join('')+'</div>';
-    if(sp.length) h+='<div class="acard" style="margin-top:14px"><div class="ah"><span class="at">أسماء متشابهة لم تُدمج</span><span class="an warn">'+ar(sp.length)+'</span></div>'+
-      '<div class="adesc">قد يكونان المعلّم نفسه لكن الموقع لم يجزم. إن كانا شخصاً واحداً فاكتب الاسم بصيغة واحدة في ملف الخطة.</div>'+
-      sp.map(function(m){ return '<div class="arow"><b>'+esc(m.a)+'</b> و <b>'+esc(m.b)+'</b><small>'+esc(m.subject)+'</small></div>'; }).join('')+'</div>';
+    if(mg.length) h+='<div class="acard" style="margin-top:14px"><div class="ah"><span class="at">أسماء وُحِّدت</span><span class="an info">'+ar(mg.length)+'</span></div>'+
+      '<div class="adesc">ظهر الاسم بصيغتين لمعلّم واحد، فوحّدهما الموقع تحت الاسم المعتمد، فلا يُسأل ولي الأمر «اختر معلم ابنك» خطأً. «يدوي» = من تبويب names، وغيره دمج تلقائي: تأكّد أنه الشخص نفسه.</div>'+
+      mg.map(function(m){ return '<div class="arow"><b>'+esc(m.from)+'</b> ← '+esc(m.to)+'<small>'+esc(m.subject)+(m.manual?' · يدوي':' · تلقائي')+'</small></div>'; }).join('')+'</div>';
+    if(sp.length) h+='<div class="acard" style="margin-top:14px"><div class="ah"><span class="at">أسماء متشابهة لم تُوحَّد</span><span class="an warn">'+ar(sp.length)+'</span></div>'+
+      '<div class="adesc">قد يكونان المعلّم نفسه لكن الموقع لم يجزم، فيظهر أحياناً كمعلّمَين. إن كانا شخصاً واحداً فأضِف في تبويب <b>names</b> بملف الخطة سطراً: العمود الأول الاسم الذي تريد تغييره، والثاني الاسم المعتمد.</div>'+
+      sp.map(function(m){ return '<div class="arow"><b>'+esc(m.a)+'</b> و <b>'+esc(m.b)+'</b><small>'+esc(m.subject)+(m.sameWeek?' · ظهرا في الأسبوع نفسه (قد يكون للمعلّم صفّان بكتابتين)':'')+'</small></div>'; }).join('')+'</div>';
+    if(rt.length) h+='<div class="acard" style="margin-top:14px"><div class="ah"><span class="at">معلّمون متوقّفون (مستثنون)</span><span class="an info">'+ar(rt.length)+'</span></div>'+
+      '<div class="adesc">وُسِموا «متوقف» في تبويب names، فلا يظهرون في المتابعة ولا في مُحدِّد المعلم بصفحة الأولياء. تبقى دروسهم القديمة في الأسابيع السابقة.</div>'+
+      rt.map(function(n){ return '<div class="arow"><b>'+esc(n)+'</b></div>'; }).join('')+'</div>';
     box.innerHTML=h;
   }
   function render(){

@@ -278,6 +278,12 @@ function initApp(){
     });
   })});
 
+  // المعلمون «الحاليون» (يحسبهم الخادم): لهم صفّ في أسبوع اليوم ويدرّسون هذه الشعبة حالياً. فلا يُعرض معلّم غادر أو انتقل منها.
+  (function(){ var act=D.activeTeachers, ret=D.retired||[]; if(!act) return;
+    sections.forEach(function(sec){ var u=unionTeachers[sec.code]; Object.keys(u).forEach(function(subj){
+      var a=(act[sec.code]||{})[subj];
+      u[subj]=(a&&a.length)?a.slice():u[subj].filter(function(t){return ret.indexOf(t)<0}); }); }); })();
+
   // حفظ اختيار المعلّم على جهاز ولي الأمر
   function loadChoices(){try{return JSON.parse(localStorage.getItem('ssuae_choices')||'{}')}catch(e){return {}}}
   function saveChoices(o){try{localStorage.setItem('ssuae_choices',JSON.stringify(o))}catch(e){}}
