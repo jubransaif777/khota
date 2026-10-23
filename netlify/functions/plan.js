@@ -22,18 +22,33 @@ const AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو',
 const adig=x=>String(x).replace(/[0-9]/g,d=>'٠١٢٣٤٥٦٧٨٩'[+d]);
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
 
-// توحيد أسماء المعلمين: الاسم نفسه بصيغ مختلفة (اختصار الاسم الرباعي/الخماسي، أو اختلاف المسافات) = معلّم واحد.
-// القواعد (داخل المادة الواحدة فقط): تطابق بلا مسافات ← دمج · اسم أقصر يطابق الأطول في أول كلمة وآخر كلمة ← دمج
-// · الاسمان في أسبوع واحد للمادة نفسها ← شخصان مختلفان (لا دمج) · تشابه أضعف ← لا دمج، ويُعرض كاقتراح للإدارة.
-function buildNameMap(recs){
-  const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim();
-  const toks=s=>norm(s).split(' ').filter(Boolean), compact=s=>norm(s).replace(/\s/g,'');
+// ====== أسماء المعلمين: تطبيع + تبويب names + دمج تلقائي + «الشعب الحالية» ======
+const RECENT_WEEKS = 2;   // «الشعب الحالية» للمعلم = ما أدخله في آخر أسبوعين أدخل فيهما شيئاً
+const _norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim();
+const _toks=s=>_norm(s).split(' ').filter(Boolean), _compact=s=>_norm(s).replace(/\s/g,'');
+
+// تبويب اختياري باسم names في ملف الخطة: (الاسم في الملف) | (الاسم المعتمد) | (الحالة)
+//   • مرادف: اكتب الاسم المعتمد  → كل كتابة للاسم الأول تُقرأ كالاسم المعتمد.
+//   • متوقّف: اكتب أي كلمة في عمود الحالة (متوقف/غادر/نُقل) → يُستثنى من المتابعة ومن مُحدِّد المعلم.
+function parseNamesTab(wb){
+  const out={alias:[],retired:[]}; const sn=wb.SheetNames.find(n=>/^names?$/i.test(String(n).trim())); if(!sn) return out;
+  const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:'',raw:false});
+  rows.forEach((r,i)=>{ const a=clean(r[0]), b=clean(r[1]), c=clean(r[2]); if(!a) return; if(i<2 && /^(الاسم|اسم|name)/i.test(a)) return;
+    if(c) out.retired.push(a); else if(b && _compact(b)!==_compact(a)) out.alias.push([a,b]); });
+  return out;
+}
+
+// توحيد أسماء الشخص الواحد بصيغ مختلفة. القواعد (داخل المادة الواحدة): مرادف يدوي من names ← دائماً · تطابق بلا مسافات ← دمج ·
+// اسم أقصر يطابق الأطول في أول كلمة وآخر كلمة ← دمج · الاسمان في أسبوع واحد ← لا دمج (شخصان)، يُعرض كاقتراح · تشابه أضعف ← اقتراح فقط.
+function buildNameMap(recs, alias){
+  const explicit=new Map(); (alias||[]).forEach(([from,to])=>explicit.set(_compact(from),to));
+  const ex=n=>explicit.get(_compact(n))||n;
   const bySub=new Map();
-  recs.forEach(r=>{ if(!r.teacher||!r.subject) return;
+  recs.forEach(r=>{ if(!r.teacher||!r.subject) return; const t=ex(r.teacher);
     let o=bySub.get(r.subject); if(!o){ o={names:new Map(),weeks:new Map()}; bySub.set(r.subject,o); }
-    const n=o.names.get(r.teacher)||{count:0,last:0}; n.count++; n.last=Math.max(n.last,r.week||0); o.names.set(r.teacher,n);
-    if(!o.weeks.has(r.week)) o.weeks.set(r.week,new Set()); o.weeks.get(r.week).add(r.teacher); });
-  const map=new Map(), merges=[], suspects=[];
+    const n=o.names.get(t)||{count:0,last:0}; n.count++; n.last=Math.max(n.last,r.week||0); o.names.set(t,n);
+    if(!o.weeks.has(r.week)) o.weeks.set(r.week,new Set()); o.weeks.get(r.week).add(t); });
+  const autoMap=new Map(), suspects=[];
   for(const [sub,o] of bySub){
     const names=[...o.names.keys()]; if(names.length<2) continue;
     const together=(a,b)=>{ for(const s of o.weeks.values()) if(s.has(a)&&s.has(b)) return true; return false; };
@@ -42,22 +57,29 @@ function buildNameMap(recs){
     const union=(a,b)=>{ parent[find(a)]=find(b); };
     for(let i=0;i<names.length;i++) for(let j=i+1;j<names.length;j++){
       const a=names[i], b=names[j];
-      if(compact(a)===compact(b)){ union(a,b); continue; }
-      const ta=toks(a), tb=toks(b), S=ta.length<=tb.length?ta:tb, L=ta.length<=tb.length?tb:ta;
+      if(_compact(a)===_compact(b)){ union(a,b); continue; }
+      const ta=_toks(a), tb=_toks(b), S=ta.length<=tb.length?ta:tb, L=ta.length<=tb.length?tb:ta;
       if(!(S.length>=2 && S.length<L.length && S.every(w=>L.includes(w)))) continue;
-      if(together(a,b)) continue;
-      if(S[0]===L[0] && S[S.length-1]===L[L.length-1]) union(a,b); else suspects.push({subject:sub,a,b});
+      if(together(a,b)){ suspects.push({subject:sub,a,b,sameWeek:true}); continue; }
+      if(S[0]===L[0] && S[S.length-1]===L[L.length-1]) union(a,b); else suspects.push({subject:sub,a,b,sameWeek:false});
     }
     const groups={}; names.forEach(n=>{ const k=find(n); (groups[k]=groups[k]||[]).push(n); });
     for(const g of Object.values(groups)){
       if(g.length<2) continue;
-      g.sort((x,y)=>toks(x).length-toks(y).length || o.names.get(y).count-o.names.get(x).count || o.names.get(y).last-o.names.get(x).last || x.length-y.length);
-      g.slice(1).forEach(n=>{ map.set(sub+'||'+n,g[0]); merges.push({subject:sub,from:n,to:g[0]}); });
+      g.sort((x,y)=>_toks(x).length-_toks(y).length || o.names.get(y).count-o.names.get(x).count || o.names.get(y).last-o.names.get(x).last || x.length-y.length);
+      g.slice(1).forEach(n=>autoMap.set(sub+'||'+n,g[0]));
     }
   }
-  // اقتراح لا يتكرر لزوج دُمج أصلاً
-  const merged=new Set(merges.map(m=>m.subject+'||'+m.from+'||'+m.to));
-  return {map,merges,suspects:suspects.filter(s=>!map.has(s.subject+'||'+s.a)&&!map.has(s.subject+'||'+s.b))};
+  const map=new Map(), merges=[], seen=new Set();
+  recs.forEach(r=>{ if(!r.teacher||!r.subject) return; const k=r.subject+'||'+r.teacher; if(seen.has(k)) return; seen.add(k);
+    const n2=ex(r.teacher), c=autoMap.get(r.subject+'||'+n2)||n2;
+    if(c!==r.teacher){ map.set(k,c); merges.push({subject:r.subject,from:r.teacher,to:c,manual:n2!==r.teacher}); } });
+  return {map,merges,suspects:suspects.filter(s=>!autoMap.has(s.subject+'||'+s.a)&&!autoMap.has(s.subject+'||'+s.b))};
+}
+
+// «الشعب الحالية» لمعلم/مادة: اتحاد ما أدخله في آخر K أسبوع أدخل فيه شيئاً (حتى الأسبوع uptoIdx). يتجاوز تأخّره، ويُسقط الشعب التي ترك تدريسها.
+function currentSections(timeline, uptoIdx, K){
+  const act=timeline.filter(t=>t.i<=uptoIdx && t.codes.size>0).slice(-(K||RECENT_WEEKS)); const u=new Set(); act.forEach(t=>t.codes.forEach(c=>u.add(c))); return u;
 }
 
 // مؤشّر الأسبوع الحالي: بتوقيت الإمارات (لا توقيت الخادم UTC)، ويتحوّل يوم السبت منتصف الليل
@@ -131,7 +153,7 @@ function pivot(buf){
     // إعلانات الأسبوع: نصٌّ في عمود (ملاحظات/موعد/تذكير) لا يحمله أي درس.
     //  • صفّ بلا اسم معلم ولا مادة  → إعلان عام لكل الأولياء دائماً.
     //  • صفّ معلم/مادة بلا دروس      → إعلان عام فقط إن كان الأسبوع كله بلا دروس (عطلة)؛ وإلا يُحجب (غالباً أُدخل في العمود الخطأ) ويظهر للإدارة في لوحة المتابعة.
-    const general=[], stray=[];
+    const general=[], stray=[], roster=[];
     for(let r=5;r<=maxRow;r++){
       const subject=fixSubject(cell(ws,r,C_SUBJECT));
       const teacher=clean(cell(ws,r,C_TEACHER));
@@ -139,20 +161,21 @@ function pivot(buf){
       const texts=()=>[note, rem?'تذكير: '+rem:'', exam?'موعد اختبار: '+exam:''];
       if(!subject && !teacher){ texts().forEach(t=>general.push(t)); continue; }
       const [emoji,tint]=meta(subject);
-      let placed=false;
+      let placed=false; const codesFilled=[];
       for(const [code] of SECTIONS){
         const lesson=clean(cell(ws,r,COL[code]));
         if(!lesson) continue;
         const e={subject,teacher,lesson,emoji,tint};
         if(note) e.note=note; if(rem) e.reminder=rem; if(exam) e.exam=exam;
-        sections[code].push(e); placed=true;
+        sections[code].push(e); placed=true; codesFilled.push(code);
       }
+      if(teacher && subject) roster.push({subject,teacher,codes:codesFilled});
       if(!placed) texts().forEach(t=>stray.push(t));
     }
     const weekHasLessons=Object.values(sections).some(a=>a.length>0);
     const notices=[];
     (weekHasLessons?general:general.concat(stray)).forEach(t=>{ t=clean(t); if(t.length>1 && !/^[-–—.\s]+$/.test(t) && !notices.includes(t)) notices.push(t); });
-    weeks.push({num,label:'الأسبوع '+adig(num), notices,
+    weeks.push({num,label:'الأسبوع '+adig(num), notices, _roster:roster,
       range:start?fmtRange(start):'', start:start?start.toISOString().slice(0,10):null, sections});
   }
   // قراءة إعلان إدارة المدرسة من تبويب announcement (A1 عنوان، A2 نص) — يُقرأ ولو كان مخفيًّا
@@ -233,13 +256,22 @@ function pivot(buf){
     }
   }
   weeks.sort((a,b)=>a.num-b.num);
-  { // توحيد أسماء المعلمين عبر الأسابيع كلها قبل أن تجمعها الصفحة (مُحدِّد «اختر معلم ابنك»)
-    const recs=[]; weeks.forEach(w=>Object.values(w.sections).forEach(a=>a.forEach(e=>recs.push({week:w.num,subject:e.subject,teacher:e.teacher}))));
-    const nm=buildNameMap(recs);
-    if(nm.map.size) weeks.forEach(w=>Object.values(w.sections).forEach(a=>a.forEach(e=>{ const c=nm.map.get(e.subject+'||'+e.teacher); if(c) e.teacher=c; })));
-  }
+  const NT=parseNamesTab(wb);
+  const recs=[]; weeks.forEach(w=>{ Object.values(w.sections).forEach(a=>a.forEach(e=>recs.push({week:w.num,subject:e.subject,teacher:e.teacher}))); w._roster.forEach(r=>recs.push({week:w.num,subject:r.subject,teacher:r.teacher})); });
+  const nm=buildNameMap(recs,NT.alias); const canon=(sub,t)=>nm.map.get(sub+'||'+t)||t;
+  weeks.forEach(w=>{ Object.values(w.sections).forEach(a=>a.forEach(e=>{ e.teacher=canon(e.subject,e.teacher); })); w._roster.forEach(r=>{ r.teacher=canon(r.subject,r.teacher); }); });
   const {cur,upcoming}=weekPointer(weeks);
-  return {school:SCHOOL,term:TERM,currentWeekIndex:cur, currentIsUpcoming:upcoming, announcement, links, news,
+  // المعلمون «الحاليون» لكل (شعبة، مادة): لهم صفّ في أسبوع اليوم + يدرّسون الشعبة في آخر أسبوعين أدخلوا فيهما شيئاً + ليسوا متوقّفين
+  const retKeys=new Set(NT.retired.map(_compact)), isRet=n=>retKeys.has(_compact(n));
+  const timeline={}; weeks.forEach((w,i)=>{ const per={}; w._roster.forEach(r=>{ const k=r.subject+'||'+r.teacher; const st=per[k]||(per[k]=new Set()); r.codes.forEach(c=>st.add(c)); }); Object.entries(per).forEach(([k,st])=>{ (timeline[k]=timeline[k]||[]).push({i,codes:st}); }); });
+  const rosterNow=new Set((weeks[cur]?weeks[cur]._roster:[]).map(r=>r.subject+'||'+r.teacher)), useRoster=rosterNow.size>0;
+  const activeTeachers={}; SECTIONS.forEach(([c])=>activeTeachers[c]={});
+  Object.entries(timeline).forEach(([k,tl])=>{ const p=k.indexOf('||'), subject=k.slice(0,p), teacher=k.slice(p+2);
+    if(isRet(teacher) || (useRoster && !rosterNow.has(k))) return;
+    currentSections(tl,weeks.length-1).forEach(c=>{ const arr=activeTeachers[c][subject]||(activeTeachers[c][subject]=[]); if(!arr.includes(teacher)) arr.push(teacher); }); });
+  const retired=[...new Set(recs.map(r=>canon(r.subject,r.teacher)).filter(t=>t&&isRet(t)))];
+  weeks.forEach(w=>{ delete w._roster; });
+  return {school:SCHOOL,term:TERM,currentWeekIndex:cur, currentIsUpcoming:upcoming, activeTeachers, retired, announcement, links, news,
     sectionOrder:SECTIONS.map(([code,label])=>({code,label})), weeks};
 }
 
@@ -300,3 +332,4 @@ exports.handler = async (event) => {
 exports._pivot = pivot;
 exports._weekPointer = weekPointer;
 exports._buildNameMap = buildNameMap;
+exports._currentSections = currentSections;
