@@ -66,10 +66,20 @@
     html+='</div>';
     body.innerHTML=html;
   }
-  fetch('/.netlify/functions/plan',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){ render(j&&j.news); })
-   .catch(function(){ document.getElementById('body').innerHTML='<div class="msg">تعذّر التحميل. حدّث الصفحة بعد قليل.</div>'; });
+  // أخبار الإكسل + أخبار لوحة الإدارة (المحتوى): المثبّت أولاً ثم الأحدث
+  function sortNews(a){ return a.slice().sort(function(x,y){ if(!!x.pinned!==!!y.pinned) return x.pinned?-1:1; return (y.date||'').localeCompare(x.date||''); }); }
+  Promise.all([
+    fetch('/.netlify/functions/plan',{cache:'no-store'}).then(function(r){return r.json()}).catch(function(){return null}),
+    fetch('/.netlify/functions/content').then(function(r){return r.json()}).catch(function(){return null})
+  ]).then(function(res){
+    var plan=res[0], c=res[1], admin=(c&&c.ok&&c.news)||[];
+    if(!plan && !(c&&c.ok)){ document.getElementById('body').innerHTML='<div class="msg">تعذّر التحميل. حدّث الصفحة بعد قليل.</div>'; return; }
+    var seen={}, all=admin.concat((plan&&plan.news)||[]).filter(function(n){ var k=(n.date||'')+'|'+n.title; if(seen[k]) return false; seen[k]=1; return true; });
+    render(sortNews(all));
+  });
 })();
 </script>
+<script src="/site-content.js" defer></script>
 <script src="/site-rating.js" defer></script>
 </body>
 </html>

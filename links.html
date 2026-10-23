@@ -68,11 +68,19 @@
     });
     body.innerHTML=html;
   }
-  fetch('/.netlify/functions/plan',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
-    render(j&&j.links);
-  }).catch(function(){ document.getElementById('body').innerHTML='<div class="msg">تعذّر التحميل. حدّث الصفحة بعد قليل.</div>'; });
+  // روابط لوحة الإدارة (المحتوى) أولاً ثم روابط الإكسل، بلا تكرار للرابط نفسه
+  Promise.all([
+    fetch('/.netlify/functions/plan',{cache:'no-store'}).then(function(r){return r.json()}).catch(function(){return null}),
+    fetch('/.netlify/functions/content').then(function(r){return r.json()}).catch(function(){return null})
+  ]).then(function(res){
+    var plan=res[0], c=res[1], admin=(c&&c.ok&&c.links)||[];
+    if(!plan && !(c&&c.ok)){ document.getElementById('body').innerHTML='<div class="msg">تعذّر التحميل. حدّث الصفحة بعد قليل.</div>'; return; }
+    var seen={}, all=admin.concat((plan&&plan.links)||[]).filter(function(x){ var k=fixUrl(x.url).toLowerCase(); if(seen[k]) return false; seen[k]=1; return true; });
+    render(all);
+  });
 })();
 </script>
+<script src="/site-content.js" defer></script>
 <script src="/site-rating.js" defer></script>
 </body>
 </html>
