@@ -172,6 +172,9 @@
   .ct-prev b{display:block;font-size:14px}.ct-prev .pt{white-space:pre-line;overflow-wrap:anywhere}
   .ct-prev.info{background:var(--primary-soft);border-color:rgba(14,90,84,.28)}.ct-prev.important{background:var(--partial-soft);border-color:#D9A45A}.ct-prev.urgent{background:#FDECEA;border-color:#E08A80;color:#6B1A12}
   .ct-toast{position:fixed;inset-inline:16px;bottom:18px;z-index:80;max-width:520px;margin:0 auto;background:var(--primary-ink);color:#fff;border-radius:14px;padding:12px 16px;font-size:13.5px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}.ct-toast.bad{background:#9A2A1E}
+
+  .ck-ok{color:var(--done)}.ck-bad{color:#B03A2E}.ck-warn{color:var(--partial)}.ck-run{color:var(--muted)}
+  .ck-sum{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.7}.ck-sum.ok{background:var(--done-soft);color:var(--done)}.ck-sum.bad{background:#FDECEA;color:#9A2A1E}.ck-sum.warn{background:var(--partial-soft);color:var(--partial)}
 </style>
 </head>
 <body>
@@ -610,7 +613,9 @@
     var b={action:'save',rev:CT.doc.rev}; b[coll]=arr; CT.busy=true;
     return ctApi(b).then(function(x){ CT.busy=false; var j=x.j||{};
       if(j.ok){ CT.doc=j.doc; CT.today=j.today||CT.today; toast(msg||'تم الحفظ ✓ يظهر للأولياء خلال لحظات'); return true; }
-      if(x.s===409){ CT.doc=j.doc; CT.form=null; renderContent(); toast('تغيّر المحتوى من جهاز آخر فحُدِّثت القائمة. كرّر ما فعلتَه.',true); return false; }
+      if(x.s===409){
+        if(j.doc&&CT.doc&&j.doc.rev<CT.doc.rev){ toast('الخدمة لم تتزامن بعد مع آخر حفظ. انتظر ثوانٍ ثم أعد المحاولة (لم يضع شيء).',true); return false; }
+        CT.doc=j.doc; CT.form=null; renderContent(); toast('تغيّر المحتوى من جهاز آخر فحُدِّثت القائمة. كرّر ما فعلتَه.',true); return false; }
       if(x.s===500){ toast('تعذّر الحفظ: مخزن المحتوى غير متاح.',true); return false; }
       toast(j.message||'تعذّر الحفظ',true); return false;
     }).catch(function(){ CT.busy=false; toast('تعذّر الاتصال، لم يُحفظ شيء.',true); return false; });
@@ -625,7 +630,9 @@
     var addLbl={ann:'＋ إعلان جديد',news:'＋ خبر جديد',links:'＋ رابط جديد'}[CT.sub];
     if(!CT.form) h+='<button class="ct-add" id="ctAdd">'+addLbl+'</button>'; else h+=formHtml();
     h+=listHtml();
+    h+='<div class="acard" style="margin-top:18px"><div class="ah"><span class="at">لا يظهر لدى الأولياء؟</span></div><div class="adesc">يفحص: دالة المحتوى، ووصول إعلاناتك للعرض العام، وملف site-content.js، والصفحات الخمس. (قد يتأخّر الظهور حتى دقيقة بعد الحفظ.)</div><div id="ckList"></div><div id="ckSum"></div><div class="ct-act"><button class="ct-btn pri" id="ckRun">ابدأ الفحص</button></div></div>';
     box.innerHTML=h;
+    $('ckRun').addEventListener('click',runCheck); paintCheck();
     Array.prototype.forEach.call(box.querySelectorAll('.ct-subs button'),function(b){ b.addEventListener('click',function(){ if(CT.busy) return; CT.sub=b.getAttribute('data-s'); CT.form=null; renderContent(); }); });
     var add=$('ctAdd'); if(add) add.addEventListener('click',function(){ CT.form={isNew:true,item:{}}; renderContent(); var f=$('ctText')||$('ctTitle'); if(f) f.focus(); });
     wireForm(); wireList();
@@ -702,6 +709,44 @@
     var arr=f.isNew?(CT.sub==='links'?list.concat([item]):[item].concat(list)):list.map(function(x){ return x.id===item.id?item:x; });
     var btn=$('ctSave'); btn.disabled=true; btn.textContent='جارٍ الحفظ…';
     persist(coll,arr).then(function(okk){ if(okk){ CT.form=null; renderContent(); } else if($('ctSave')){ $('ctSave').disabled=false; $('ctSave').textContent='حفظ ونشر'; } });
+  }
+
+  /* ---- فحص ظهور الإعلانات للأولياء ---- */
+  function paintCheck(){
+    var el=$('ckList'); if(!el) return; var rows=CT.ck||[];
+    el.innerHTML=rows.map(function(r){ var mk={ok:'✓',bad:'✗',warn:'⚠',run:'…'}[r.kind];
+      return '<div class="arow"><span class="ck-'+r.kind+'" style="font-weight:700">'+mk+'</span> <b>'+esc(r.title)+'</b>'+(r.detail?'<small>'+esc(r.detail)+'</small>':'')+'</div>'; }).join('');
+    var sm=$('ckSum'); if(sm) sm.innerHTML=CT.ckSum?'<div class="ck-sum '+CT.ckSum.kind+'">'+esc(CT.ckSum.text)+'</div>':'';
+  }
+  function getTxt(url){ return fetch(url,{cache:'no-store'}).then(function(r){ return r.text().then(function(t){ return {st:r.status,t:t}; }); }).catch(function(){ return {st:0,t:''}; }); }
+  function runCheck(){
+    var btn=$('ckRun'); btn.disabled=true; btn.textContent='جارٍ الفحص…'; CT.ck=[]; CT.ckSum=null;
+    function add(k,t,d){ CT.ck.push({kind:k,title:t,detail:d}); paintCheck(); }
+    var today=CT.today, expect=(CT.doc.announcements||[]).filter(function(a){ return a.start<=today&&(!a.end||a.end>=today); });
+    getTxt('/.netlify/functions/content').then(function(x){
+      var j=null; try{ j=JSON.parse(x.t); }catch(e){}
+      if(!j||!j.ok) add('bad','دالة المحتوى (العرض العام)','لا تستجيب (HTTP '+x.st+'). ارفع content.js إلى netlify/functions ثم أعد النشر.');
+      else if(j.degraded) add('bad','دالة المحتوى (العرض العام)','تعمل لكن مخزن Blobs غير متاح لها. تأكّد من وجود @netlify/blobs في package.json وأعد النشر.');
+      else {
+        add('ok','دالة المحتوى (العرض العام)','تعمل، وترى '+j.announcements.length+' إعلاناً نشطاً الآن.');
+        var ids={}; j.announcements.forEach(function(a){ ids[a.id]=1; }); var miss=expect.filter(function(a){ return !ids[a.id]; });
+        if(!expect.length) add('warn','وصول إعلاناتك','ليس لديك إعلان نشط الآن'+(CT.doc.announcements.length?' (الموجود مجدول لتاريخ لاحق أو منتهٍ، راجع تواريخه).':'.'));
+        else if(!miss.length) add('ok','وصول إعلاناتك','كل إعلاناتك النشطة ('+expect.length+') موجودة في العرض العام.');
+        else add('warn','وصول إعلاناتك',miss.length+' من إعلاناتك النشطة لم تصل بعد للعرض العام. غالباً تأخّر تزامن الخدمة (حتى دقيقة): أعد الفحص بعد قليل.');
+      }
+      return getTxt('/site-content.js');
+    }).then(function(f){
+      var ok=f.st===200&&f.t.indexOf('ssuae_sc_dismiss')>-1;
+      add(ok?'ok':'bad','ملف site-content.js',ok?'موجود في جذر الموقع.':'غير موجود في جذر الموقع (HTTP '+f.st+'). ارفعه إلى جذر المستودع بجانب index.html.');
+      var pages=[['/','الخطة الأسبوعية'],['/schedule','جدول الحصص'],['/exams','مواعيد الاختبارات'],['/news','إعلانات مهمة'],['/links','روابط مفيدة']];
+      return pages.reduce(function(p,pg){ return p.then(function(){ return getTxt(pg[0]).then(function(r){
+        var has=r.st===200&&r.t.indexOf('site-content.js')>-1;
+        add(has?'ok':'bad','صفحة «'+pg[1]+'»',has?'تحمّل سكربت الإعلانات.':(r.st===200?'لم تُحدَّث: ارفع نسختها الجديدة (فيها سطر site-content.js).':'تعذّر فتحها (HTTP '+r.st+').')); }); }); },Promise.resolve());
+    }).then(function(){
+      var bad=CT.ck.filter(function(r){ return r.kind==='bad'; }).length, warn=CT.ck.filter(function(r){ return r.kind==='warn'; }).length;
+      CT.ckSum=bad?{kind:'bad',text:'وُجد '+ar(bad)+' عائق/عوائق. أصلح ما عليه ✗ ثم أعد الفحص.'}:(warn?{kind:'warn',text:'لا عوائق في النشر. راجع ما عليه ⚠ أعلاه.'}:{kind:'ok',text:'كل شيء سليم. إن لم يظهر عند ولي أمر، فاطلب منه إغلاق الصفحة وفتحها من جديد (والإعلان غير العاجل قد يكون أخفاه من جهازه).'});
+      paintCheck(); var b=$('ckRun'); if(b){ b.disabled=false; b.textContent='إعادة الفحص'; }
+    });
   }
   function wireList(){
     var box=$('tabContent'), key={ann:'announcements',news:'news',links:'links'}[CT.sub];
