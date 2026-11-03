@@ -551,7 +551,7 @@
 
   /* ================= تبويب التقييمات ================= */
   var RT=null, rtLoaded=false, rtFilter='all';
-  var PAGE_LABEL={'/':'الخطة الأسبوعية','/schedule':'جدول الحصص','/exams':'مواعيد الاختبارات','/news':'إعلانات مهمة','/links':'روابط مفيدة','other':'أخرى'};
+  var PAGE_LABEL={'/':'الخطة الأسبوعية','/summary':'ملخص الأسبوع','/schedule':'جدول الحصص','/exams':'مواعيد الاختبارات','/news':'إعلانات مهمة','/links':'روابط مفيدة','other':'أخرى'};
   function starStr(n){ var s=''; for(var i=1;i<=5;i++) s+=(i<=n?'★':'<span class="off">★</span>'); return s; }
   function rtDate(ts){ try{ return ar(new Date(ts).toLocaleString('en-GB',{timeZone:'Asia/Dubai',day:'numeric',month:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})); }catch(e){ return ''; } }
   function loadRate(force){
@@ -630,7 +630,7 @@
     var addLbl={ann:'＋ إعلان جديد',news:'＋ خبر جديد',links:'＋ رابط جديد'}[CT.sub];
     if(!CT.form) h+='<button class="ct-add" id="ctAdd">'+addLbl+'</button>'; else h+=formHtml();
     h+=listHtml();
-    h+='<div class="acard" style="margin-top:18px"><div class="ah"><span class="at">لا يظهر لدى الأولياء؟</span></div><div class="adesc">يفحص: دالة المحتوى، ووصول إعلاناتك للعرض العام، وملف site-content.js، والصفحات الخمس. (قد يتأخّر الظهور حتى دقيقة بعد الحفظ.)</div><div id="ckList"></div><div id="ckSum"></div><div class="ct-act"><button class="ct-btn pri" id="ckRun">ابدأ الفحص</button></div></div>';
+    h+='<div class="acard" style="margin-top:18px"><div class="ah"><span class="at">لا يظهر لدى الأولياء؟</span></div><div class="adesc">يفحص: دالة المحتوى، ووصول إعلاناتك للعرض العام، وملف site-content.js، وصفحات الموقع الست. (قد يتأخّر الظهور حتى دقيقة بعد الحفظ.)</div><div id="ckList"></div><div id="ckSum"></div><div class="ct-act"><button class="ct-btn pri" id="ckRun">ابدأ الفحص</button></div></div>';
     box.innerHTML=h;
     $('ckRun').addEventListener('click',runCheck); paintCheck();
     Array.prototype.forEach.call(box.querySelectorAll('.ct-subs button'),function(b){ b.addEventListener('click',function(){ if(CT.busy) return; CT.sub=b.getAttribute('data-s'); CT.form=null; renderContent(); }); });
@@ -738,7 +738,7 @@
     }).then(function(f){
       var ok=f.st===200&&f.t.indexOf('ssuae_sc_dismiss')>-1;
       add(ok?'ok':'bad','ملف site-content.js',ok?'موجود في جذر الموقع.':'غير موجود في جذر الموقع (HTTP '+f.st+'). ارفعه إلى جذر المستودع بجانب index.html.');
-      var pages=[['/','الخطة الأسبوعية'],['/schedule','جدول الحصص'],['/exams','مواعيد الاختبارات'],['/news','إعلانات مهمة'],['/links','روابط مفيدة']];
+      var pages=[['/','الخطة الأسبوعية'],['/summary','ملخص الأسبوع'],['/schedule','جدول الحصص'],['/exams','مواعيد الاختبارات'],['/news','إعلانات مهمة'],['/links','روابط مفيدة']];
       return pages.reduce(function(p,pg){ return p.then(function(){ return getTxt(pg[0]).then(function(r){
         var has=r.st===200&&r.t.indexOf('site-content.js')>-1;
         add(has?'ok':'bad','صفحة «'+pg[1]+'»',has?'تحمّل سكربت الإعلانات.':(r.st===200?'لم تُحدَّث: ارفع نسختها الجديدة (فيها سطر site-content.js).':'تعذّر فتحها (HTTP '+r.st+').')); }); }); },Promise.resolve());
