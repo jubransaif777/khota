@@ -1,4 +1,5 @@
 const XLSX = require('xlsx');
+const guard = require('./lib/guard');
 
 // ============================================================
 //  محرّك استعلام التقرير الشهري لولي الأمر — آمن (بحث في الخادم فقط)
@@ -24,7 +25,8 @@ const SHEETS = [
 
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
 const norm=s=>clean(s).toLowerCase();
-const digits=s=>String(s==null?'':s).replace(/\D/g,'');
+const LAT=s=>String(s==null?'':s).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+const digits=s=>LAT(s).replace(/\D/g,''); // أرقام فقط (لرقم الهوية) — تُقبل الأرقام العربية أيضاً
 const cell=(ws,r,c)=>{const x=ws[XLSX.utils.encode_cell({r:r-1,c:c-1})];return x?x.v:null;};
 
 // يكتشف صف الترويسة تلقائيًا (يتحمّل صفوفًا فارغة أو تعليمات في الأعلى)
@@ -93,14 +95,12 @@ function lookup(buf, idInput, nameInput){
         examScores:row.examScores, level:row.level, strengths:row.strengths, improvement:row.improvement, notes:row.notes});
     }
   }
-  if(!found) return {status:'notfound'};
-  if(!nameOk) return {status:'namemismatch'};
+  if(!found||!nameOk) return {status:'nomatch'};   // رد واحد لأي فشل، فلا يُعرف هل الرقم موجود
   return {status:'ok', data:{name:studentName, section, studentNo, items}};
 }
 
 // تنزيل + كاش + حدّ محاولات (نفس نمط محرّك ألف)
 let CACHE={buf:null, at:0};
-const RATE={};
 const UA={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36','Accept':'*/*'};
 const isZip=b=>b&&b.length>3&&b[0]===0x50&&b[1]===0x4B;
 function shareToken(u){return 'u!'+Buffer.from(u,'utf8').toString('base64').replace(/=+$/,'').replace(/\//g,'_').replace(/\+/g,'-');}
@@ -116,21 +116,38 @@ async function download(){
   return null;
 }
 function ipOf(event){ const h=(event&&event.headers)||{}; return (h['x-nf-client-connection-ip']||h['client-ip']||h['x-forwarded-for']||'0').split(',')[0].trim(); }
-function limited(ip){ const now=Date.now(); const rec=RATE[ip];
-  if(!rec || now>rec.resetAt){ RATE[ip]={count:1, resetAt:now+3600000}; return false; }
-  rec.count++; return rec.count>20; }
 
-exports.handler = async (event) => {
-  const q=(event&&event.queryStringParameters)||{};
-  const J=(code,obj)=>({statusCode:code,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'},body:JSON.stringify(obj)});
-  if(!q.id && !q.name) return J(400,{status:'invalid'});
-  if(limited(ipOf(event))) return J(429,{status:'ratelimited'});
+const J=(code,obj)=>({statusCode:code,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'},body:JSON.stringify(obj)});
+function countRows(buf){ const wb=XLSX.read(buf,{type:'buffer'}); let n=0; for(const [sheetKey] of SHEETS){ try{ n+=parseSheet(wb.Sheets[sheetKey]).length; }catch(e){} } return n; }
+
+async function handle(event, deps){
+  const method=(event&&event.httpMethod)||'GET', hd=(event&&event.headers)||{}, ip=ipOf(event), ua=/mobile|android|iphone|ipad/i.test(hd['user-agent']||'')?'m':'d';
+  let q;
+  if(method==='POST'){ try{ q=JSON.parse(event.body||'{}'); }catch(e){ return J(400,{status:'invalid'}); } } else q=(event&&event.queryStringParameters)||{};
   try{
-    const buf=await download();
-    if(!buf) return J(502,{status:'nofile'});
-    const res=lookup(buf, q.id, q.name);
-    const map={ok:200,notfound:404,namemismatch:404,invalid:400};
-    return J(map[res.status]||400, res.status==='ok'?res:{status:res.status});
+    if(method==='GET' && q.ping){ const buf=await deps.download(); if(!buf) return J(502,{status:'nofile'}); return J(200,{status:'ok',rows:countRows(buf)}); }   // للمراقبة: عدد الصفوف فقط
+    const idD=digits(q.id), name=clean(q.name);
+    if(idD.length<10 || !name) return J(400,{status:'invalid'});
+    const g=await guard.check(deps.store, idD, ip);
+    const base={k:'report',id:guard.mask(idD),idh:g.idh.slice(0,6),iph:g.iph.slice(0,6),m:method,ua};
+    if(!g.ok){ await guard.log(deps.store,Object.assign({r:g.reason==='locked'?'locked':'rate'},base)); return J(429,{status:g.reason}); }
+    const buf=await deps.download(); if(!buf) return J(502,{status:'nofile'});
+    const res=(deps.lookup||lookup)(buf, idD, name);
+    if(res.status==='ok'){ await guard.log(deps.store,Object.assign({r:'ok'},base)); return J(200,res); }
+    if(res.status==='nomatch'){ await guard.fail(deps.store,g); await guard.log(deps.store,Object.assign({r:'fail'},base)); return J(404,{status:'nomatch'}); }
+    return J(res.status==='invalid'?400:502,{status:res.status});
   }catch(e){ return J(500,{status:'error'}); }
-};
-exports._lookup=lookup;
+}
+exports.handler = async (event) => handle(event,{download, store:guard.open(event)});
+// قائمة الطلاب (رقم الهوية + الاسم + الشعبة) من ملف التقرير — لتسهيل إصدار الشهادات من لوحة الإدارة
+function roster(buf){
+  const wb=XLSX.read(buf,{type:'buffer'}), by=new Map();
+  for(const [sheetKey] of SHEETS){
+    for(const row of parseSheet(wb.Sheets[sheetKey])){
+      if(row.id.length<10||!row.name) continue;
+      const cur=by.get(row.id); if(!cur) by.set(row.id,{id:row.id,name:row.name,section:row.section||''}); else if(!cur.section&&row.section) cur.section=row.section;
+    }
+  }
+  return [...by.values()].sort((a,b)=>a.name.localeCompare(b.name,'ar'));
+}
+exports._handle=handle; exports._lookup=lookup; exports._download=download; exports._roster=roster;

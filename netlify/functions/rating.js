@@ -5,7 +5,7 @@
 //  لا تُخزَّن أسماء ولا عناوين IP. يلزم إضافة "@netlify/blobs" إلى package.json.
 // ============================================================
 const crypto = require('crypto');
-const PAGES = ['/', '/schedule', '/exams', '/news', '/links'];
+const PAGES = ['/', '/summary', '/schedule', '/exams', '/news', '/links'];
 const J = (code, obj) => ({ statusCode: code, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, body: JSON.stringify(obj) });
 
 // حدّ بسيط للإرسال: 8 مرات في الساعة لكل عنوان (في ذاكرة الدالة)

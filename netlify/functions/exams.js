@@ -17,6 +17,17 @@ const AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو',
 
 const clean=v=>v==null?'':String(v).replace(/\s+/g,' ').trim();
 
+// مؤشّر الأسبوع الحالي: بتوقيت الإمارات (لا توقيت الخادم UTC)، ويتحوّل يوم السبت منتصف الليل
+// استعداداً للأسبوع القادم (السبت+2 = الإثنين). upcoming=true حين يكون الأسبوع المعروض لم يبدأ بعد.
+function weekPointer(weeks, nowMs){
+  const dub=new Date(new Date(nowMs==null?Date.now():nowMs).toLocaleString('en-US',{timeZone:'Asia/Dubai'}));
+  const DAY=86400000, today=Date.UTC(dub.getFullYear(),dub.getMonth(),dub.getDate()), ref=today+2*DAY;
+  const t=iso=>{ const [y,m,d]=String(iso).split('-').map(Number); return Date.UTC(y,m-1,d); };
+  let cur=0; weeks.forEach((w,i)=>{ if(w.start && t(w.start)<=ref) cur=i; });
+  const upcoming=!!(weeks[cur] && weeks[cur].start && t(weeks[cur].start)>today);
+  return {cur, upcoming};
+}
+
 // قراءة تاريخ بداية الأسبوع بأي صيغة شائعة: نص (2-11-2026 / 02/11/2026 / 27-31/10/2026 / 29-03 / 9-10 / 2026 / 2026-11-02)
 // أو تاريخ إكسل حقيقي، وبأرقام عربية أو إنجليزية. rangeFirst: يفضّل صيغة المدى (أيام من-إلى).
 function parseStartDate(v, rangeFirst){
@@ -171,9 +182,8 @@ function build(buf, withAudit){
   repairStartDates(weeks);
   const iso=d=>d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
   weeks.forEach(w=>{ w.range=w._d?fmtRange(w._d):''; w.start=w._d?iso(w._d):null; delete w._d; });
-  const today=new Date(); today.setHours(0,0,0,0);
-  let cur=0; weeks.forEach((w,i)=>{ if(w.start && new Date(w.start)<=today) cur=i; });
-  const out={school:SCHOOL, currentWeekIndex:cur, sectionOrder:SECTIONS, dayOrder:DAYS, weeks};
+  const {cur,upcoming}=weekPointer(weeks);
+  const out={school:SCHOOL, currentWeekIndex:cur, currentIsUpcoming:upcoming, sectionOrder:SECTIONS, dayOrder:DAYS, weeks};
   if(withAudit){
     const dayLabel={}; DAYS.forEach(([t,l])=>dayLabel[t]=l);
     const orphans=[];
@@ -210,3 +220,4 @@ exports.handler=async(event)=>{
   }catch(e){return {statusCode:500,headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({error:String(e&&e.message||e)})};}
 };
 exports._build=build;
+exports._weekPointer=weekPointer;
