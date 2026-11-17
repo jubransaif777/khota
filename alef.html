@@ -55,6 +55,8 @@
     <input id="id" inputmode="numeric" autocomplete="off" placeholder="784XXXXXXXXXXXX">
     <label for="name">الاسم الأول بالإنجليزية (First name)</label>
     <input id="name" autocomplete="off" placeholder="Hamed">
+    <div id="vwrap" hidden><label for="v" id="vlabel">رمز التحقق</label>
+    <input id="v" inputmode="numeric" autocomplete="off"></div>
     <button class="btn" id="go">استعلام</button>
     <div id="out"></div>
     <div class="note">🔒 يتمّ البحث بأمان في خادم المدرسة، ولا تُعرض بيانات أي طالب آخر.</div>
@@ -69,10 +71,12 @@
   function toast(t){var el=$('toast');el.textContent=t;el.classList.add('on');setTimeout(function(){el.classList.remove('on')},1600);}
   function copy(t){ if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){toast('تم النسخ')},function(){toast('تعذّر النسخ')});} else {toast('تعذّر النسخ');} }
 
-  var ERR={notfound:'لم نجد بيانات مطابقة. تأكّد من رقم الهوية والاسم الأول.',
+  var ERR={nomatch:'لم نجد بيانات مطابقة. تأكّد من البيانات المدخلة.',
+    locked:'أُوقفت المحاولات لهذا الرقم اليوم لأسباب أمنية. تواصل مع إدارة المدرسة لتزويدك ببيانات طالبك.',
+    notfound:'لم نجد بيانات مطابقة. تأكّد من رقم الهوية والاسم الأول.',
     namemismatch:'لم نجد بيانات مطابقة. تأكّد من رقم الهوية والاسم الأول.',
     invalid:'الرجاء إدخال رقم الهوية كاملاً والاسم الأول.',
-    ratelimited:'محاولات كثيرة. الرجاء المحاولة بعد قليل.',
+    ratelimited:'محاولات كثيرة من هذا الجهاز. الرجاء المحاولة بعد ساعة.',
     nofile:'تعذّر الوصول للبيانات حالياً. حاول لاحقاً.',
     badformat:'تعذّرت قراءة ملف البيانات.', error:'حدث خطأ. حاول مجدداً.'};
 
@@ -90,24 +94,33 @@
     $('cpEmail').addEventListener('click',function(){ copy(d.email); });
   }
 
+  // تحقّق ثانٍ اختياري: يظهر الحقل فقط إن أضافت المدرسة عموداً له في ملف البيانات
+  var needV=false, infoP=null;
+  function loadInfo(){ if(!infoP) infoP=fetch('/.netlify/functions/alef?info=1',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+      if(j&&j.verify&&j.verify.needed){ needV=true; $('vlabel').textContent=j.verify.label||'رمز التحقق'; $('vwrap').hidden=false; } }).catch(function(){}); return infoP; }
+  loadInfo();
   function query(){
-    var id=$('id').value.trim(), name=$('name').value.trim();
+    var id=$('id').value.trim(), name=$('name').value.trim(), v=$('v')?$('v').value.trim():'';
     $('out').innerHTML='';
-    if(!id || !name){ $('out').innerHTML='<div class="err">'+ERR.invalid+'</div>'; return; }
     $('go').disabled=true; $('go').textContent='… جارٍ البحث';
-    fetch('/.netlify/functions/alef?id='+encodeURIComponent(id)+'&name='+encodeURIComponent(name),{cache:'no-store'})
-      .then(function(r){return r.json()})
-      .then(function(j){
-        $('go').disabled=false; $('go').textContent='استعلام';
-        if(j.status==='ok'){ showResult(j.data); }
-        else { $('out').innerHTML='<div class="err">'+(ERR[j.status]||ERR.error)+'</div>'; }
-      })
-      .catch(function(){ $('go').disabled=false; $('go').textContent='استعلام'; $('out').innerHTML='<div class="err">'+ERR.error+'</div>'; });
+    loadInfo().then(function(){
+      if(!id || !name || (needV&&!v)){ $('go').disabled=false; $('go').textContent='استعلام'; $('out').innerHTML='<div class="err">'+ERR.invalid+(needV&&!v?' وأدخل '+$('vlabel').textContent+'.':'')+'</div>'; return; }
+      // POST: لا يظهر الرقم ولا الاسم في عنوان الطلب أو سجلات الخادم
+      return fetch('/.netlify/functions/alef',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',body:JSON.stringify({id:id,name:name,v:v})})
+        .then(function(r){return r.json()})
+        .then(function(j){
+          $('go').disabled=false; $('go').textContent='استعلام';
+          if(j.status==='ok'){ showResult(j.data); }
+          else { $('out').innerHTML='<div class="err">'+(ERR[j.status]||ERR.error)+'</div>'; }
+        });
+    }).catch(function(){ $('go').disabled=false; $('go').textContent='استعلام'; $('out').innerHTML='<div class="err">'+ERR.error+'</div>'; });
   }
   $('go').addEventListener('click',query);
-  $('name').addEventListener('keydown',function(e){ if(e.key==='Enter') query(); });
+  $('name').addEventListener('keydown',function(e){ if(e.key==='Enter'){ if(needV&&$('v')) $('v').focus(); else query(); } });
+  $('v').addEventListener('keydown',function(e){ if(e.key==='Enter') query(); });
   $('id').addEventListener('keydown',function(e){ if(e.key==='Enter') $('name').focus(); });
 })();
 </script>
+<script src="/site-track.js" defer></script>
 </body>
 </html>

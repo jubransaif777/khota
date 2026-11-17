@@ -74,8 +74,8 @@
 (function(){
   var $=function(id){return document.getElementById(id)};
   function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&lt;','>':'&gt;','&':'&amp;'}[c]||c})}
-  var ERR={notfound:'لم نجد بيانات مطابقة. تأكّد من رقم الهوية والاسم.',namemismatch:'لم نجد بيانات مطابقة. تأكّد من رقم الهوية والاسم.',
-    invalid:'الرجاء إدخال رقم الهوية كاملاً والاسم.',ratelimited:'محاولات كثيرة. حاول بعد قليل.',
+  var ERR={nomatch:'لم نجد بيانات مطابقة. تأكّد من رقم الهوية والاسم.',locked:'أُوقفت المحاولات لهذا الرقم اليوم لأسباب أمنية. تواصل مع إدارة المدرسة.',notfound:'لم نجد بيانات مطابقة. تأكّد من رقم الهوية والاسم.',namemismatch:'لم نجد بيانات مطابقة. تأكّد من رقم الهوية والاسم.',
+    invalid:'الرجاء إدخال رقم الهوية كاملاً والاسم.',ratelimited:'محاولات كثيرة من هذا الجهاز. حاول بعد ساعة.',
     nofile:'تعذّر الوصول للبيانات حالياً.', error:'حدث خطأ. حاول مجدداً.'};
   function lvlClass(l){ if(/بحاجة/.test(l)) return 'support'; if(/فوق/.test(l)) return 'above'; return 'expected'; }
   var lastItems=[], curReport='1';
@@ -125,7 +125,7 @@
     $('out').innerHTML='';
     if(!id||!name){ $('out').innerHTML='<div class="err">'+ERR.invalid+'</div>'; return; }
     $('go').disabled=true; $('go').textContent='… جارٍ البحث';
-    fetch('/.netlify/functions/report?id='+encodeURIComponent(id)+'&name='+encodeURIComponent(name),{cache:'no-store'})
+    fetch('/.netlify/functions/report',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',body:JSON.stringify({id:id,name:name})})
       .then(function(r){return r.json()})
       .then(function(j){ $('go').disabled=false; $('go').textContent='عرض التقرير';
         if(j.status==='ok'){ showResult(j.data); } else { $('out').innerHTML='<div class="err">'+(ERR[j.status]||ERR.error)+'</div>'; } })
@@ -136,5 +136,6 @@
   $('id').addEventListener('keydown',function(e){ if(e.key==='Enter') $('name').focus(); });
 })();
 </script>
+<script src="/site-track.js" defer></script>
 </body>
 </html>

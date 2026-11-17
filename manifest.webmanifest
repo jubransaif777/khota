@@ -1,0 +1,24 @@
+{
+  "name": "الخطة الأسبوعية — مدرسة المعيريض للحلقة الثانية بنين",
+  "short_name": "الخطة الأسبوعية",
+  "description": "الخطة الأسبوعية وملخص الأسبوع وجدول الحصص ومواعيد الاختبارات لأولياء الأمور.",
+  "id": "/",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "ar",
+  "theme_color": "#0E5A54",
+  "background_color": "#F4F7F6",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "ملخص الأسبوع", "short_name": "الملخص", "url": "/summary?source=shortcut", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "جدول الحصص", "short_name": "الحصص", "url": "/schedule?source=shortcut", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "مواعيد الاختبارات", "short_name": "الاختبارات", "url": "/exams?source=shortcut", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

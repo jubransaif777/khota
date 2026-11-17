@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>شهادات الشكر والتقدير — مدرسة المعيريض</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0E5A54">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=Amiri:wght@400;700&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#F1F5F4;--surface:#FFFFFF;--ink:#15302D;--muted:#5E706C;--line:#DBE4E1;
+    --primary:#0E5A54;--primary-soft:#E1EEEC;--primary-ink:#0B403B;--gold:#B8923A;
+    --miss:#C0392B;--miss-soft:#FBE7E5;--radius:16px;--shadow:0 1px 2px rgba(16,45,42,.05),0 8px 24px -18px rgba(16,45,42,.35);--maxw:560px}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0D1615;--surface:#15211F;--ink:#E9F1EF;--muted:#9CB0AC;--line:#263733;
+    --primary:#4FB6A9;--primary-soft:#123430;--primary-ink:#B9E4DE;--miss:#E8776B;--miss-soft:#3A1F1C;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -18px rgba(0,0,0,.7)}}
+  *{box-sizing:border-box} html,body{margin:0}
+  body{font-family:'Readex Pro','Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .app{max-width:var(--maxw);margin:0 auto;padding:0 14px 40px;min-height:100vh}
+  .top{display:flex;align-items:center;gap:11px;padding:22px 4px 14px}
+  .crest{width:48px;height:48px;border-radius:13px;overflow:hidden;box-shadow:var(--shadow);background:var(--surface);border:2px solid var(--surface)}
+  .crest img{width:100%;height:100%;object-fit:cover;display:block}
+  .brand h1{font-size:16.5px;margin:0;font-weight:600} .brand p{font-size:11px;color:var(--muted);margin:2px 0 0}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 18px;box-shadow:var(--shadow)}
+  .lead{font-size:13.5px;color:var(--muted);margin:0 0 16px;line-height:1.7}
+  label{display:block;font-size:12.5px;font-weight:600;margin:0 2px 6px}
+  input{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:13px 14px;font-family:inherit;font-size:16px;margin-bottom:14px}
+  input:focus{outline:2px solid var(--primary);outline-offset:1px}
+  .btn{width:100%;border:none;background:var(--primary);color:#fff;border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;font-family:inherit}
+  .btn:active{transform:scale(.99)} .btn:disabled{opacity:.6}
+  .btn.ghost{background:var(--primary-soft);color:var(--primary-ink);border:1px solid var(--primary);padding:11px;font-size:14px}
+  .note{font-size:11px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.6}
+  .err{background:var(--miss-soft);color:var(--miss);border-radius:12px;padding:13px 14px;font-size:13.5px;text-align:center;margin-top:14px}
+  .result{margin-top:18px}
+  .rname{font-size:17px;font-weight:700;text-align:center;color:var(--primary-ink);margin-bottom:2px}
+  .rcount{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:16px}
+  .crd{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px;background:var(--surface)}
+  .crd-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 2px 10px;font-size:13px}
+  .crd-h b{font-weight:700;color:var(--primary-ink)} .crd-h span{color:var(--muted);font-size:12px}
+  .back{display:block;text-align:center;margin-top:18px;color:var(--primary);text-decoration:none;font-size:13px}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><div class="crest"><img id="crestImg" alt="" src="/crest.png"></div>
+    <div class="brand"><h1>شهادات الشكر والتقدير</h1><p>مدرسة المعيريض للحلقة الثانية بنين</p></div></div>
+  <div class="card">
+    <p class="lead">أدخل <b>رقم هوية الطالب</b> واسمه الأول لعرض الشهادات التي حصل عليها، ويمكنك طباعتها أو حفظها بصيغة PDF.</p>
+    <label for="id">رقم هوية الطالب (UAEID)</label>
+    <input id="id" inputmode="numeric" autocomplete="off" placeholder="784XXXXXXXXXXXX">
+    <label for="name">اسم الطالب الأول</label>
+    <input id="name" autocomplete="off" placeholder="مثال: جبران">
+    <button class="btn" id="go">عرض الشهادات</button>
+    <div id="out" role="status" aria-live="polite"></div>
+    <div class="note">🔒 يتمّ البحث بأمان في خادم المدرسة، ولا تُعرض شهادات أي طالب آخر.</div>
+  </div>
+  <a class="back" href="/">← العودة إلى الخطة الأسبوعية</a>
+</div>
+<script src="/site-cert.js"></script>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  var ERR={nomatch:'لم نجد شهادات مطابقة. تأكّد من رقم الهوية والاسم الأول، وقد لا تكون صدرت للطالب شهادة بعد.',
+    locked:'أُوقفت المحاولات لهذا الرقم اليوم لأسباب أمنية. حاول غداً أو تواصل مع إدارة المدرسة.',
+    invalid:'الرجاء إدخال رقم الهوية كاملاً والاسم الأول.',ratelimited:'محاولات كثيرة من هذا الجهاز. حاول بعد ساعة.',
+    nofile:'تعذّر الوصول للبيانات حالياً.',error:'حدث خطأ. حاول مجدداً.'};
+  var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  function fdate(s){ var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||''); return m?(+m[3])+' '+MONTHS[+m[2]-1]+' '+m[1]:''; }
+  function title(t){ t=String(t||'').trim(); return /^شهادة/.test(t)?t:'شهادة '+t; }
+  var last=null, title=SiteCert.title, fdate=SiteCert.fdate, certHTML=SiteCert.html;
+  function ev(n){ try{ window.SiteTrack&&SiteTrack.event(n); }catch(e){} }
+  function render(r){
+    last=r; var n=r.certs.length;
+    var h='<div class="result"><div class="rname">'+esc(r.student.name)+'</div><div class="rcount">'+(n===1?'شهادة واحدة':n===2?'شهادتان':n+(n<=10?' شهادات':' شهادة'))+'</div>';
+    r.certs.forEach(function(c,i){
+      h+='<div class="crd"><div class="crd-h"><b>'+esc(title(c.type))+'</b><span>'+esc(fdate(c.date))+'</span></div>'+certHTML(c,r)+
+         '<button class="btn ghost" data-i="'+i+'">🖨️ طباعة / حفظ PDF</button></div>';
+    });
+    $('out').innerHTML=h+'</div>';
+    Array.prototype.forEach.call($('out').querySelectorAll('button[data-i]'),function(b){ b.addEventListener('click',function(){ printCert(+b.getAttribute('data-i')); }); });
+  }
+  function printCert(i){ if(!last||!last.certs[i]) return; ev('cert_print'); SiteCert.print(last.certs[i],last); }
+  function dig(s){ return String(s).replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d)}).replace(/[۰-۹]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)}).replace(/\D/g,''); }
+  function go(){
+    var id=$('id').value.trim(), name=$('name').value.trim(), out=$('out');
+    if(dig(id).length<10||!name){ out.innerHTML='<div class="err">'+ERR.invalid+'</div>'; return; }
+    $('go').disabled=true; out.innerHTML='<div class="note">… جارٍ البحث</div>';
+    fetch('/.netlify/functions/certs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,name:name}),cache:'no-store'})
+      .then(function(r){ return r.json().catch(function(){return {status:'error'}}).then(function(j){ return {s:r.status,j:j}; }); })
+      .then(function(x){ $('go').disabled=false;
+        if(x.j&&x.j.status==='ok'){ render(x.j); ev('cert_view'); } else out.innerHTML='<div class="err">'+(ERR[x.j&&x.j.status]||ERR.error)+'</div>'; })
+      .catch(function(){ $('go').disabled=false; out.innerHTML='<div class="err">'+ERR.error+'</div>'; });
+  }
+  $('go').addEventListener('click',go);
+  ['id','name'].forEach(function(k){ $(k).addEventListener('keydown',function(e){ if(e.key==='Enter') go(); }); });
+})();
+</script>
+<script src="/site-track.js" defer></script>
+</body>
+</html>

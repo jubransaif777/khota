@@ -1,3 +1,7 @@
+[build]
+  publish = "."
 [functions]
   directory = "netlify/functions"
-  node_bundler = "esbuild"
+# فحص مصادر الموقع تلقائياً كل ٣٠ دقيقة
+[functions."health-cron"]
+  schedule = "*/30 * * * *"

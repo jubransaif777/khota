@@ -171,10 +171,68 @@
   .ct-prev{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-radius:14px;border:1px solid;font-size:14px;line-height:1.7}
   .ct-prev b{display:block;font-size:14px}.ct-prev .pt{white-space:pre-line;overflow-wrap:anywhere}
   .ct-prev.info{background:var(--primary-soft);border-color:rgba(14,90,84,.28)}.ct-prev.important{background:var(--partial-soft);border-color:#D9A45A}.ct-prev.urgent{background:#FDECEA;border-color:#E08A80;color:#6B1A12}
+  /* الشهادات */
+  .ct-subs{flex-wrap:wrap}.ct-subs button{flex:1 1 30%}
+  .ce-modal{position:fixed;inset:0;z-index:90;background:rgba(10,20,19,.7);display:grid;place-items:center;padding:14px;overflow:auto}
+  .ce-modal .box{background:var(--surface);border-radius:16px;padding:12px;width:100%;max-width:820px}
+  .ce-ros{border:1px solid var(--line);border-radius:10px;max-height:260px;overflow:auto;margin-top:6px;background:var(--bg)}
+  .ce-r{display:flex;align-items:center;gap:9px;padding:8px 10px;border-bottom:1px solid var(--line);font-size:13.5px;cursor:pointer}.ce-r:last-child{border-bottom:0}
+  .ce-r span{flex:1}.ce-r small{color:var(--muted);font-size:11.5px}
+  @media print{.ce-modal{display:none !important}}
   .ct-toast{position:fixed;inset-inline:16px;bottom:18px;z-index:80;max-width:520px;margin:0 auto;background:var(--primary-ink);color:#fff;border-radius:14px;padding:12px 16px;font-size:13.5px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}.ct-toast.bad{background:#9A2A1E}
 
   .ck-ok{color:var(--done)}.ck-bad{color:#B03A2E}.ck-warn{color:var(--partial)}.ck-run{color:var(--muted)}
   .ck-sum{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.7}.ck-sum.ok{background:var(--done-soft);color:var(--done)}.ck-sum.bad{background:#FDECEA;color:#9A2A1E}.ck-sum.warn{background:var(--partial-soft);color:var(--partial)}
+
+  .tabs button{flex-basis:calc(33.333% - 6px)}
+  @media (max-width:520px){.tabs button{flex-basis:calc(50% - 6px)}}
+  .tabs button .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#D64B3C;margin-inline-start:6px;vertical-align:middle}
+  /* سجل الالتزام */
+  .lg-ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px}.lg-ctl select{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--ink)}
+  .lg-ctl label{font-size:12.5px;display:flex;gap:6px;align-items:center}
+  .lgw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+  table.lg{border-collapse:collapse;width:100%;min-width:480px;font-size:12.5px}
+  table.lg th,table.lg td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+  table.lg th.t,table.lg td.t{text-align:right;position:sticky;right:0;background:var(--surface);min-width:132px;white-space:normal}
+  table.lg td.t small{display:block;color:var(--muted);font-size:11px}
+  .lg-c{font-weight:700;font-size:14px}.lg-c.done{color:var(--done)}.lg-c.partial{color:var(--partial)}.lg-c.missing{color:var(--miss)}.lg-c.none{color:var(--muted);opacity:.5}
+  .lg-p{font-weight:700;border-radius:8px;padding:2px 8px;display:inline-block;min-width:44px}.lg-p.hi{background:var(--done-soft);color:var(--done)}.lg-p.mid{background:var(--partial-soft);color:var(--partial)}.lg-p.lo{background:var(--miss-soft);color:var(--miss)}
+  .lg-note{font-size:12px;color:var(--muted);line-height:1.8;margin-top:10px}
+  @media print{
+    body.pc{background:#fff;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body.pc .noprint,body.pc .gate,body.pc .tabs,body.pc #trSubs,body.pc #trWeek,body.pc #tabExams,body.pc #tabSched,body.pc #tabRate,body.pc #tabContent,body.pc #tabSystem,body.pc #panelHead,body.pc .foot,body.pc .lg-ctl{display:none!important}
+    body.pc .wrap{max-width:none;padding:0}body.pc #trLog{display:block!important}
+    body.pc .lg-print{display:block!important;margin-bottom:4mm}body.pc .lg-print h2{margin:0;font-size:15pt}body.pc .lg-print p{margin:2px 0 0;font-size:10pt;color:#333}
+    body.pc .lgw{border:none;overflow:visible}body.pc table.lg{min-width:0;font-size:9.5pt}
+    body.pc table.lg th,body.pc table.lg td{border:1px solid #777;padding:2.5px 3px;color:#000}body.pc table.lg th{background:#EEE!important}body.pc table.lg th.t,body.pc table.lg td.t{position:static}
+    body.pc .lg-p,body.pc .lg-c{background:none!important;color:#000!important}
+    body.pc tr{break-inside:avoid}
+  }
+  .lg-print{display:none}
+
+  /* رسائل الواتساب */
+  .wa-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+  .wa-card .wh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.wa-card .wh b{font-size:14.5px;flex:1}
+  .wa-card textarea{width:100%;min-height:210px;margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-family:inherit;font-size:13px;line-height:1.75;background:var(--bg);color:var(--ink);direction:rtl}
+  .wa-opts{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 12px;font-size:12.5px}.wa-opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+  .wa-card details summary{cursor:pointer;font-size:12.5px;color:var(--primary-ink);margin-top:8px}
+  /* لوحة النظام */
+  .sy-tiles{grid-template-columns:repeat(auto-fit,minmax(104px,1fr))!important}
+  .sy-h{font-size:13px;font-weight:700;margin:16px 2px 6px}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:96px;padding:6px 2px 0;border-bottom:1px solid var(--line)}
+  .bars i{flex:1;background:var(--primary);border-radius:3px 3px 0 0;min-height:2px;display:block}.bars i.pk{background:var(--partial)}.bars i.zero{background:var(--line)}
+  .bl{display:flex;gap:3px;font-size:10px;color:var(--muted);margin-top:3px}.bl span{flex:1;text-align:center;overflow:hidden;white-space:nowrap}
+  .hb{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12.5px}.hb .nm{width:92px;flex:0 0 auto}.hb .tr{flex:1;background:var(--surface-2);border-radius:6px;height:14px;overflow:hidden}.hb .tr i{display:block;height:100%;background:var(--primary)}.hb .vl{width:46px;text-align:left;color:var(--muted)}
+  .st-chip{font-size:11.5px;font-weight:700;border-radius:20px;padding:2px 10px;white-space:nowrap}.st-ok{background:var(--done-soft);color:var(--done)}.st-warn{background:var(--partial-soft);color:var(--partial)}.st-bad{background:var(--miss-soft);color:var(--miss)}.st-mute{background:var(--surface-2);color:var(--muted)}
+  .sy-row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);font-size:13px}.sy-row:first-child{border-top:none}.sy-row .b{flex:1;min-width:0}.sy-row small{display:block;color:var(--muted);font-size:11.5px;line-height:1.7;overflow-wrap:anywhere}
+  table.sy{border-collapse:collapse;width:100%;font-size:12px}table.sy th,table.sy td{padding:6px 5px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}table.sy td.w{white-space:normal}
+  .im-print{display:none}
+  @media print{
+    body.pi{background:#fff;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body.pi .noprint,body.pi .gate,body.pi .tabs,body.pi #tabTeachers,body.pi #tabExams,body.pi #tabSched,body.pi #tabRate,body.pi #tabContent,body.pi #panelHead,body.pi .foot,body.pi #tabSystem .ct-subs,body.pi #tabSystem .actions{display:none!important}
+    body.pi .wrap{max-width:none;padding:0}body.pi .im-print{display:block!important;margin-bottom:5mm}body.pi .im-print h2{margin:0;font-size:16pt}body.pi .im-print p{margin:2px 0 0;font-size:10pt;color:#333}
+    body.pi .bars i,body.pi .hb .tr i{-webkit-print-color-adjust:exact;print-color-adjust:exact}body.pi .sc{break-inside:avoid;border:1px solid #999}body.pi .sy-h,body.pi .hb{break-inside:avoid}
+  }
 </style>
 </head>
 <body>
@@ -193,8 +251,10 @@
   <div id="panel" class="hidden">
     <div id="panelHead"><h1>لوحة الإدارة</h1>
     <div class="sub">مدرسة المعيريض للحلقة الثانية بنين</div></div>
-    <div class="tabs" id="tabs"><button data-t="teachers" class="on">متابعة المعلمين</button><button data-t="exams">الاختبارات</button><button data-t="sched">جدول الحصص</button><button data-t="rate">التقييمات</button><button data-t="content">المحتوى</button></div>
+    <div class="tabs" id="tabs"><button data-t="teachers" class="on">متابعة المعلمين</button><button data-t="exams">الاختبارات</button><button data-t="sched">جدول الحصص</button><button data-t="rate">التقييمات</button><button data-t="content">المحتوى</button><button data-t="system">النظام</button></div>
     <div id="tabTeachers">
+    <div class="ct-subs" id="trSubs"><button data-m="week" class="on">هذا الأسبوع</button><button data-m="log">سجل الالتزام</button></div>
+    <div id="trWeek">
     <div class="weeknav">
       <button id="prev">‹</button>
       <div class="mid" id="wkmid"><b id="wklbl"></b><span id="wkrng"></span></div>
@@ -205,9 +265,12 @@
       <button data-f="all" class="on">الكل</button>
       <button data-f="late">المتأخرون فقط</button>
     </div>
+    <div class="actions"><button class="btn print" id="remindBtn">📋 نسخ تذكير للمتأخرين</button></div>
     <div id="tablebox"></div>
     <div id="strayBox"></div>
     <div id="nameBox"></div>
+    </div>
+    <div id="trLog" class="hidden"></div>
     <div class="foot">تُقرأ البيانات مباشرة من ملف المدرسة · لوحة إدارية</div>
     </div>
 
@@ -231,10 +294,13 @@
     <div id="tabSched" class="hidden"></div>
     <div id="tabRate" class="hidden"></div>
     <div id="tabContent" class="hidden"></div>
+    <div id="tabSystem" class="hidden"></div>
   </div>
 </div>
 <div class="mscrim" id="mscrim"><div class="modal" id="modal"></div></div>
 
+<script src="/site-merge.js"></script>
+<script src="/site-cert.js"></script>
 <script>
 (function(){
   "use strict";
@@ -255,6 +321,8 @@
         DATA.sectionOrder.forEach(function(s){secLabel[s.code]=s.label});
         $('gate').classList.add('hidden'); $('panel').classList.remove('hidden');
         render();
+        try{ localStorage.setItem('ssuae_notrack','1'); }catch(e){}   // لا تُحسب زياراتك أنت في إحصاءات الاستخدام
+        healthBadge();
       })
       .catch(function(){ $('err').textContent='تعذّر الاتصال، حاول مجدداً'; });
   }
@@ -491,12 +559,14 @@
     $('tabSched').classList.toggle('hidden',t!=='sched');
     $('tabRate').classList.toggle('hidden',t!=='rate');
     $('tabContent').classList.toggle('hidden',t!=='content');
+    $('tabSystem').classList.toggle('hidden',t!=='system');
     document.body.classList.toggle('px',t==='exams');
     Array.prototype.forEach.call(document.querySelectorAll('#tabs button'),function(b){ b.classList.toggle('on',b.getAttribute('data-t')===t); });
     if(t==='exams') loadExams();
     if(t==='sched') loadSched();
     if(t==='rate') loadRate();
     if(t==='content') loadContent();
+    if(t==='system') loadSystem();
   }
   Array.prototype.forEach.call(document.querySelectorAll('#tabs button'),function(b){
     b.addEventListener('click',function(){ showTab(b.getAttribute('data-t')); });
@@ -624,9 +694,10 @@
   function annStatus(a){ var t=CT.today; if(a.start>t) return ['مجدول','sch']; if(a.end&&a.end<t) return ['منتهٍ','']; return ['نشط الآن','act']; }
 
   function renderContent(){
-    var d=CT.doc, box=$('tabContent'), subs=[['ann','الإعلانات',d.announcements.length],['news','الأخبار',d.news.length],['links','الروابط',d.links.length]];
+    var d=CT.doc, box=$('tabContent'), subs=[['ann','الإعلانات',d.announcements.length],['news','الأخبار',d.news.length],['links','الروابط',d.links.length],['wa','رسائل الواتساب',null],['certs','الشهادات',null]];
     var h='<div class="ct-note">ما تكتبه هنا يظهر للأولياء مباشرة خلال لحظات، دون المرور بملف الإكسل. ما في الإكسل يبقى كما هو ويُعرض معه.</div>'+
-      '<div class="ct-subs">'+subs.map(function(x){ return '<button data-s="'+x[0]+'" class="'+(CT.sub===x[0]?'on':'')+'">'+x[1]+' ('+ar(x[2])+')</button>'; }).join('')+'</div>';
+      '<div class="ct-subs">'+subs.map(function(x){ return '<button data-s="'+x[0]+'" class="'+(CT.sub===x[0]?'on':'')+'">'+x[1]+(x[2]==null?'':' ('+ar(x[2])+')')+'</button>'; }).join('')+'</div>';
+    if(CT.sub==='wa'||CT.sub==='certs'){ box.innerHTML=h+(CT.sub==='wa'?'<div id="waBox"></div>':'<div id="certBox"></div>'); Array.prototype.forEach.call(box.querySelectorAll('.ct-subs button'),function(b){ b.addEventListener('click',function(){ if(CT.busy) return; CT.sub=b.getAttribute('data-s'); CT.form=null; renderContent(); }); }); if(CT.sub==='wa') renderWa(); else { CE.view='list'; loadCerts(); } return; }
     var addLbl={ann:'＋ إعلان جديد',news:'＋ خبر جديد',links:'＋ رابط جديد'}[CT.sub];
     if(!CT.form) h+='<button class="ct-add" id="ctAdd">'+addLbl+'</button>'; else h+=formHtml();
     h+=listHtml();
@@ -757,6 +828,393 @@
     function mv(attr,dir){ Array.prototype.forEach.call(box.querySelectorAll('['+attr+']'),function(b){ b.addEventListener('click',function(){ if(CT.busy) return; var l=CT.doc.links.slice(), id=b.getAttribute(attr), i=-1,j; l.forEach(function(x,k){ if(x.id===id) i=k; }); j=i+dir; if(i<0||j<0||j>=l.length) return; var t=l[i]; l[i]=l[j]; l[j]=t; persist('links',l,'تم الترتيب ✓').then(function(okk){ if(okk) renderContent(); }); }); }); }
     mv('data-up',-1); mv('data-dn',1);
   }
+
+
+  /* ================= سجل الالتزام (داخل تبويب المعلمين) ================= */
+  var trMode='week', trOpts={last:0,cur:false};
+  function dubaiToday(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dubai'}); }
+  function addDays(iso,n){ var d=new Date(iso+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); }
+  // الأسابيع المنتهية فقط (انتهى أحدها حين مضى يوم الجمعة)، دون العطلات (بلا دروس)، والمطلوب من كل معلّم = ما حُسب له في المتابعة الأسبوعية
+  function logModel(){
+    var today=dubaiToday(), ws=DATA.weeks.filter(function(w){ return w.start && (trOpts.cur ? w.start<=today : addDays(w.start,4)<today) && w.summary && w.summary.total>0; });
+    if(trOpts.last) ws=ws.slice(-trOpts.last);
+    var map={}, order=[];
+    ws.forEach(function(w){ (w.rows||[]).forEach(function(r){
+      if(!r.required.length) return; var k=r.teacher+'||'+r.subject;
+      if(!map[k]){ map[k]={teacher:r.teacher,subject:r.subject,cells:{},req:0,done:0,n:{done:0,partial:0,missing:0}}; order.push(k); }
+      var m=map[k], c=m.cells[w.num]||(m.cells[w.num]={req:0,done:0}); c.req+=r.required.length; c.done+=r.done.length; m.req+=r.required.length; m.done+=r.done.length; }); });
+    order.forEach(function(k){ var m=map[k]; ws.forEach(function(w){ var c=m.cells[w.num]; if(!c) return; c.st=c.done>=c.req?'done':(c.done>0?'partial':'missing'); m.n[c.st]++; }); m.pct=m.req?Math.round(m.done/m.req*100):null; });
+    var list=order.map(function(k){return map[k]}).sort(function(a,b){ return ((a.pct==null?101:a.pct)-(b.pct==null?101:b.pct)) || a.teacher.localeCompare(b.teacher,'ar'); });
+    var tr=0,td=0; list.forEach(function(m){tr+=m.req;td+=m.done});
+    return {weeks:ws,list:list,overall:tr?Math.round(td/tr*100):null,low:list.filter(function(m){return m.pct!=null&&m.pct<70}).length,today:today};
+  }
+  function pctCls(p){ return p>=90?'hi':(p>=70?'mid':'lo'); }
+  var SYM={done:'✓',partial:'◐',missing:'✗',none:'·'};
+  function renderLog(){
+    var box=$('trLog'), M=logModel();
+    var h='<div class="lg-print"><h2>سجل التزام المعلمين بالخطة الأسبوعية</h2><p>مدرسة المعيريض للحلقة الثانية بنين · '+(M.weeks.length?esc(M.weeks[0].label)+' – '+esc(M.weeks[M.weeks.length-1].label):'')+' · بتاريخ '+esc(dfmt(M.today))+'</p></div>'+
+      '<div class="lg-ctl noprint"><select id="lgLast"><option value="0">كل الأسابيع المنتهية</option><option value="4">آخر ٤ أسابيع</option><option value="8">آخر ٨ أسابيع</option><option value="12">آخر ١٢ أسبوعاً</option></select>'+
+      '<label><input type="checkbox" id="lgCur"> تضمين الأسبوع الجاري</label><span style="flex:1"></span><button class="ct-btn" id="lgCsv">⬇ Excel / CSV</button><button class="ct-btn pri" id="lgPrint">🖨 طباعة</button></div>';
+    if(!M.weeks.length){ box.innerHTML=h+'<div class="empty">لا توجد أسابيع منتهية بخطة منشورة بعد. يظهر السجل بعد انتهاء أول أسبوع.</div>'; wireLog(); return; }
+    h+='<div class="summary"><div class="sc"><div class="n">'+ar(M.weeks.length)+'</div><div class="t">أسابيع محتسبة</div></div><div class="sc '+(M.overall>=90?'done':(M.overall>=70?'partial':'miss'))+'"><div class="n">'+ar(M.overall)+'٪</div><div class="t">متوسط الالتزام</div></div><div class="sc '+(M.low?'miss':'done')+'"><div class="n">'+ar(M.low)+'</div><div class="t">دون ٧٠٪</div></div></div>';
+    h+='<div class="lgw"><table class="lg"><thead><tr><th class="t">المعلم / المادة</th>'+M.weeks.map(function(w){return '<th title="'+escq(w.label+' · '+(w.range||''))+'">'+ar(w.num)+'</th>'}).join('')+'<th>النسبة</th></tr></thead><tbody>'+
+      M.list.map(function(m){ return '<tr><td class="t"><b>'+esc(m.teacher)+'</b><small>'+esc(m.subject)+'</small></td>'+M.weeks.map(function(w){ var c=m.cells[w.num]; if(!c) return '<td><span class="lg-c none">·</span></td>'; return '<td title="'+ar(c.done)+' من '+ar(c.req)+' شعبة"><span class="lg-c '+c.st+'">'+SYM[c.st]+'</span></td>'; }).join('')+'<td><span class="lg-p '+pctCls(m.pct)+'">'+ar(m.pct)+'٪</span></td></tr>'; }).join('')+'</tbody></table></div>'+
+      '<div class="lg-note">✓ مكتمل · ◐ جزئي · ✗ لم تُنشر · · لا مطلوب منه. الأرقام أسابيع الخطة. النسبة = الشعب المنشورة ÷ الشعب المطلوبة. تُحتسب الأسابيع المنتهية فقط (ما بعد الجمعة) وبلا أسابيع العطلة، والمطلوب من كل معلّم هو ما تحسبه المتابعة الأسبوعية (آخر أسبوعين أدخل فيهما شيئاً).</div>';
+    box.innerHTML=h; $('lgLast').value=String(trOpts.last); $('lgCur').checked=trOpts.cur; wireLog();
+  }
+  function csvCell(v){ v=String(v==null?'':v); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+  function wireLog(){
+    $('lgLast').addEventListener('change',function(){ trOpts.last=+this.value; renderLog(); });
+    $('lgCur').addEventListener('change',function(){ trOpts.cur=this.checked; renderLog(); });
+    $('lgCsv').addEventListener('click',function(){
+      var M=logModel(); if(!M.weeks.length){ toast('لا بيانات للتصدير',true); return; }
+      var rows=[['المعلم','المادة','النسبة %','الشعب المطلوبة','الشعب المنشورة'].concat(M.weeks.map(function(w){return 'أسبوع '+w.num}))];
+      M.list.forEach(function(m){ rows.push([m.teacher,m.subject,m.pct,m.req,m.done].concat(M.weeks.map(function(w){ var c=m.cells[w.num]; return c?({done:'مكتمل',partial:'جزئي',missing:'لم تُنشر'})[c.st]:''; }))); });
+      var blob=new Blob(['\ufeff'+rows.map(function(r){return r.map(csvCell).join(',')}).join('\r\n')],{type:'text/csv;charset=utf-8'}), a=document.createElement('a');
+      a.href=URL.createObjectURL(blob); a.download='التزام-المعلمين.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href)},2000); toast('نُزِّل الملف ✓');
+    });
+    $('lgPrint').addEventListener('click',function(){
+      var st=document.createElement('style'); st.id='pcPage'; st.textContent='@page{size:A4 landscape;margin:10mm}'; document.head.appendChild(st); document.body.classList.add('pc');
+      var done=function(){ document.body.classList.remove('pc'); var x=$('pcPage'); if(x) x.remove(); window.removeEventListener('afterprint',done); };
+      window.addEventListener('afterprint',done); window.print();
+    });
+  }
+  function setTrMode(m){
+    trMode=m; $('trWeek').classList.toggle('hidden',m!=='week'); $('trLog').classList.toggle('hidden',m!=='log');
+    Array.prototype.forEach.call(document.querySelectorAll('#trSubs button'),function(b){ b.classList.toggle('on',b.getAttribute('data-m')===m); });
+    if(m==='log') renderLog();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#trSubs button'),function(b){ b.addEventListener('click',function(){ setTrMode(b.getAttribute('data-m')); }); });
+
+  // ---- نص تذكير جاهز للمعلمين المتأخرين (للصق في مجموعة الواتساب) ----
+  function copyText(t,okMsg){
+    function fb(){ var ta=document.createElement('textarea'); ta.value=t; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); var ok=false; try{ ok=document.execCommand('copy'); }catch(e){} ta.remove(); toast(ok?(okMsg||'نُسخ ✓'):'تعذّر النسخ، انسخ النص يدوياً',!ok); }
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function(){ toast(okMsg||'نُسخ ✓'); },fb); else fb();
+  }
+  function remindText(){
+    var w=DATA.weeks[wk], late=(w.rows||[]).filter(function(r){ return r.required.length&&r.status!=='done'; }); if(!late.length) return '';
+    return 'الزملاء الكرام،\nلم تكتمل الخطة الأسبوعية («'+w.label+(w.range?' · '+w.range:'')+'») لدى:\n\n'+late.sort(function(a,b){return a.teacher.localeCompare(b.teacher,'ar')}).map(function(r){
+      var miss=r.required.filter(function(c){return r.done.indexOf(c)<0}); return '• '+r.teacher+' — '+r.subject+': '+(r.status==='missing'?'لم تُنشر بعد':'ناقص '+miss.join('، ')); }).join('\n')+'\n\nنرجو استكمالها في أقرب وقت. شاكرين تعاونكم 🌹';
+  }
+  $('remindBtn').addEventListener('click',function(){ var t=remindText(); if(!t){ toast('لا متأخرون في هذا الأسبوع 🎉'); return; } copyText(t,'نُسخ نص التذكير ✓ الصقه في مجموعة المعلمين'); });
+
+
+  /* ================= رسائل الواتساب الجاهزة (داخل تبويب المحتوى) ================= */
+  var WA={plan:null,exams:null,state:'idle',wk:0,opts:{exams:true,reminders:true,notices:true,lessons:false}};
+  function waLoad(){
+    if(WA.state==='loading') return; WA.state='loading';
+    Promise.all([fetch('/.netlify/functions/plan',{cache:'no-store'}).then(function(r){return r.json()}),
+                 fetch('/.netlify/functions/exams',{cache:'no-store'}).then(function(r){return r.json()}).catch(function(){return null})]).then(function(r){
+      if(!r[0]||!r[0].weeks){ WA.state='fail'; } else { WA.plan=r[0]; WA.exams=(r[1]&&r[1].weeks)?r[1]:null; WA.wk=r[0].currentWeekIndex||0; WA.state='ok'; }
+      renderWa();
+    }).catch(function(){ WA.state='fail'; renderWa(); });
+  }
+  function waText(group){
+    var m=SiteMerge.model({plan:WA.plan,exams:WA.exams,group:group,weekIndex:WA.wk,pick:''});
+    return {m:m,text:SiteMerge.whatsapp(m,{exams:WA.opts.exams,reminders:WA.opts.reminders,notices:WA.opts.notices,lessons:WA.opts.lessons,link:location.origin+'/summary'})};
+  }
+  function renderWa(){
+    var box=$('waBox'); if(!box) return;
+    if(!window.SiteMerge){ box.innerHTML='<div class="acard"><div class="ah"><span class="at">ملف المكتبة غير مرفوع</span><span class="an warn">!</span></div><div class="adesc">ارفع <b>site-merge.js</b> إلى جذر المستودع بجانب index.html ثم أعد النشر.</div></div>'; return; }
+    if(WA.state==='idle'){ waLoad(); }
+    if(WA.state==='idle'||WA.state==='loading'){ box.innerHTML='<div class="empty">… جارٍ تحميل الخطة والاختبارات</div>'; return; }
+    if(WA.state==='fail'){ box.innerHTML='<div class="empty">تعذّر تحميل الخطة. <button class="ct-btn" id="waRetry">إعادة المحاولة</button></div>'; $('waRetry').addEventListener('click',function(){ WA.state='idle'; renderWa(); }); return; }
+    var weeks=WA.plan.weeks, w=weeks[WA.wk], o=WA.opts;
+    var h='<div class="ct-note">رسالة جاهزة لكل صف: انسخها وألصقها في مجموعة الواتساب، أو افتح الواتساب مباشرة. يمكنك تعديل النص قبل النسخ.</div>'+
+      '<div class="weeknav"><button id="waPrev"'+(WA.wk===0?' disabled':'')+'>‹</button><div class="mid"><b>'+esc(w.label)+'</b><span>'+esc(w.range||'')+'</span></div><button id="waNext"'+(WA.wk===weeks.length-1?' disabled':'')+'>›</button></div>'+
+      '<div class="wa-opts"><label><input type="checkbox" data-o="exams"'+(o.exams?' checked':'')+'> الاختبارات</label><label><input type="checkbox" data-o="reminders"'+(o.reminders?' checked':'')+'> التذكيرات</label><label><input type="checkbox" data-o="notices"'+(o.notices?' checked':'')+'> إعلان الأسبوع</label><label><input type="checkbox" data-o="lessons"'+(o.lessons?' checked':'')+'> الدروس</label></div>';
+    var n=0;
+    WA.plan.sectionOrder.forEach(function(sec){
+      var r=waText(sec.code), m=r.m; if(!m.rows.length&&!m.items.length) return; n++;
+      h+='<div class="wa-card" data-g="'+escq(sec.code)+'"><div class="wh"><b>'+esc(sec.label)+'</b><span class="ct-chip">'+(m.hasExams&&m.examWeek?ar(m.items.length)+' اختبار':'بلا جدول اختبارات')+'</span><span class="ct-chip">'+ar(m.reminders.length)+' تذكير</span></div>'+
+        '<details><summary>عرض النص وتعديله</summary><textarea>'+esc(r.text)+'</textarea></details><div class="ct-act"><button class="ct-btn pri" data-a="copy">📋 نسخ</button><button class="ct-btn" data-a="wa">💬 فتح في واتساب</button></div></div>';
+    });
+    if(!n) h+='<div class="empty">لا خطة منشورة لهذا الأسبوع بعد.</div>';
+    box.innerHTML=h;
+    $('waPrev').addEventListener('click',function(){ if(WA.wk>0){ WA.wk--; renderWa(); } }); $('waNext').addEventListener('click',function(){ if(WA.wk<weeks.length-1){ WA.wk++; renderWa(); } });
+    Array.prototype.forEach.call(box.querySelectorAll('.wa-opts input'),function(c){ c.addEventListener('change',function(){ WA.opts[c.getAttribute('data-o')]=c.checked; renderWa(); }); });
+    Array.prototype.forEach.call(box.querySelectorAll('.wa-card'),function(card){
+      var ta=card.querySelector('textarea');
+      card.querySelector('[data-a=copy]').addEventListener('click',function(){ copyText(ta.value,'نُسخت رسالة «'+card.querySelector('b').textContent+'» ✓'); });
+      card.querySelector('[data-a=wa]').addEventListener('click',function(){ window.open('https://wa.me/?text='+encodeURIComponent(ta.value),'_blank','noopener'); });
+    });
+  }
+
+  /* ================= شهادات الشكر والتقدير (داخل تبويب المحتوى) ================= */
+  var CE={doc:null,today:'',view:'list',q:'',limit:40,edit:null,roster:null,rstate:'idle',picks:{},rq:'',draft:null,busy:false};
+  var CTYPES=[['شكر وتقدير','تقديراً لجهوده المتميزة وحسن سلوكه والتزامه، نتمنى له دوام التوفيق والنجاح.'],
+    ['تفوق دراسي','لتفوقه الدراسي وحصوله على مستوى متميز في تحصيله، متمنين له مزيداً من التقدم والنجاح.'],
+    ['التزام وانضباط','لالتزامه بالحضور والانضباط المدرسي وحسن تعامله مع زملائه ومعلميه.'],
+    ['مشاركة وتميّز','لمشاركته الفاعلة وإسهامه المتميز في الأنشطة والفعاليات المدرسية.'],
+    ['تميّز سلوكي','لحسن خلقه وسلوكه القويم وكونه قدوة حسنة لزملائه.']];
+  function ceApi(body){ body.pw=PW; return fetch('/.netlify/functions/certs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'}).then(function(r){ return r.json().then(function(j){ return {s:r.status,j:j}; }).catch(function(){ return {s:r.status,j:null}; }); }); }
+  var ORD={5:'الخامس',6:'السادس',7:'السابع',8:'الثامن'};
+  function ceSecLabel(s){ s=String(s||'').trim(); var m=/^([5-8])\s*([GgAa])\s*(\d)?$/.exec(s); if(!m) return s; return 'الصف '+ORD[m[1]]+' '+(/g/i.test(m[2])?'العام':'المتقدم')+(m[3]?' — شعبة '+m[3]:''); }
+  function ceDig(s){ return String(s==null?'':s).replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d)}).replace(/[۰-۹]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)}).replace(/\D/g,''); }
+  function loadCerts(force){
+    var box=$('certBox'); if(!box) return;
+    if(CE.doc&&!force){ renderCerts(); return; }
+    box.innerHTML='<div class="empty">… جارٍ التحميل</div>';
+    ceApi({action:'get'}).then(function(x){
+      if(x.j&&x.j.ok){ CE.doc=x.j.doc; CE.today=x.j.today; renderCerts(); return; }
+      var msg=!x.j?'دالة الشهادات غير مرفوعة. ارفع <b>certs.js</b> إلى netlify/functions (مع lib/guard.js) ثم أعد النشر.':(x.j.error==='storage'?'مخزن الشهادات غير متاح. تأكّد من "@netlify/blobs" في package.json ثم أعد النشر.':(x.s===429?'محاولات كثيرة، انتظر قليلاً.':'خطأ غير متوقع.'));
+      box.innerHTML='<div class="acard"><div class="ah"><span class="at">تعذّر فتح الشهادات</span><span class="an warn">!</span></div><div class="adesc">'+msg+'</div></div>';
+    }).catch(function(){ box.innerHTML='<div class="acard"><div class="ah"><span class="at">تعذّر الاتصال</span><span class="an warn">!</span></div></div>'; });
+  }
+  // إرسال تعديل مع رقم النسخة؛ يعيد وعداً بـ true عند النجاح
+  function ceSend(body,okMsg){
+    if(CE.busy) return Promise.resolve(false); body.rev=CE.doc.rev; CE.busy=true;
+    return ceApi(body).then(function(x){ CE.busy=false; var j=x.j||{};
+      if(j.ok){ CE.doc=j.doc; CE.today=j.today||CE.today; toast(okMsg||'تم الحفظ ✓'); return j; }
+      if(x.s===409){ if(j.doc&&CE.doc&&j.doc.rev<CE.doc.rev){ toast('الخدمة لم تتزامن بعد مع آخر حفظ. انتظر ثوانٍ ثم أعد المحاولة (لم يضع شيء).',true); return false; }
+        CE.doc=j.doc; renderCerts(); toast('تغيّرت الشهادات من جهاز آخر فحُدِّثت القائمة. كرّر ما فعلتَه.',true); return false; }
+      toast(j.message||(x.s===401?'كلمة المرور غير مقبولة':'تعذّر الحفظ'),true); return false;
+    }).catch(function(){ CE.busy=false; toast('تعذّر الاتصال، لم يُحفظ شيء.',true); return false; });
+  }
+  function cePreview(c){
+    var d=CE.doc, old=document.querySelector('.ce-modal'); if(old) old.remove();
+    var m=document.createElement('div'); m.className='ce-modal';
+    var cc={type:c.type,date:c.date,name:c.name,section:c.section,text:SiteCert.text(c)};
+    m.innerHTML='<div class="box">'+SiteCert.html(cc,d.settings)+'<div class="ct-act" style="justify-content:center"><button class="ct-btn pri" id="cmPrint">🖨 طباعة / PDF</button><button class="ct-btn" id="cmClose">إغلاق</button></div></div>';
+    document.body.appendChild(m);
+    $('cmClose').addEventListener('click',function(){ m.remove(); }); m.addEventListener('click',function(e){ if(e.target===m) m.remove(); });
+    $('cmPrint').addEventListener('click',function(){ m.remove(); SiteCert.print(cc,d.settings); });
+  }
+  function certsMatch(c,q){ q=q.trim(); if(!q) return true; var qd=ceDig(q); return c.name.indexOf(q)>-1||c.type.indexOf(q)>-1||(c.section||'').toLowerCase().indexOf(q.toLowerCase())>-1||(qd.length>=3&&c.sid.slice(-qd.length)===qd); }
+  function renderCerts(){
+    var box=$('certBox'); if(!box) return; if(!CE.doc){ loadCerts(); return; }
+    if(CE.view==='issue') return renderCertIssue(box);
+    if(CE.view==='edit') return renderCertEdit(box);
+    if(CE.view==='settings') return renderCertSettings(box);
+    var d=CE.doc, all=d.certs.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||'')||b.created-a.created; }), list=all.filter(function(c){ return certsMatch(c,CE.q); });
+    var students={}; all.forEach(function(c){ students[c.sid]=1; });
+    var h='<div class="ct-note">اكتب الشهادة هنا، فيجدها وليّ الأمر في صفحة <b dir="ltr">/certs</b> بإدخال رقم هوية ابنه واسمه الأول، ويطبعها أو يحفظها PDF. لا تظهر شهادة طالب لغيره.</div>'+
+      '<div class="summary"><div class="sc"><div class="n">'+ar(all.length)+'</div><div class="t">شهادة</div></div><div class="sc"><div class="n">'+ar(Object.keys(students).length)+'</div><div class="t">طالب</div></div><div class="sc"><div class="n">'+ar(all.filter(function(c){return c.hidden}).length)+'</div><div class="t">مخفية</div></div></div>'+
+      '<button class="ct-add" id="ceNew">＋ إصدار شهادات جديدة</button>'+
+      '<div class="ct-act" style="margin:0 0 10px"><button class="ct-btn" id="ceSet">⚙️ المدرسة والتوقيعات</button><button class="ct-btn" id="ceLink">🔗 نسخ رسالة وصلة الأولياء</button></div>'+
+      '<input class="ct-in" id="ceQ" placeholder="ابحث باسم الطالب أو آخر أرقام الهوية أو نوع الشهادة" value="'+escq(CE.q)+'" style="margin-bottom:10px">';
+    if(!all.length) h+='<div class="empty">لا توجد شهادات بعد. اضغط «إصدار شهادات جديدة».</div>';
+    else if(!list.length) h+='<div class="empty">لا نتائج مطابقة.</div>';
+    list.slice(0,CE.limit).forEach(function(c){
+      h+='<div class="ct-item" data-id="'+escq(c.id)+'"><div class="ct-h"><span class="ct-chip sch">'+escq(c.type)+'</span><span class="ct-chip">'+dfmt(c.date)+'</span>'+(c.hidden?'<span class="ct-chip urgent">مخفية عن الأولياء</span>':'')+'</div>'+
+        '<b>'+escq(c.name)+'</b><div class="ct-meta">'+escq(c.section||'')+' · <span dir="ltr">'+escq(c.sid)+'</span></div>'+
+        '<div class="ct-txt">'+escq(SiteCert.text(c))+'</div>'+
+        '<div class="ct-act"><button class="ct-btn" data-a="pv">👁 معاينة / طباعة</button><button class="ct-btn" data-a="ed">تعديل</button><button class="ct-btn" data-a="hd">'+(c.hidden?'إظهار':'إخفاء')+'</button><button class="ct-btn del" data-a="rm">حذف</button></div></div>';
+    });
+    if(list.length>CE.limit) h+='<button class="ct-add" id="ceMore">عرض المزيد ('+ar(list.length-CE.limit)+' متبقية)</button>';
+    box.innerHTML=h;
+    $('ceNew').addEventListener('click',function(){ CE.view='issue'; CE.picks={}; CE.rq=''; CE.draft={type:CTYPES[0][0],body:CTYPES[0][1],date:CE.today}; renderCerts(); if(CE.rstate==='idle') loadRoster(); });
+    $('ceSet').addEventListener('click',function(){ CE.view='settings'; renderCerts(); });
+    $('ceLink').addEventListener('click',function(){ copyText('لعرض شهادات الشكر والتقدير للطالب وطباعتها، ادخل على الرابط التالي وأدخل رقم هوية الطالب واسمه الأول:\n'+location.origin+'/certs','نُسخت الرسالة ✓ الصقها في مجموعات الأولياء'); });
+    var q=$('ceQ'); q.addEventListener('input',function(){ CE.q=q.value; CE.limit=40; var pos=q.selectionStart; renderCerts(); var n=$('ceQ'); n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} });
+    var more=$('ceMore'); if(more) more.addEventListener('click',function(){ CE.limit+=60; renderCerts(); });
+    Array.prototype.forEach.call(box.querySelectorAll('.ct-item'),function(it){
+      var id=it.getAttribute('data-id'), c=d.certs.filter(function(x){ return x.id===id; })[0];
+      Array.prototype.forEach.call(it.querySelectorAll('[data-a]'),function(b){ b.addEventListener('click',function(){
+        var a=b.getAttribute('data-a');
+        if(a==='pv') cePreview(c);
+        else if(a==='ed'){ CE.edit=c.id; CE.view='edit'; renderCerts(); }
+        else if(a==='hd') ceSend({action:'update',id:c.id,fields:{hidden:!c.hidden}},c.hidden?'أُظهرت الشهادة ✓':'أُخفيت الشهادة ✓').then(function(r){ if(r) renderCerts(); });
+        else if(a==='rm'){ if(!window.confirm('حذف شهادة «'+c.name+'» نهائياً؟')) return; ceSend({action:'remove',id:c.id},'تم الحذف ✓').then(function(r){ if(r) renderCerts(); }); }
+      }); });
+    });
+  }
+  function loadRoster(){
+    if(CE.rstate==='loading') return; CE.rstate='loading';
+    ceApi({action:'roster'}).then(function(x){ CE.roster=(x.j&&x.j.roster)||[]; CE.rstate=(x.j&&x.j.ok&&!x.j.note)?'ok':'none'; if(CE.view==='issue') renderCerts(); })
+      .catch(function(){ CE.rstate='none'; CE.roster=[]; if(CE.view==='issue') renderCerts(); });
+  }
+  function certFields(v){ // حقول النوع والنص والتاريخ المشتركة بين الإصدار والتعديل
+    return '<div class="ct-fld"><label>نوع الشهادة</label><div class="fchips" id="ceTypes">'+CTYPES.map(function(t){ return '<button type="button" class="fchip'+(v.type===t[0]?' on':'')+'" data-t="'+escq(t[0])+'">'+escq(t[0])+'</button>'; }).join('')+'</div><input class="ct-in" id="ceType" maxlength="40" value="'+escq(v.type)+'"><div class="hint">اختر من الأنواع الجاهزة أو اكتب نوعاً آخر. يظهر عنوان الشهادة «شهادة …».</div></div>'+
+      '<div class="ct-fld"><label>نص الشهادة</label><textarea class="ct-ta" id="ceBody" maxlength="600">'+escq(v.body)+'</textarea><div class="hint">يمكنك كتابة <b>{الاسم}</b> و<b>{الصف}</b> داخل النص فيُستبدلان باسم كل طالب وصفّه. الاسم والصف يظهران أصلاً في الشهادة.</div></div>'+
+      '<div class="ct-fld"><label>التاريخ</label><input class="ct-in" type="date" id="ceDate" value="'+escq(v.date)+'"></div>';
+  }
+  function wireTypes(){
+    Array.prototype.forEach.call(document.querySelectorAll('#ceTypes .fchip'),function(b){ b.addEventListener('click',function(){
+      var t=b.getAttribute('data-t'), cur=$('ceBody').value.trim(), preset=CTYPES.filter(function(x){ return x[1]===cur; }).length>0;
+      $('ceType').value=t; if(!cur||preset) $('ceBody').value=CTYPES.filter(function(x){ return x[0]===t; })[0][1];
+      Array.prototype.forEach.call(document.querySelectorAll('#ceTypes .fchip'),function(o){ o.classList.toggle('on',o===b); }); }); });
+  }
+  function renderCertIssue(box){
+    var dr=CE.draft, ros=CE.roster||[], q=CE.rq.trim(), picks=CE.picks;
+    var shown=ros.filter(function(s){ return !q||s.name.indexOf(q)>-1||(s.section||'').toLowerCase().indexOf(q.toLowerCase())>-1||s.id.slice(-ceDig(q).length)===ceDig(q)&&ceDig(q).length>=3; });
+    var np=Object.keys(picks).length;
+    var h='<div class="ct-form"><h3>إصدار شهادات</h3>'+certFields(dr)+
+      '<div class="ct-fld"><label>الطلاب ('+ar(np)+' مختار)</label>'+
+      (CE.rstate==='loading'?'<div class="hint">… جارٍ تحميل قائمة الطلاب من ملف التقرير</div>':
+       (CE.rstate==='none'||!ros.length?'<div class="hint">تعذّر تحميل قائمة الطلاب من ملف التقرير، أضِف الطلاب يدوياً أدناه.</div>':
+       '<input class="ct-in" id="ceRq" placeholder="ابحث بالاسم أو الشعبة (مثل 6G1)" value="'+escq(CE.rq)+'"><div class="ce-ros">'+
+        shown.slice(0,120).map(function(s){ return '<label class="ce-r"><input type="checkbox" data-id="'+escq(s.id)+'"'+(picks[s.id]?' checked':'')+'><span>'+escq(s.name)+'</span><small>'+escq(s.section||'')+'</small></label>'; }).join('')+(shown.length>120?'<div class="hint" style="padding:6px">يُعرض أول ١٢٠ — قيّد البحث.</div>':'')+(shown.length?'':'<div class="hint" style="padding:6px">لا نتائج.</div>')+'</div>'+
+        '<div class="ct-act" style="margin-top:6px"><button type="button" class="ct-btn" id="ceAll">تحديد كل المعروض ('+ar(Math.min(shown.length,120))+')</button><button type="button" class="ct-btn" id="ceNone">إلغاء التحديد</button></div>'))+
+      '</div>'+
+      '<div class="ct-fld"><label>إضافة طالب يدوياً</label><div class="ct-row2"><div><input class="ct-in" id="ceMid" dir="ltr" inputmode="numeric" placeholder="رقم الهوية 784…"></div><div><input class="ct-in" id="ceMname" placeholder="اسم الطالب الكامل"></div></div><div class="ct-row2" style="margin-top:6px"><div><input class="ct-in" id="ceMsec" placeholder="الصف/الشعبة (مثل 6G1)"></div><div><button type="button" class="ct-btn" id="ceMadd" style="width:100%;padding:10px">＋ أضف للمختارين</button></div></div></div>'+
+      (np?'<div class="ct-fld"><label>المختارون</label><div class="fchips">'+Object.keys(picks).map(function(k){ return '<button type="button" class="fchip on" data-rm="'+escq(k)+'">'+escq(picks[k].name)+' ✕</button>'; }).join('')+'</div></div>':'')+
+      '<div class="ct-err" id="ceErr"></div><div class="ct-act" style="margin-top:0"><button class="ct-btn pri" id="ceGo">إصدار'+(np?' ('+ar(np)+')':'')+'</button><button class="ct-btn" id="cePv">👁 معاينة</button><button class="ct-btn" id="ceBack">إلغاء</button></div></div>';
+    box.innerHTML=h; wireTypes();
+    function keep(){ dr.type=$('ceType').value; dr.body=$('ceBody').value; dr.date=$('ceDate').value; }
+    var rq=$('ceRq'); if(rq) rq.addEventListener('input',function(){ keep(); CE.rq=rq.value; var p=rq.selectionStart; renderCerts(); var n=$('ceRq'); if(n){ n.focus(); try{ n.setSelectionRange(p,p); }catch(e){} } });
+    Array.prototype.forEach.call(box.querySelectorAll('.ce-r input'),function(c){ c.addEventListener('change',function(){ var id=c.getAttribute('data-id'), s=ros.filter(function(x){ return x.id===id; })[0]; if(c.checked) picks[id]={sid:s.id,name:s.name,section:ceSecLabel(s.section)}; else delete picks[id]; keep(); renderCerts(); }); });
+    var al=$('ceAll'); if(al) al.addEventListener('click',function(){ keep(); shown.slice(0,120).forEach(function(s){ picks[s.id]={sid:s.id,name:s.name,section:ceSecLabel(s.section)}; }); renderCerts(); });
+    var no=$('ceNone'); if(no) no.addEventListener('click',function(){ keep(); CE.picks={}; renderCerts(); });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-rm]'),function(b){ b.addEventListener('click',function(){ keep(); delete picks[b.getAttribute('data-rm')]; renderCerts(); }); });
+    $('ceMadd').addEventListener('click',function(){ var id=ceDig($('ceMid').value), nm=$('ceMname').value.trim(); if(id.length<10||!nm){ $('ceErr').textContent='أدخل رقم هوية صحيحاً (١٥ رقماً) واسم الطالب.'; return; } keep(); picks[id]={sid:id,name:nm,section:ceSecLabel($('ceMsec').value)}; renderCerts(); });
+    $('ceBack').addEventListener('click',function(){ CE.view='list'; renderCerts(); });
+    $('cePv').addEventListener('click',function(){ keep(); var first=picks[Object.keys(picks)[0]]||{name:'اسم الطالب',section:'الصف السادس العام'}; if(!dr.type.trim()||!dr.body.trim()){ $('ceErr').textContent='اكتب نوع الشهادة ونصها.'; return; }
+      cePreview({type:dr.type,date:dr.date||CE.today,name:first.name,section:first.section,body:dr.body}); });
+    $('ceGo').addEventListener('click',function(){
+      keep(); var err=$('ceErr'); if(!dr.type.trim()) return err.textContent='اكتب نوع الشهادة.'; if(!dr.body.trim()) return err.textContent='اكتب نص الشهادة.'; if(!np) return err.textContent='اختر طالباً واحداً على الأقل.';
+      if(np>1&&!window.confirm('إصدار هذه الشهادة لـ '+np+' طالباً؟')) return;
+      var b=$('ceGo'); b.disabled=true; b.textContent='جارٍ الإصدار…';
+      ceSend({action:'issue',type:dr.type.trim(),body:dr.body.trim(),date:dr.date||CE.today,students:Object.keys(picks).map(function(k){ return picks[k]; })},'').then(function(r){
+        if(r){ toast('أُصدرت '+ar(r.issued)+' شهادة'+(r.skipped?' (وتجاوزنا '+ar(r.skipped)+' مكررة)':'')+' ✓ تظهر للأولياء فوراً'); CE.view='list'; CE.picks={}; renderCerts(); }
+        else if($('ceGo')){ $('ceGo').disabled=false; $('ceGo').textContent='إصدار'+(np?' ('+ar(np)+')':''); } });
+    });
+  }
+  function renderCertEdit(box){
+    var c=CE.doc.certs.filter(function(x){ return x.id===CE.edit; })[0]; if(!c){ CE.view='list'; return renderCerts(); }
+    box.innerHTML='<div class="ct-form"><h3>تعديل الشهادة</h3>'+
+      '<div class="ct-fld"><label>اسم الطالب</label><input class="ct-in" id="eeName" maxlength="80" value="'+escq(c.name)+'"></div>'+
+      '<div class="ct-row2"><div class="ct-fld"><label>رقم الهوية</label><input class="ct-in" id="eeSid" dir="ltr" inputmode="numeric" value="'+escq(c.sid)+'"></div><div class="ct-fld"><label>الصف / الشعبة</label><input class="ct-in" id="eeSec" maxlength="40" value="'+escq(c.section||'')+'"></div></div>'+
+      certFields({type:c.type,body:c.body,date:c.date})+'<label class="ct-chk"><input type="checkbox" id="eeHid"'+(c.hidden?' checked':'')+'> إخفاء الشهادة عن الأولياء</label>'+
+      '<div class="ct-err" id="ceErr"></div><div class="ct-act" style="margin-top:6px"><button class="ct-btn pri" id="eeSave">حفظ</button><button class="ct-btn" id="eePv">👁 معاينة</button><button class="ct-btn" id="eeBack">إلغاء</button></div></div>';
+    wireTypes();
+    function cur(){ return {name:$('eeName').value.trim(),sid:ceDig($('eeSid').value),section:$('eeSec').value.trim(),type:$('ceType').value.trim(),body:$('ceBody').value.trim(),date:$('ceDate').value,hidden:$('eeHid').checked}; }
+    $('eeBack').addEventListener('click',function(){ CE.view='list'; renderCerts(); });
+    $('eePv').addEventListener('click',function(){ var f=cur(); if(!f.type||!f.body||!f.name){ $('ceErr').textContent='أكمل الاسم والنوع والنص.'; return; } cePreview(f); });
+    $('eeSave').addEventListener('click',function(){ var f=cur(), err=$('ceErr'); if(!f.name) return err.textContent='اكتب اسم الطالب.'; if(f.sid.length<10) return err.textContent='رقم الهوية غير صحيح.'; if(!f.type||!f.body) return err.textContent='اكتب النوع والنص.';
+      var b=$('eeSave'); b.disabled=true; ceSend({action:'update',id:c.id,fields:f},'حُفظ التعديل ✓').then(function(r){ if(r){ CE.view='list'; renderCerts(); } else if($('eeSave')) $('eeSave').disabled=false; }); });
+  }
+  function renderCertSettings(box){
+    var s=CE.doc.settings, sg=s.sigs.slice(); while(sg.length<3) sg.push({title:'',name:''});
+    box.innerHTML='<div class="ct-form"><h3>المدرسة والتوقيعات</h3><div class="ct-note">تظهر في أسفل كل شهادة. اترك مسمّى التوقيع فارغاً لحذفه.</div>'+
+      '<div class="ct-fld"><label>اسم المدرسة</label><input class="ct-in" id="esSchool" maxlength="100" value="'+escq(s.school)+'"></div>'+
+      '<div class="ct-fld"><label>الجهة (السطر العلوي)</label><input class="ct-in" id="esMin" maxlength="120" value="'+escq(s.ministry||'')+'"></div>'+
+      sg.map(function(x,i){ return '<div class="ct-row2"><div class="ct-fld"><label>مسمّى التوقيع '+ar(i+1)+'</label><input class="ct-in" data-st="'+i+'" maxlength="60" value="'+escq(x.title)+'"></div><div class="ct-fld"><label>الاسم (اختياري)</label><input class="ct-in" data-sn="'+i+'" maxlength="60" value="'+escq(x.name)+'"></div></div>'; }).join('')+
+      '<div class="ct-err" id="ceErr"></div><div class="ct-act"><button class="ct-btn pri" id="esSave">حفظ</button><button class="ct-btn" id="esPv">👁 معاينة</button><button class="ct-btn" id="esBack">إلغاء</button></div></div>';
+    function cur(){ var sigs=[]; for(var i=0;i<3;i++){ var t=document.querySelector('[data-st="'+i+'"]').value.trim(); if(t) sigs.push({title:t,name:document.querySelector('[data-sn="'+i+'"]').value.trim()}); } return {school:$('esSchool').value.trim(),ministry:$('esMin').value.trim(),sigs:sigs}; }
+    $('esBack').addEventListener('click',function(){ CE.view='list'; renderCerts(); });
+    $('esPv').addEventListener('click',function(){ var st=cur(); var old=CE.doc.settings; CE.doc.settings=st; try{ cePreview({type:'شكر وتقدير',date:CE.today,name:'اسم الطالب (نموذج)',section:'الصف السادس العام',body:CTYPES[0][1]}); } finally { CE.doc.settings=old; } });
+    $('esSave').addEventListener('click',function(){ var st=cur(); if(!st.school) return $('ceErr').textContent='اسم المدرسة مطلوب.'; var b=$('esSave'); b.disabled=true;
+      ceSend({action:'settings',settings:st},'حُفظت الإعدادات ✓').then(function(r){ if(r){ CE.view='list'; renderCerts(); } else if($('esSave')) $('esSave').disabled=false; }); });
+  }
+
+  /* ================= تبويب النظام: الاستخدام والأمان والمصادر ================= */
+  var SY={sub:'use',days:14,stats:null,statsDays:0,use:'idle',audit:null,sec:'idle',health:null,src:'idle',rating:null,busy:false};
+  var PG={'/':'الخطة الأسبوعية','/summary':'ملخص الأسبوع','/schedule':'جدول الحصص','/exams':'مواعيد الاختبارات','/news':'إعلانات مهمة','/links':'روابط مفيدة','/alef':'بيانات ألف','/report':'تقرير الطالب','/certs':'شهادات الشكر','other':'أخرى'};
+  var EVN={share:'مشاركة الملخص',ics:'إضافة للتقويم',install:'تثبيت التطبيق',install_prompt:'عرض بطاقة التثبيت',print:'طباعة',whatsapp:'واتساب',cert_view:'عرض شهادة (ولي أمر)',cert_print:'طباعة شهادة'};
+  function sysApi(fn,body){ body.pw=PW; return fetch('/.netlify/functions/'+fn,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'}).then(function(r){ return r.json().then(function(j){ return {s:r.status,j:j}; }).catch(function(){ return {s:r.status,j:null}; }); }); }
+  function tmf(t){ return new Date(t).toLocaleString('ar-AE',{timeZone:'Asia/Dubai',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }
+  function hlab(h){ return ar(h%12||12)+(h<12?' ص':' م'); }
+  function pctOf(a,b){ return b?Math.round(a/b*100):0; }
+  function loadSystem(){ renderSystem(); loadSysPart(); }
+  function renderSystem(){
+    var box=$('tabSystem'), subs=[['use','الاستخدام والأثر'],['sec','الأمان'],['src','المصادر']];
+    box.innerHTML='<div class="ct-subs">'+subs.map(function(x){ return '<button data-s="'+x[0]+'" class="'+(SY.sub===x[0]?'on':'')+'">'+x[1]+'</button>'; }).join('')+'</div><div id="sysBody"></div>';
+    Array.prototype.forEach.call(box.querySelectorAll('.ct-subs button'),function(b){ b.addEventListener('click',function(){ SY.sub=b.getAttribute('data-s'); renderSystem(); loadSysPart(); }); });
+    paintSys();
+  }
+  function loadSysPart(){ if(SY.sub==='use') loadUse(false); else if(SY.sub==='sec') loadSec(false); else loadSrc(false); }
+  function paintSys(){ var b=$('sysBody'); if(!b) return; if(SY.sub==='use') paintUse(b); else if(SY.sub==='sec') paintSec(b); else paintSrc(b); }
+  function errBox(msg){ return '<div class="acard"><div class="ah"><span class="at">تعذّر التحميل</span><span class="an warn">!</span></div><div class="adesc">'+msg+'</div></div>'; }
+
+  // ---- الاستخدام والأثر ----
+  function loadUse(force){
+    if(!force&&SY.stats&&SY.statsDays===SY.days){ paintSys(); return; }
+    SY.use='loading'; paintSys();
+    sysApi('track',{action:'stats',days:SY.days}).then(function(x){
+      if(x.j&&x.j.ok){ SY.stats=x.j; SY.statsDays=SY.days; SY.use='ok'; } else SY.use=(x.j&&x.j.error==='storage')?'storage':(x.s===401?'auth':'fail'); paintSys();
+    }).catch(function(){ SY.use='fail'; paintSys(); });
+    if(!SY.rating) sysApi('rating',{action:'list'}).then(function(x){ if(x.j&&x.j.ok&&x.j.count){ SY.rating={avg:x.j.avg,count:x.j.count}; paintSys(); } }).catch(function(){});
+  }
+  function hbars(entries,max,fmt){ return entries.map(function(e){ return '<div class="hb"><span class="nm">'+esc(e[0])+'</span><span class="tr"><i style="width:'+Math.max(2,Math.round(e[1]/max*100))+'%"></i></span><span class="vl">'+ar(fmt?fmt(e[1]):e[1])+'</span></div>'; }).join(''); }
+  function paintUse(b){
+    var head='<div class="actions noprint" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="syDays" class="ct-in" style="width:auto"><option value="7">آخر ٧ أيام</option><option value="14">آخر ١٤ يوماً</option><option value="30">آخر ٣٠ يوماً</option><option value="60">آخر ٦٠ يوماً</option></select><span style="flex:1"></span><button class="ct-btn" id="syRef">↻ تحديث</button><button class="ct-btn" id="syCsv">⬇ Excel / CSV</button><button class="ct-btn pri" id="syPrint">🖨 تقرير الأثر (PDF)</button></div>';
+    if(SY.use==='loading'||SY.use==='idle'){ b.innerHTML=head+'<div class="empty">… جارٍ تحميل الإحصاءات</div>'; wireUse(); return; }
+    if(SY.use!=='ok'){ b.innerHTML=head+errBox(SY.use==='storage'?'مخزن الإحصاءات غير متاح. تأكّد من وجود @netlify/blobs في package.json وأعد النشر.':(SY.use==='auth'?'كلمة المرور غير مقبولة.':'تأكّد من رفع <b>track.js</b> إلى netlify/functions ثم أعد النشر.')); wireUse(); return; }
+    var S=SY.stats, T=S.total, days=S.days, withData=days.filter(function(d){return d.t>0}).length||1, max=Math.max.apply(null,days.map(function(d){return d.t}).concat([1]));
+    var rt=SY.rating?'<div class="sc done"><div class="n">'+ar(SY.rating.avg.toFixed(1).replace('.','٫'))+' ★</div><div class="t">تقييم ('+ar(SY.rating.count)+')</div></div>':'';
+    var h=head+'<div class="im-print"><h2>تقرير استخدام الموقع وأثره</h2><p>مدرسة المعيريض للحلقة الثانية بنين · من '+esc(dfmt(S.range.from))+' إلى '+esc(dfmt(S.range.to))+'</p></div>'+
+      '<div class="summary sy-tiles" style="margin-top:12px"><div class="sc"><div class="n">'+ar(T.t)+'</div><div class="t">زيارة صفحة</div></div><div class="sc"><div class="n">'+ar(Math.round(T.u/withData))+'</div><div class="t">أجهزة نشطة يومياً (متوسط)</div></div><div class="sc done"><div class="n">'+ar(T.nw)+'</div><div class="t">أجهزة جديدة</div></div><div class="sc"><div class="n">'+ar(pctOf(T.m,T.t))+'٪</div><div class="t">من الجوال</div></div><div class="sc"><div class="n">'+ar(pctOf(T.s,T.t))+'٪</div><div class="t">من التطبيق المثبّت</div></div>'+rt+'</div>';
+    h+='<div class="sy-h">الزيارات يومياً</div><div class="bars">'+days.map(function(d){ return '<i class="'+(d.t?'':'zero')+'" style="height:'+Math.max(2,Math.round(d.t/max*100))+'%" title="'+escq(dfmt(d.date)+': '+d.t)+'"></i>'; }).join('')+'</div><div class="bl">'+days.map(function(d,i){ return '<span>'+(days.length<=14||i%Math.ceil(days.length/12)===0?ar(+d.date.slice(8)):'')+'</span>'; }).join('')+'</div>';
+    var pg=Object.keys(T.v).map(function(k){return [PG[k]||k,T.v[k]]}).sort(function(a,b){return b[1]-a[1]}); h+='<div class="sy-h">الصفحات الأكثر استعمالاً</div>'+(pg.length?hbars(pg,pg[0][1]):'<div class="empty">لا بيانات بعد</div>');
+    var hm=Math.max.apply(null,T.h.concat([1])), pk=T.h.indexOf(hm); h+='<div class="sy-h">ساعات الذروة (بتوقيت الإمارات)'+(T.t?' — الأعلى: '+hlab(pk):'')+'</div><div class="bars">'+T.h.map(function(v,i){ return '<i class="'+(i===pk&&v?'pk':(v?'':'zero'))+'" style="height:'+Math.max(2,Math.round(v/hm*100))+'%" title="'+escq(hlab(i)+': '+v)+'"></i>'; }).join('')+'</div><div class="bl">'+T.h.map(function(v,i){ return '<span>'+(i%3===0?ar(i):'')+'</span>'; }).join('')+'</div>';
+    var cl=Object.keys(T.c).map(function(k){return [secLabel[k]||k,T.c[k]]}).sort(function(a,b){return b[1]-a[1]});
+    h+='<div class="sy-h">الأجهزة النشطة حسب الصف (مجموع أيام الفترة)</div>'+(cl.length?hbars(cl,cl[0][1]):'<div class="empty">تظهر بعد أن يختار الأولياء صفوفهم.</div>');
+    var none=(DATA.sectionOrder||[]).filter(function(s){return !T.c[s.code]}).map(function(s){return s.label}); if(cl.length&&none.length) h+='<div class="lg-note">لم يظهر استخدام من: <b>'+esc(none.join('، '))+'</b>. قد يحتاج أولياء هذه الصفوف إلى تعريف بالموقع (مثلاً عبر رسالة الواتساب).</div>';
+    var ev=Object.keys(T.e).map(function(k){return [EVN[k]||k,T.e[k]]}).sort(function(a,b){return b[1]-a[1]}); if(ev.length) h+='<div class="sy-h">ما فعله الزوّار</div>'+hbars(ev,ev[0][1]);
+    h+='<div class="lg-note">🔒 أعداد مجهولة تماماً: لا هويات ولا عناوين IP ولا ملفات تتبّع، والأعداد تقريبية (±٥٪). زياراتك أنت من هذا الجهاز مستثناة.</div>';
+    b.innerHTML=h; wireUse();
+  }
+  function wireUse(){
+    var sel=$('syDays'); if(sel){ sel.value=String(SY.days); sel.addEventListener('change',function(){ SY.days=+this.value; loadUse(true); }); }
+    var r=$('syRef'); if(r) r.addEventListener('click',function(){ loadUse(true); });
+    var cv=$('syCsv'); if(cv) cv.addEventListener('click',function(){
+      var S=SY.stats; if(!S){ toast('لا بيانات للتصدير',true); return; }
+      var pages=Object.keys(S.total.v).sort(), rows=[['التاريخ','زيارات الصفحات','أجهزة نشطة','أجهزة جديدة','من الجوال','من التطبيق المثبّت'].concat(pages.map(function(p){return PG[p]||p}))];
+      S.days.forEach(function(d){ rows.push([d.date,d.t,d.u,d.nw,d.m,d.s].concat(pages.map(function(p){return d.v[p]||0}))); });
+      rows.push(['المجموع',S.total.t,S.total.u,S.total.nw,S.total.m,S.total.s].concat(pages.map(function(p){return S.total.v[p]||0})));
+      var blob=new Blob(['\ufeff'+rows.map(function(r){return r.map(csvCell).join(',')}).join('\r\n')],{type:'text/csv;charset=utf-8'}), a=document.createElement('a');
+      a.href=URL.createObjectURL(blob); a.download='إحصاءات-الموقع-'+S.range.from+'-إلى-'+S.range.to+'.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href)},2000); toast('نُزِّل الملف ✓');
+    });
+    var p=$('syPrint'); if(p) p.addEventListener('click',function(){ document.body.classList.add('pi'); var done=function(){ document.body.classList.remove('pi'); window.removeEventListener('afterprint',done); }; window.addEventListener('afterprint',done); window.print(); });
+  }
+
+  // ---- الأمان ----
+  function loadSec(force){
+    if(!force&&SY.audit){ paintSys(); return; } SY.sec='loading'; paintSys();
+    sysApi('track',{action:'audit'}).then(function(x){ if(x.j&&x.j.ok){ SY.audit=x.j; SY.sec='ok'; } else SY.sec=(x.j&&x.j.error==='storage')?'storage':'fail'; paintSys(); }).catch(function(){ SY.sec='fail'; paintSys(); });
+  }
+  var RES={ok:['ناجح','st-ok'],fail:['فشل','st-warn'],locked:['موقوف','st-bad'],rate:['محجوب','st-bad']};
+  function paintSec(b){
+    var head='<div class="actions"><button class="ct-btn" id="seRef">↻ تحديث</button></div>';
+    if(SY.sec==='loading'||SY.sec==='idle'){ b.innerHTML=head+'<div class="empty">… جارٍ تحميل سجل الأمان</div>'; var r0=$('seRef'); if(r0) r0.addEventListener('click',function(){ loadSec(true); }); return; }
+    if(SY.sec!=='ok'){ b.innerHTML=head+errBox('تأكّد من رفع <b>track.js</b> و<b>lib/guard.js</b> و<b>alef.js</b> و<b>report.js</b> ثم أعد النشر.'); $('seRef').addEventListener('click',function(){ loadSec(true); }); return; }
+    var A=SY.audit, d1=A.summary.d1, d7=A.summary.d7;
+    var tile=function(n,t,k){ return '<div class="sc '+(k||'')+'"><div class="n">'+ar(n||0)+'</div><div class="t">'+t+'</div></div>'; };
+    var h=head+'<div class="sy-h">آخر ٢٤ ساعة (ألف والتقرير والشهادات)</div><div class="summary sy-tiles">'+tile(d1.ok,'استعلام ناجح','done')+tile(d1.fail,'محاولة فاشلة',d1.fail>5?'partial':'')+tile(d1.locked,'محاولة موقوفة',d1.locked?'miss':'')+tile(d1.rate,'محجوبة (كثرة طلبات)',d1.rate?'miss':'')+'</div>'+
+      '<div class="lg-note">آخر ٧ أيام: '+ar(d7.ok||0)+' ناجح · '+ar(d7.fail||0)+' فاشل · '+ar(d7.locked||0)+' موقوف · '+ar(d7.rate||0)+' محجوب.</div>';
+    if(A.lockedToday.length) h+='<div class="acard" style="margin-top:12px"><div class="ah"><span class="at">أرقام هوية أُوقفت اليوم</span><span class="an warn">'+ar(A.lockedToday.length)+'</span></div><div class="adesc">بلغ كل رقم منها ٥ محاولات فاشلة فأُوقف حتى منتصف الليل. قد يكون وليّ أمر أخطأ في الاسم، أو محاولة تخمين. إن كان وليّ أمر حقيقياً فتحقّق من هويته وزوّده بالبيانات مباشرة.</div>'+A.lockedToday.map(function(x){ return '<div class="arow"><b dir="ltr">'+esc(x)+'</b></div>'; }).join('')+'</div>';
+    if(A.suspects.length) h+='<div class="acard" style="margin-top:12px"><div class="ah"><span class="at">أجهزة بمحاولات فاشلة متكررة</span><span class="an warn">'+ar(A.suspects.length)+'</span></div><div class="adesc">بصمة مبهَمة للعنوان (لا يمكن عكسها إلى IP) بـ٥ إخفاقات فأكثر خلال أسبوع. تُحجب تلقائياً عند تجاوز الحدّ، ولا إجراء مطلوب منك إلا الانتباه.</div>'+A.suspects.map(function(x){ return '<div class="arow"><b dir="ltr">'+esc(x.iph)+'</b><small>'+ar(x.n)+' محاولة فاشلة</small></div>'; }).join('')+'</div>';
+    if(A.getUsed) h+='<div class="acard" style="margin-top:12px"><div class="ah"><span class="at">طلبات بالطريقة القديمة (GET)</span><span class="an warn">'+ar(A.getUsed)+'</span></div><div class="adesc">ما زالت صفحة قديمة تُرسل الرقم والاسم في الرابط (يُسجَّل في سجلات الخادم). تأكّد من رفع <b>alef.html</b> و<b>report.html</b> الجديدين، وامسح ذاكرة المتصفح إن لزم.</div></div>';
+    h+='<div class="sy-h">آخر المحاولات</div>'+(A.events.length?'<div class="lgw"><table class="sy"><thead><tr><th>الوقت</th><th>الصفحة</th><th>النتيجة</th><th>الهوية</th><th>بصمة الجهاز</th><th>جهاز</th></tr></thead><tbody>'+A.events.map(function(e){ var r=RES[e.r]||[e.r,'st-mute']; return '<tr><td>'+esc(tmf(e.t))+'</td><td>'+({alef:'ألف',report:'التقرير',cert:'الشهادات'}[e.k]||'التقرير')+'</td><td><span class="st-chip '+r[1]+'">'+r[0]+'</span></td><td dir="ltr">'+esc(e.id)+'</td><td dir="ltr">'+esc(e.iph)+'</td><td>'+(e.ua==='m'?'جوال':'حاسوب')+'</td></tr>'; }).join('')+'</tbody></table></div>':'<div class="empty">لا محاولات مسجّلة بعد.</div>');
+    h+='<div class="lg-note">🔒 السجل يحفظ نتيجة المحاولة ووقتها وآخر ٣ أرقام من الهوية وبصمة مبهَمة للجهاز فقط. لا أسماء ولا كلمات مرور ولا عناوين IP. يُحذف ما تجاوز ٣٠ يوماً. القفل: ٥ محاولات فاشلة لكل هوية في اليوم، و٣٠ محاولة لكل جهاز في الساعة.</div>';
+    b.innerHTML=h; $('seRef').addEventListener('click',function(){ loadSec(true); });
+  }
+
+  // ---- المصادر والتنبيه ----
+  function loadSrc(force,run){
+    if(!force&&!run&&SY.health){ paintSys(); return; } SY.src='loading'; paintSys();
+    sysApi('health',{action:run?'run':'status'}).then(function(x){
+      if(x.j&&x.j.ok){ SY.health=x.j; SY.src='ok'; if(!run&&!(x.j.state.checks||[]).length){ loadSrc(false,true); return; } } else SY.src=(x.s===401?'auth':'fail'); paintSys(); healthDot();
+    }).catch(function(){ SY.src='fail'; paintSys(); });
+  }
+  var SC_={ok:['يعمل','st-ok','✓'],warn:['تحذير','st-warn','⚠'],fail:['معطّل','st-bad','✗']};
+  function paintSrc(b){
+    var head='<div class="actions"><button class="ct-btn pri" id="srRun">▶ افحص الآن</button></div>';
+    if(SY.src==='loading'||SY.src==='idle'){ b.innerHTML=head+'<div class="empty">… جارٍ فحص المصادر (قد يستغرق ثوانٍ)</div>'; return; }
+    if(SY.src!=='ok'){ b.innerHTML=head+errBox('تأكّد من رفع <b>health.js</b> و<b>health-cron.js</b> إلى netlify/functions ثم أعد النشر.'); $('srRun').addEventListener('click',function(){ loadSrc(true,true); }); return; }
+    var H=SY.health, st=H.state, cfg=H.config, now=H.now, bad=st.checks.filter(function(c){return c.status==='fail'}).length, warn=st.checks.filter(function(c){return c.status==='warn'}).length;
+    var sched=st.lastSched&&now-st.lastSched<75*60000;
+    var h=head+'<div class="summary sy-tiles"><div class="sc '+(bad?'miss':'done')+'"><div class="n">'+ar(bad?bad:st.checks.length)+'</div><div class="t">'+(bad?'مصدر معطّل':'مصادر تعمل')+'</div></div><div class="sc '+(warn?'partial':'')+'"><div class="n">'+ar(warn)+'</div><div class="t">تحذير</div></div></div>'+
+      '<div class="lg-note">آخر فحص: '+esc(tmf(st.at))+' · الفحص التلقائي كل ٣٠ دقيقة: <b>'+(sched?'يعمل ✓':'لم يُسجَّل فحص تلقائي بعد')+'</b>'+(sched?'':' (يحتاج ملف <b>netlify.toml</b> في جذر المستودع، وقد يستغرق أول تشغيل حتى ٣٠ دقيقة بعد النشر)')+'</div>'+
+      '<div class="acard" style="margin-top:12px"><div class="ah"><span class="at">المصادر</span></div>'+st.checks.map(function(c){ var k=SC_[c.status]; return '<div class="sy-row"><span class="st-chip '+k[1]+'">'+k[2]+' '+k[0]+'</span><div class="b"><b>'+esc(c.label)+'</b><small>'+esc(c.detail)+' · '+ar(Math.round(c.ms/100)/10)+' ث</small></div></div>'; }).join('')+'</div>'+
+      '<div class="acard" style="margin-top:12px"><div class="ah"><span class="at">التنبيهات</span><span class="an '+((cfg.telegram||cfg.webhook)?'info':'warn')+'">'+((cfg.telegram||cfg.webhook)?'مفعّلة':'غير مفعّلة')+'</span></div>'+
+      '<div class="adesc">تُرسل رسالة واحدة عند تعطّل مصدر <b>مرتين متتاليتين</b> (≈ساعة)، وأخرى عند عودته، وتذكير بعد ١٢ ساعة إن بقي معطّلاً. التحذيرات (مثل «لا خطة للأسبوع») تظهر هنا فقط.</div>'+
+      '<div class="sy-row"><span class="st-chip '+(cfg.telegram?'st-ok':'st-mute')+'">'+(cfg.telegram?'✓':'—')+' تيليجرام</span><div class="b"><small>TELEGRAM_BOT_TOKEN و TELEGRAM_CHAT_ID</small></div></div>'+
+      '<div class="sy-row"><span class="st-chip '+(cfg.webhook?'st-ok':'st-mute')+'">'+(cfg.webhook?'✓':'—')+' رابط تنبيه</span><div class="b"><small>ALERT_WEBHOOK_URL (يستقبل JSON فيه حقل text)</small></div></div>'+
+      '<div class="ct-act"><button class="ct-btn" id="srTest">إرسال تنبيه تجريبي</button></div>'+
+      ((cfg.telegram||cfg.webhook)?'':'<details><summary style="cursor:pointer;font-size:12.5px;color:var(--primary-ink);margin-top:8px">كيف أفعّل التنبيه على تيليجرام؟</summary><div class="adesc" style="margin-top:6px">١) من @BotFather أنشئ بوتاً وانسخ الرمز. ٢) أضف البوت إلى قناتك أو مجموعتك (أو راسله). ٣) في Netlify ← Site configuration ← Environment variables أضف <b>TELEGRAM_BOT_TOKEN</b> برمز البوت و<b>TELEGRAM_CHAT_ID</b> بمعرّف المحادثة. ٤) أعد النشر ثم اضغط «إرسال تنبيه تجريبي».</div></details>')+'</div>';
+    var hist=(st.history||[]).slice(0,12); if(hist.length) h+='<div class="sy-h">آخر الأحداث</div><div class="acard">'+hist.map(function(e){ return '<div class="sy-row"><div class="b"><b>'+esc(e.label)+(e.to?' ← '+(SC_[e.to]?SC_[e.to][0]:e.to):'')+'</b><small>'+esc(tmf(e.t))+(e.id==='_alert'?' · تسليم: '+esc(e.detail):' · '+esc(e.detail||''))+'</small></div></div>'; }).join('')+'</div>';
+    b.innerHTML=h;
+    $('srRun').addEventListener('click',function(){ loadSrc(true,true); });
+    $('srTest').addEventListener('click',function(){ sysApi('health',{action:'test_alert'}).then(function(x){ var j=x.j||{}; if(!j.ok) toast('تعذّر الإرسال',true); else if(!j.configured) toast('لم يُضبط تنبيه بعد: اتبع الخطوات أعلاه',true); else { var d=j.delivery||{}; toast((d.telegram===true||d.webhook===true)?'أُرسل التنبيه التجريبي ✓ تحقّق من تيليجرام':'فشل التسليم: راجع الرمز ومعرّف المحادثة',!(d.telegram===true||d.webhook===true)); } }); });
+  }
+  // نقطة حمراء على تبويب «النظام» إن كان مصدر معطّلاً (تُفحَص عند الدخول)
+  function healthDot(){
+    var btn=document.querySelector('#tabs button[data-t=system]'); if(!btn||!SY.health) return; var d=btn.querySelector('.dot'); if(d) d.remove();
+    if((SY.health.state.checks||[]).some(function(c){return c.status==='fail'})){ var s=document.createElement('span'); s.className='dot'; s.title='مصدر معطّل'; btn.appendChild(s); }
+  }
+  function healthBadge(){ sysApi('health',{action:'status'}).then(function(x){ if(x.j&&x.j.ok){ SY.health=x.j; SY.src='ok'; healthDot(); } }).catch(function(){}); }
 
   $('enter').addEventListener('click',auth);
   $('pw').addEventListener('keydown',function(e){ if(e.key==='Enter') auth(); });
