@@ -7,8 +7,8 @@
 const crypto = require('crypto');
 const guard = require('./lib/guard');
 const J = (code, obj) => ({ statusCode: code, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, body: JSON.stringify(obj) });
-const PAGES = ['/', '/summary', '/schedule', '/exams', '/news', '/links', '/alef', '/report', '/certs'];
-const EVENTS = ['share', 'ics', 'print', 'install', 'install_prompt', 'whatsapp', 'cert_view', 'cert_print'];
+const PAGES = ['/', '/summary', '/schedule', '/exams', '/news', '/links', '/alef', '/report', '/certs', '/docs'];
+const EVENTS = ['share', 'ics', 'print', 'install', 'install_prompt', 'whatsapp', 'cert_view', 'cert_print', 'doc_open', 'doc_download'];
 const SHARDS = 8;
 let NOW = () => Date.now();
 const dayOf = t => new Date(t).toLocaleDateString('en-CA', { timeZone: 'Asia/Dubai' });

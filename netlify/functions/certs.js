@@ -16,7 +16,7 @@ const sameSecret = (a, b) => crypto.timingSafeEqual(sha(a), sha(b));
 const clean = (s, max) => String(s == null ? '' : s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').replace(/\r\n?/g, '\n').replace(/[ \t]+/g, ' ').replace(/ ?\n ?/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, max || 200);
 const latin = s => String(s == null ? '' : s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 const digits = s => latin(s).replace(/\D/g, '');
-const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;
+const isDate = s => { try { return /^\d{4}-\d{2}-\d{2}$/.test(s) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s; } catch (e) { return false; } };
 const newId = () => crypto.randomBytes(8).toString('hex');
 const okId = s => /^[a-zA-Z0-9-]{6,40}$/.test(String(s || ''));
 class Bad extends Error { constructor(path, msg) { super(msg); this.path = path; } }
