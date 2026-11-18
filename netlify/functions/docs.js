@@ -59,6 +59,12 @@ async function bump(store, id) {                       // عدّاد فتح تق
 
 async function publicGet(event, deps) {
   const q = Object.assign({}, event.queryStringParameters || {}), today = dubaiToday();
+  if (!q.id) {                                                          // الرابط النظيف: المعرّف من المسار نفسه (/files/<id>.pdf أو /.netlify/functions/docs/<id>.pdf)
+    for (const u of [event.path, event.rawUrl, event.rawPath]) {
+      const m = /\/(?:files|docs)\/([A-Za-z0-9]{6,40})(?:\.pdf)?\/?(?:[?#].*)?$/i.exec(String(u || ''));
+      if (m) { q.id = m[1]; break; }
+    }
+  }
   if (q.id) q.id = String(q.id).replace(/\.pdf$/i, '');                    // الرابط النظيف: /files/<id>.pdf
   if (q.ping) return J(200, { status: 'ok', count: (await readIndex(deps.store)).docs.length });
   const idx = await readIndex(deps.store);
