@@ -6,7 +6,7 @@ var VERSION = 'v1', SHELL = 'ssuae-shell-' + VERSION, DATA = 'ssuae-data-' + VER
 var PAGES = ['/', '/summary', '/schedule', '/exams', '/news', '/links'];
 var DATA_PATHS = ['/.netlify/functions/plan', '/.netlify/functions/exams', '/.netlify/functions/schedule', '/.netlify/functions/content'];
 var ASSETS = ['/site-class.js', '/site-content.js', '/site-rating.js', '/site-track.js', '/site-merge.js', '/site-pwa.js', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
-var NEVER = /^\/(admin|staff|alef|report|certs)(\/|\.html$|$)|^\/\.netlify\/functions\/(alef|report|certs|staff|admin|rating|track|health|health-cron)(\/|$)/;
+var NEVER = /^\/(admin|staff|alef|report|certs|docs)(\/|\.html$|$)|^\/\.netlify\/functions\/(alef|report|certs|docs|staff|admin|rating|track|health|health-cron)(\/|$)/;
 var PAGE_TIMEOUT = 4000, DATA_TIMEOUT = 5000;
 
 function pageKey(p) { p = p.replace(/\/index\.html$/, '/').replace(/\.html$/, ''); return p.length > 1 ? p.replace(/\/+$/, '') : p; }

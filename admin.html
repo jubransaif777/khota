@@ -694,10 +694,10 @@
   function annStatus(a){ var t=CT.today; if(a.start>t) return ['مجدول','sch']; if(a.end&&a.end<t) return ['منتهٍ','']; return ['نشط الآن','act']; }
 
   function renderContent(){
-    var d=CT.doc, box=$('tabContent'), subs=[['ann','الإعلانات',d.announcements.length],['news','الأخبار',d.news.length],['links','الروابط',d.links.length],['wa','رسائل الواتساب',null],['certs','الشهادات',null]];
+    var d=CT.doc, box=$('tabContent'), subs=[['ann','الإعلانات',d.announcements.length],['news','الأخبار',d.news.length],['links','الروابط',d.links.length],['wa','رسائل الواتساب',null],['certs','الشهادات',null],['docs','المستندات',null]];
     var h='<div class="ct-note">ما تكتبه هنا يظهر للأولياء مباشرة خلال لحظات، دون المرور بملف الإكسل. ما في الإكسل يبقى كما هو ويُعرض معه.</div>'+
       '<div class="ct-subs">'+subs.map(function(x){ return '<button data-s="'+x[0]+'" class="'+(CT.sub===x[0]?'on':'')+'">'+x[1]+(x[2]==null?'':' ('+ar(x[2])+')')+'</button>'; }).join('')+'</div>';
-    if(CT.sub==='wa'||CT.sub==='certs'){ box.innerHTML=h+(CT.sub==='wa'?'<div id="waBox"></div>':'<div id="certBox"></div>'); Array.prototype.forEach.call(box.querySelectorAll('.ct-subs button'),function(b){ b.addEventListener('click',function(){ if(CT.busy) return; CT.sub=b.getAttribute('data-s'); CT.form=null; renderContent(); }); }); if(CT.sub==='wa') renderWa(); else { CE.view='list'; loadCerts(); } return; }
+    if(CT.sub==='wa'||CT.sub==='certs'||CT.sub==='docs'){ box.innerHTML=h+(CT.sub==='wa'?'<div id="waBox"></div>':(CT.sub==='docs'?'<div id="docBox"></div>':'<div id="certBox"></div>')); Array.prototype.forEach.call(box.querySelectorAll('.ct-subs button'),function(b){ b.addEventListener('click',function(){ if(CT.busy) return; CT.sub=b.getAttribute('data-s'); CT.form=null; renderContent(); }); }); if(CT.sub==='wa') renderWa(); else if(CT.sub==='docs'){ DE.view='list'; DE.edit=null; loadDocs(); } else { CE.view='list'; loadCerts(); } return; }
     var addLbl={ann:'＋ إعلان جديد',news:'＋ خبر جديد',links:'＋ رابط جديد'}[CT.sub];
     if(!CT.form) h+='<button class="ct-add" id="ctAdd">'+addLbl+'</button>'; else h+=formHtml();
     h+=listHtml();
@@ -1098,10 +1098,97 @@
       ceSend({action:'settings',settings:st},'حُفظت الإعدادات ✓').then(function(r){ if(r){ CE.view='list'; renderCerts(); } else if($('esSave')) $('esSave').disabled=false; }); });
   }
 
+  /* ================= المستندات (PDF) داخل تبويب المحتوى ================= */
+  var DE={doc:null,views:{},today:'',view:'list',edit:null,busy:false};
+  var DCATS=['جداول الاختبارات','أدلة وتعاميم','نماذج','أخرى'], DMAX=4*1024*1024;
+  function deApi(body){ body.pw=PW; return fetch('/.netlify/functions/docs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'}).then(function(r){ return r.json().then(function(j){ return {s:r.status,j:j}; }).catch(function(){ return {s:r.status,j:null}; }); }); }
+  function fsz(n){ return n>=1048576?(n/1048576).toFixed(1)+' ميغابايت':Math.max(1,Math.round(n/1024))+' كيلوبايت'; }
+  function loadDocs(force){
+    var box=$('docBox'); if(!box) return; if(DE.doc&&!force){ renderDocs(); return; }
+    box.innerHTML='<div class="empty">… جارٍ التحميل</div>';
+    deApi({action:'get'}).then(function(x){
+      if(x.j&&x.j.ok){ DE.doc=x.j.doc; DE.views=x.j.views||{}; DE.today=x.j.today; renderDocs(); return; }
+      var msg=!x.j?'دالة المستندات غير مرفوعة. ارفع <b>docs.js</b> إلى netlify/functions ثم أعد النشر.':(x.j.error==='storage'?'مخزن المستندات غير متاح. تأكّد من "@netlify/blobs" في package.json ثم أعد النشر.':(x.s===429?'محاولات كثيرة، انتظر قليلاً.':'خطأ غير متوقع.'));
+      box.innerHTML='<div class="acard"><div class="ah"><span class="at">تعذّر فتح المستندات</span><span class="an warn">!</span></div><div class="adesc">'+msg+'</div></div>';
+    }).catch(function(){ box.innerHTML='<div class="acard"><div class="ah"><span class="at">تعذّر الاتصال</span><span class="an warn">!</span></div></div>'; });
+  }
+  function deSend(body,okMsg){
+    if(DE.busy) return Promise.resolve(false); body.rev=DE.doc.rev; DE.busy=true;
+    return deApi(body).then(function(x){ DE.busy=false; var j=x.j||{};
+      if(j.ok){ DE.doc=j.doc; DE.today=j.today||DE.today; if(okMsg) toast(okMsg); return j; }
+      if(x.s===409){ if(j.doc&&DE.doc&&j.doc.rev<DE.doc.rev){ toast('الخدمة لم تتزامن بعد مع آخر حفظ. انتظر ثوانٍ ثم أعد المحاولة (لم يضع شيء).',true); return false; }
+        DE.doc=j.doc; renderDocs(); toast('تغيّرت المستندات من جهاز آخر فحُدِّثت القائمة. كرّر ما فعلتَه.',true); return false; }
+      toast(j.message||(x.s===401?'كلمة المرور غير مقبولة':(x.s===413?'الملف كبير جداً':'تعذّر الحفظ')),true); return false;
+    }).catch(function(){ DE.busy=false; toast('تعذّر الاتصال، لم يُحفظ شيء.',true); return false; });
+  }
+  function docStatus(d){ var t=DE.today, c=[]; if(d.pinned) c.push('<span class="ct-chip">📌 مثبّت</span>'); if(d.hidden) c.push('<span class="ct-chip urgent">مخفي عن الأولياء</span>'); if(d.expires&&d.expires<t) c.push('<span class="ct-chip urgent">منتهي</span>'); else if(d.expires) c.push('<span class="ct-chip">ينتهي '+dfmt(d.expires)+'</span>'); return c.join(''); }
+  function renderDocs(){
+    var box=$('docBox'); if(!box) return; if(!DE.doc){ loadDocs(); return; }
+    if(DE.view==='form') return renderDocForm(box);
+    var all=DE.doc.docs.slice().sort(function(a,b){ return (b.pinned?1:0)-(a.pinned?1:0)||(b.date||'').localeCompare(a.date||'')||b.created-a.created; });
+    var live=all.filter(function(d){ return !d.hidden&&(!d.expires||d.expires>=DE.today); }).length;
+    var h='<div class="ct-note">ارفع ملف PDF (حتى ٤ ميغابايت) فيظهر للأولياء في صفحة <b dir="ltr">/docs</b> مصنّفاً ومرتّباً. <b>لا ترفع مستنداً فيه أسماء طلاب أو أرقام هوية</b>، فالصفحة عامة لكل من يعرف الرابط.</div>'+
+      '<div class="summary"><div class="sc"><div class="n">'+ar(all.length)+'</div><div class="t">مستند</div></div><div class="sc"><div class="n">'+ar(live)+'</div><div class="t">ظاهر للأولياء</div></div><div class="sc"><div class="n">'+ar(all.reduce(function(s,d){ return s+(DE.views[d.id]||0); },0))+'</div><div class="t">مرة فتح (تقريباً)</div></div></div>'+
+      '<button class="ct-add" id="deNew">＋ رفع مستند جديد</button>'+
+      '<div class="ct-act" style="margin:0 0 10px"><button class="ct-btn" id="deLink">🔗 نسخ رسالة وصلة المستندات</button></div>';
+    if(!all.length) h+='<div class="empty">لا توجد مستندات بعد. اضغط «رفع مستند جديد».</div>';
+    all.forEach(function(d){
+      h+='<div class="ct-item" data-id="'+escq(d.id)+'"><div class="ct-h"><span class="ct-chip sch">'+escq(d.cat)+'</span><span class="ct-chip">'+dfmt(d.date)+'</span>'+docStatus(d)+'</div>'+
+        '<b>'+escq(d.title)+'</b>'+(d.desc?'<div class="ct-txt">'+escq(d.desc)+'</div>':'')+
+        '<div class="ct-meta">PDF · '+escq(fsz(d.size))+' · 👁 '+ar(DE.views[d.id]||0)+' فتح</div>'+
+        '<div class="ct-act"><a class="ct-btn" target="_blank" rel="noopener" href="/.netlify/functions/docs?id='+escq(d.id)+'" style="text-decoration:none">فتح</a><button class="ct-btn" data-a="wa">نسخ رسالة</button><button class="ct-btn" data-a="ed">تعديل</button><button class="ct-btn" data-a="pn">'+(d.pinned?'إلغاء التثبيت':'تثبيت')+'</button><button class="ct-btn" data-a="hd">'+(d.hidden?'إظهار':'إخفاء')+'</button><button class="ct-btn del" data-a="rm">حذف</button></div></div>';
+    });
+    box.innerHTML=h;
+    $('deNew').addEventListener('click',function(){ DE.view='form'; DE.edit=null; renderDocs(); });
+    $('deLink').addEventListener('click',function(){ copyText('للاطلاع على المستندات والتعاميم المهمة (جداول الاختبارات والأدلة):\n'+location.origin+'/docs','نُسخت الرسالة ✓ الصقها في مجموعات الأولياء'); });
+    Array.prototype.forEach.call(box.querySelectorAll('.ct-item'),function(it){
+      var id=it.getAttribute('data-id'), d=DE.doc.docs.filter(function(x){ return x.id===id; })[0];
+      Array.prototype.forEach.call(it.querySelectorAll('[data-a]'),function(b){ b.addEventListener('click',function(){
+        var a=b.getAttribute('data-a');
+        if(a==='wa') copyText('📄 *'+d.title+'*\n'+(d.desc?d.desc+'\n':'')+'للاطلاع على المستند:\n'+location.origin+'/docs','نُسخت الرسالة ✓');
+        else if(a==='ed'){ DE.edit=id; DE.view='form'; renderDocs(); }
+        else if(a==='pn') deSend({action:'update',id:id,fields:{pinned:!d.pinned}},d.pinned?'أُلغي التثبيت ✓':'ثُبّت في أعلى القائمة ✓').then(function(r){ if(r) renderDocs(); });
+        else if(a==='hd') deSend({action:'update',id:id,fields:{hidden:!d.hidden}},d.hidden?'أُظهر المستند ✓':'أُخفي عن الأولياء ✓').then(function(r){ if(r) renderDocs(); });
+        else if(a==='rm'){ if(!window.confirm('حذف «'+d.title+'» نهائياً؟ لن يستطيع الأولياء فتحه بعد الآن.')) return; deSend({action:'remove',id:id},'تم الحذف ✓').then(function(r){ if(r) renderDocs(); }); }
+      }); });
+    });
+  }
+  function renderDocForm(box){
+    var cur=DE.edit?DE.doc.docs.filter(function(x){ return x.id===DE.edit; })[0]:null; if(DE.edit&&!cur){ DE.view='list'; return renderDocs(); }
+    var v=cur||{title:'',cat:DCATS[0],desc:'',date:DE.today,expires:'',pinned:false};
+    box.innerHTML='<div class="ct-form"><h3>'+(cur?'تعديل المستند':'رفع مستند جديد')+'</h3>'+
+      '<div class="ct-fld"><label>'+(cur?'استبدال الملف (اختياري — يبقى الرابط نفسه)':'ملف PDF (حتى ٤ ميغابايت)')+'</label><input type="file" id="dFile" accept="application/pdf,.pdf" class="ct-in">'+(cur?'<div class="hint">الملف الحالي: '+escq(cur.fname||'—')+' ('+escq(fsz(cur.size))+')</div>':'')+'</div>'+
+      '<div class="ct-fld"><label>العنوان</label><input class="ct-in" id="dTitle" maxlength="120" value="'+escq(v.title)+'" placeholder="مثال: جدول الاختبارات النهائية — الفصل الأول"></div>'+
+      '<div class="ct-fld"><label>التصنيف</label><div class="fchips" id="dCats">'+DCATS.map(function(c){ return '<button type="button" class="fchip'+(v.cat===c?' on':'')+'" data-c="'+escq(c)+'">'+escq(c)+'</button>'; }).join('')+'</div><input class="ct-in" id="dCat" maxlength="30" value="'+escq(v.cat)+'"><div class="hint">اختر تصنيفاً جاهزاً أو اكتب آخر.</div></div>'+
+      '<div class="ct-fld"><label>وصف قصير (اختياري)</label><textarea class="ct-ta" id="dDesc" maxlength="300">'+escq(v.desc)+'</textarea></div>'+
+      '<div class="ct-row2"><div class="ct-fld"><label>تاريخ النشر</label><input class="ct-in" type="date" id="dDate" value="'+escq(v.date)+'"></div><div class="ct-fld"><label>يُخفى تلقائياً بعد (اختياري)</label><input class="ct-in" type="date" id="dExp" value="'+escq(v.expires||'')+'"></div></div>'+
+      '<label class="ct-chk"><input type="checkbox" id="dPin"'+(v.pinned?' checked':'')+'> تثبيت في أعلى القائمة (للمهم)</label>'+
+      '<div class="ct-err" id="dErr"></div><div class="ct-act" style="margin-top:6px"><button class="ct-btn pri" id="dSave">'+(cur?'حفظ':'رفع ونشر')+'</button><button class="ct-btn" id="dBack">إلغاء</button></div></div>';
+    Array.prototype.forEach.call(document.querySelectorAll('#dCats .fchip'),function(b){ b.addEventListener('click',function(){ $('dCat').value=b.getAttribute('data-c'); Array.prototype.forEach.call(document.querySelectorAll('#dCats .fchip'),function(o){ o.classList.toggle('on',o===b); }); }); });
+    $('dFile').addEventListener('change',function(){ var f=$('dFile').files[0]; if(!f) return; if(f.size>DMAX){ $('dErr').textContent='حجم الملف '+fsz(f.size)+' يتجاوز ٤ ميغابايت. اضغطه ثم أعد المحاولة.'; $('dFile').value=''; return; } $('dErr').textContent='';
+      if(!$('dTitle').value.trim()) $('dTitle').value=f.name.replace(/\.pdf$/i,'').replace(/[_]+/g,' ').trim(); });
+    $('dBack').addEventListener('click',function(){ DE.view='list'; DE.edit=null; renderDocs(); });
+    $('dSave').addEventListener('click',function(){
+      var err=$('dErr'), f=$('dFile').files[0], fields={title:$('dTitle').value.trim(),cat:$('dCat').value.trim(),desc:$('dDesc').value.trim(),date:$('dDate').value,expires:$('dExp').value,pinned:$('dPin').checked};
+      if(fields.title.length<3) return err.textContent='اكتب عنواناً للمستند.'; if(!fields.cat) return err.textContent='اختر تصنيفاً.';
+      if(!cur&&!f) return err.textContent='اختر ملف PDF أولاً.'; if(f&&f.size>DMAX) return err.textContent='الملف أكبر من ٤ ميغابايت.';
+      if(fields.expires&&fields.date&&fields.expires<fields.date) return err.textContent='تاريخ الانتهاء قبل تاريخ النشر.';
+      var b=$('dSave'); b.disabled=true; b.textContent=f?'جارٍ الرفع…':'جارٍ الحفظ…';
+      function go(data){
+        var body=cur?{action:'update',id:cur.id,fields:fields}:Object.assign({action:'upload'},fields);
+        if(data){ body.data=data; body.filename=f.name; }
+        deSend(body,cur?'حُفظ التعديل ✓':'نُشر المستند ✓ يراه الأولياء الآن').then(function(r){
+          if(r){ DE.view='list'; DE.edit=null; loadDocs(true); } else { b.disabled=false; b.textContent=cur?'حفظ':'رفع ونشر'; } });
+      }
+      if(!f) return go(null);
+      var rd=new FileReader(); rd.onload=function(){ go(String(rd.result).replace(/^data:[^,]*,/,'')); }; rd.onerror=function(){ err.textContent='تعذّرت قراءة الملف.'; b.disabled=false; b.textContent='رفع ونشر'; }; rd.readAsDataURL(f);
+    });
+  }
+
   /* ================= تبويب النظام: الاستخدام والأمان والمصادر ================= */
   var SY={sub:'use',days:14,stats:null,statsDays:0,use:'idle',audit:null,sec:'idle',health:null,src:'idle',rating:null,busy:false};
-  var PG={'/':'الخطة الأسبوعية','/summary':'ملخص الأسبوع','/schedule':'جدول الحصص','/exams':'مواعيد الاختبارات','/news':'إعلانات مهمة','/links':'روابط مفيدة','/alef':'بيانات ألف','/report':'تقرير الطالب','/certs':'شهادات الشكر','other':'أخرى'};
-  var EVN={share:'مشاركة الملخص',ics:'إضافة للتقويم',install:'تثبيت التطبيق',install_prompt:'عرض بطاقة التثبيت',print:'طباعة',whatsapp:'واتساب',cert_view:'عرض شهادة (ولي أمر)',cert_print:'طباعة شهادة'};
+  var PG={'/':'الخطة الأسبوعية','/summary':'ملخص الأسبوع','/schedule':'جدول الحصص','/exams':'مواعيد الاختبارات','/news':'إعلانات مهمة','/links':'روابط مفيدة','/alef':'بيانات ألف','/report':'تقرير الطالب','/certs':'شهادات الشكر','/docs':'المستندات','other':'أخرى'};
+  var EVN={share:'مشاركة الملخص',ics:'إضافة للتقويم',install:'تثبيت التطبيق',install_prompt:'عرض بطاقة التثبيت',print:'طباعة',whatsapp:'واتساب',cert_view:'عرض شهادة (ولي أمر)',cert_print:'طباعة شهادة',doc_open:'فتح مستند',doc_download:'تنزيل مستند'};
   function sysApi(fn,body){ body.pw=PW; return fetch('/.netlify/functions/'+fn,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'}).then(function(r){ return r.json().then(function(j){ return {s:r.status,j:j}; }).catch(function(){ return {s:r.status,j:null}; }); }); }
   function tmf(t){ return new Date(t).toLocaleString('ar-AE',{timeZone:'Asia/Dubai',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }
   function hlab(h){ return ar(h%12||12)+(h<12?' ص':' م'); }
