@@ -58,7 +58,8 @@ async function bump(store, id) {                       // عدّاد فتح تق
 }
 
 async function publicGet(event, deps) {
-  const q = event.queryStringParameters || {}, today = dubaiToday();
+  const q = Object.assign({}, event.queryStringParameters || {}), today = dubaiToday();
+  if (q.id) q.id = String(q.id).replace(/\.pdf$/i, '');                    // الرابط النظيف: /files/<id>.pdf
   if (q.ping) return J(200, { status: 'ok', count: (await readIndex(deps.store)).docs.length });
   const idx = await readIndex(deps.store);
   if (!q.id) {
