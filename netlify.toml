@@ -9,6 +9,6 @@
 # رابط نظيف لملفات المستندات: khotamaereid.net/files/<id>.pdf (يخفي مسار الدوال)
 [[redirects]]
   from = "/files/:id"
-  to = "/.netlify/functions/docs?id=:id"
+  to = "/.netlify/functions/docs/:id"
   status = 200
   force = true
