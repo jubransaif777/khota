@@ -24,6 +24,11 @@
   .crest{width:48px;height:48px;border-radius:13px;overflow:hidden;box-shadow:var(--shadow);background:var(--surface);border:2px solid var(--surface)}
   .crest img{width:100%;height:100%;object-fit:cover;display:block}
   .brand h1{font-size:16.5px;margin:0;font-weight:600} .brand p{font-size:11px;color:var(--muted);margin:2px 0 0}
+  .topnav{display:flex;flex-wrap:wrap;gap:6px;background:var(--surface-2);border-radius:16px;padding:6px;margin:14px 0 4px}
+  .topnav a{flex:1 1 calc(25% - 6px);min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;min-height:42px;text-align:center;text-decoration:none;color:var(--muted);font-size:13px;font-weight:600;line-height:1.3;padding:7px 6px;border-radius:11px}
+  .topnav a.active{background:var(--surface);color:var(--primary-ink);box-shadow:var(--shadow)}
+  .topnav a .ti{font-size:15px;line-height:1;flex:0 0 auto}
+  .topnav{display:grid;grid-template-columns:repeat(12,1fr)}.topnav a{grid-column:span 3;flex-direction:column;gap:3px;font-size:12px;min-height:54px}.topnav a:nth-child(n+5){grid-column:span 4}
   .chips{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
   .chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font:500 13px/1 inherit;font-family:inherit;cursor:pointer}
   .chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
@@ -49,11 +54,11 @@
 </head>
 <body>
 <div class="app">
+  <nav class="topnav"><a href="/"><span class="ti">📚</span><span>الخطة الأسبوعية</span></a><a href="/summary"><span class="ti">📋</span><span>ملخص الأسبوع</span></a><a href="/schedule"><span class="ti">🗓️</span><span>جدول الحصص</span></a><a href="/exams"><span class="ti">📝</span><span>مواعيد الاختبارات</span></a><a href="/news"><span class="ti">📣</span><span>إعلانات مهمة</span></a><a href="/docs" class="active"><span class="ti">📄</span><span>المستندات</span></a><a href="/links"><span class="ti">🔗</span><span>روابط مفيدة</span></a></nav>
   <div class="top"><div class="crest"><img alt="" src="/crest.png"></div>
     <div class="brand"><h1>المستندات والتعاميم</h1><p>مدرسة المعيريض للحلقة الثانية بنين</p></div></div>
   <div class="chips" id="chips" hidden></div>
   <div id="list" role="status" aria-live="polite"><div class="empty">… جارٍ التحميل</div></div>
-  <a class="back" href="/">← العودة إلى الخطة الأسبوعية</a>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -66,7 +71,7 @@
   function ev(n){ try{ window.SiteTrack&&SiteTrack.event(n); }catch(e){} }
   function toast(t){ var b=$('toast'); b.textContent=t; b.classList.add('on'); setTimeout(function(){ b.classList.remove('on'); },2200); }
   var API='/.netlify/functions/docs', DOCS=[], CAT='';
-  function url(id,dl){ return API+'?id='+encodeURIComponent(id)+(dl?'&dl=1':''); }
+  function url(id,dl){ return '/files/'+encodeURIComponent(id)+'.pdf'+(dl?'?dl=1':''); }
   function card(d){
     return '<div class="doc'+(d.pinned?' pin':'')+'"><div class="doc-h"><div class="ico">📄</div><h2>'+esc(d.title)+
       (d.pinned?'<span class="badge pin">📌 مهم</span>':'')+(d.isNew?'<span class="badge new">جديد</span>':'')+'</h2></div>'+

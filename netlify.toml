@@ -5,3 +5,10 @@
 # فحص مصادر الموقع تلقائياً كل ٣٠ دقيقة
 [functions."health-cron"]
   schedule = "*/30 * * * *"
+
+# رابط نظيف لملفات المستندات: khotamaereid.net/files/<id>.pdf (يخفي مسار الدوال)
+[[redirects]]
+  from = "/files/:id"
+  to = "/.netlify/functions/docs?id=:id"
+  status = 200
+  force = true

@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=Amiri:wght@400;700&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#F1F5F4; --surface:#FFFFFF; --surface-2:#EAF0EE; --ink:#15302D; --muted:#5E706C; --line:#DBE4E1;
@@ -1026,7 +1026,7 @@
   }
   function certFields(v){ // حقول النوع والنص والتاريخ المشتركة بين الإصدار والتعديل
     return '<div class="ct-fld"><label>نوع الشهادة</label><div class="fchips" id="ceTypes">'+CTYPES.map(function(t){ return '<button type="button" class="fchip'+(v.type===t[0]?' on':'')+'" data-t="'+escq(t[0])+'">'+escq(t[0])+'</button>'; }).join('')+'</div><input class="ct-in" id="ceType" maxlength="40" value="'+escq(v.type)+'"><div class="hint">اختر من الأنواع الجاهزة أو اكتب نوعاً آخر. يظهر عنوان الشهادة «شهادة …».</div></div>'+
-      '<div class="ct-fld"><label>نص الشهادة</label><textarea class="ct-ta" id="ceBody" maxlength="600">'+escq(v.body)+'</textarea><div class="hint">يمكنك كتابة <b>{الاسم}</b> و<b>{الصف}</b> داخل النص فيُستبدلان باسم كل طالب وصفّه. الاسم والصف يظهران أصلاً في الشهادة.</div></div>'+
+      '<div class="ct-fld"><label>نص الشهادة</label><textarea class="ct-ta" id="ceBody" maxlength="600">'+escq(v.body)+'</textarea><div class="hint">يمكنك كتابة <b>{الاسم}</b> و<b>{الصف}</b> داخل النص فيُستبدلان باسم كل طالب وصفّه. الاسم والصف يظهران أصلاً في الشهادة. يُفضَّل ألا يتجاوز النص ٢٥٠ حرفاً ليظهر بخط كبير واضح.</div></div>'+
       '<div class="ct-fld"><label>التاريخ</label><input class="ct-in" type="date" id="ceDate" value="'+escq(v.date)+'"></div>';
   }
   function wireTypes(){
@@ -1136,7 +1136,7 @@
       h+='<div class="ct-item" data-id="'+escq(d.id)+'"><div class="ct-h"><span class="ct-chip sch">'+escq(d.cat)+'</span><span class="ct-chip">'+dfmt(d.date)+'</span>'+docStatus(d)+'</div>'+
         '<b>'+escq(d.title)+'</b>'+(d.desc?'<div class="ct-txt">'+escq(d.desc)+'</div>':'')+
         '<div class="ct-meta">PDF · '+escq(fsz(d.size))+' · 👁 '+ar(DE.views[d.id]||0)+' فتح</div>'+
-        '<div class="ct-act"><a class="ct-btn" target="_blank" rel="noopener" href="/.netlify/functions/docs?id='+escq(d.id)+'" style="text-decoration:none">فتح</a><button class="ct-btn" data-a="wa">نسخ رسالة</button><button class="ct-btn" data-a="ed">تعديل</button><button class="ct-btn" data-a="pn">'+(d.pinned?'إلغاء التثبيت':'تثبيت')+'</button><button class="ct-btn" data-a="hd">'+(d.hidden?'إظهار':'إخفاء')+'</button><button class="ct-btn del" data-a="rm">حذف</button></div></div>';
+        '<div class="ct-act"><a class="ct-btn" target="_blank" rel="noopener" href="/files/'+escq(d.id)+'.pdf" style="text-decoration:none">فتح</a><button class="ct-btn" data-a="wa">نسخ رسالة</button><button class="ct-btn" data-a="ed">تعديل</button><button class="ct-btn" data-a="pn">'+(d.pinned?'إلغاء التثبيت':'تثبيت')+'</button><button class="ct-btn" data-a="hd">'+(d.hidden?'إظهار':'إخفاء')+'</button><button class="ct-btn del" data-a="rm">حذف</button></div></div>';
     });
     box.innerHTML=h;
     $('deNew').addEventListener('click',function(){ DE.view='form'; DE.edit=null; renderDocs(); });
