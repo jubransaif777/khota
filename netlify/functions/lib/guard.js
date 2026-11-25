@@ -70,6 +70,29 @@ async function purge(st) {
   for (const k of oldKeys) { const v = await st.get(k, { type: 'json' }).catch(() => null); if (v && v.t < old) { try { await st.delete(k); n++; } catch (e) {} } }
   return n;
 }
-module.exports = { LIM, open, check, fail, log, events, purge, mask, hmac, dayKey,
-  _setNow: f => { NOW = f || (() => Date.now()); }, _mem: mem };
 
+// ------------------------------------------------------------
+//  بوابة كلمات سرّ الإدارة (admin / staff / content / certs / docs / health / rating / track)
+//  • مقارنة ثابتة الزمن (لا تكشف الفروق الزمنية).
+//  • قفل دائم: 8 محاولات فاشلة لكل جهاز في الساعة (يُحفظ في المخزن فلا يتجاوزه تبديل النسخة)، ثم 429.
+//  • كل فشل يُسجَّل في سجلّ الأمان (بصمة مبهَمة للجهاز فقط، لا كلمة السر ولا IP).
+//  • النجاح لا يُصفّر العدّاد (لا تلاعب بمحاولات ما قبل التخمين الصحيح).
+// ------------------------------------------------------------
+const GATE = { perIpHour: 8 };
+const sha = x => crypto.createHash('sha256').update(String(x)).digest();
+const sameSecret = (a, b) => crypto.timingSafeEqual(sha(a), sha(b));
+const ipOf = event => { const h = (event && event.headers) || {}; return String(h['x-nf-client-connection-ip'] || h['client-ip'] || h['x-forwarded-for'] || '0').split(',')[0].trim(); };
+
+// يعيد { ok:true } أو { ok:false, code:401|429|500, error }
+async function gate(event, supplied, secret, scope, st) {
+  if (!secret) return { ok: false, code: 500, error: 'nopass' };
+  st = st === undefined ? open(event) : st;
+  const iph = hmac('ip:' + ipOf(event)), key = 'a:' + hourKey() + ':' + iph;
+  if ((await getN(st, key)) >= GATE.perIpHour) return { ok: false, code: 429, error: 'rate' };
+  if (supplied && sameSecret(supplied, secret)) return { ok: true };
+  const n = await bump(st, key);
+  await log(st, { r: 'admin', s: scope || '', iph: iph.slice(0, 6), m: (event && event.httpMethod) || '' });
+  return { ok: false, code: n >= GATE.perIpHour ? 429 : 401, error: n >= GATE.perIpHour ? 'rate' : 'auth' };
+}
+module.exports = { GATE, gate, sameSecret, ipOf, LIM, open, check, fail, log, events, purge, mask, hmac, dayKey,
+  _setNow: f => { NOW = f || (() => Date.now()); }, _mem: mem };
