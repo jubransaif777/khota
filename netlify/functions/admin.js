@@ -1,4 +1,5 @@
 const XLSX = require('xlsx');
+const guard = require('./lib/guard');
 
 // ============================================================
 //  دالة لوحة متابعة المعلمين — محمية بكلمة سرّ (متغيّر بيئة)
@@ -202,9 +203,12 @@ function follow(buf){
 }
 
 exports.handler = async (event) => {
-  const pw = (event && event.queryStringParameters && event.queryStringParameters.pw) || '';
-  if(!ADMIN_PASSWORD) return {statusCode:500,headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({error:'لم تُضبط كلمة السرّ (ADMIN_PASSWORD) في إعدادات Netlify.'})};
-  if(pw!==ADMIN_PASSWORD) return {statusCode:401,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'},body:JSON.stringify({error:'كلمة السرّ غير صحيحة'})};
+  const H={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'};
+  const E=(code,msg)=>({statusCode:code,headers:H,body:JSON.stringify({error:msg})});
+  if(event&&event.httpMethod!=='POST') return E(405,'طريقة غير مسموحة');                      // كلمة السرّ لا تُرسَل في الرابط أبداً
+  let b={}; try{ b=JSON.parse((event&&event.body)||'{}'); }catch(e){ return E(400,'طلب غير صالح'); }
+  const gt=await guard.gate(event,b.pw,ADMIN_PASSWORD,'admin');
+  if(!gt.ok) return E(gt.code, gt.error==='nopass'?'لم تُضبط كلمة السرّ (ADMIN_PASSWORD) في إعدادات Netlify.':gt.error==='rate'?'محاولات كثيرة. حاول بعد ساعة.':'كلمة السرّ غير صحيحة');
   try{
     const buf=await download();
     if(!buf) return {statusCode:502,headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({error:'تعذّر تنزيل ملف الإكسل'})};

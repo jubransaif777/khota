@@ -5,6 +5,7 @@
 //  يُحفظ في Netlify Blobs (مخزن site-content). يلزم "@netlify/blobs" في package.json (مضاف سابقاً للتقييمات).
 // ============================================================
 const crypto = require('crypto');
+const guard = require('./lib/guard');
 const J = (code, obj, cache) => ({ statusCode: code, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': cache || 'no-store' }, body: JSON.stringify(obj) });
 const LIM = { announcements: 30, news: 200, links: 100 };
 const LEVELS = ['info', 'important', 'urgent'];
@@ -64,8 +65,8 @@ async function handle(event, store, opt) {
   if (event.httpMethod !== 'POST') return J(405, { ok: false, error: 'method' });
   let b = {}; try { b = JSON.parse(event.body || '{}'); } catch (e) { return J(400, { ok: false, error: 'json' }); }
   const pw = process.env.ADMIN_PASSWORD;
-  if (tooMany(ip)) return J(429, { ok: false, error: 'rate' });
-  if (!pw || !b.pw || !sameSecret(b.pw, pw)) { noteFail(ip); return J(401, { ok: false, error: 'auth' }); }
+  const gt = await guard.gate(event, b.pw, pw, 'content', opt && opt.audit);
+  if (!gt.ok) return J(gt.code, { ok: false, error: gt.error });
   const doc = await readDoc(store);
   if (b.action === 'get') return J(200, { ok: true, today, doc });
   if (b.action === 'save') {

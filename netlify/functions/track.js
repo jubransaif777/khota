@@ -60,17 +60,17 @@ async function handle(event, deps) {
   const st = deps.store;
   if (b.action) {                                         // ---- المدير ----
     const pw = process.env.ADMIN_PASSWORD;
-    if (!pw || !b.pw || !sameSecret(b.pw, pw)) return J(401, { ok: false, error: 'auth' });
+    { const gt = await guard.gate(event, b.pw, pw, 'track', deps && deps.audit); if (!gt.ok) return J(gt.code, { ok: false, error: gt.error }); }
     if (!st) return J(500, { ok: false, error: 'storage' });
     try {
       if (b.action === 'stats') return J(200, Object.assign({ ok: true }, await stats(st, b.days)));
       if (b.action === 'audit') {
         const ast = deps.audit || guard.open(event); await guard.purge(ast).catch(() => 0);
         const evs = await guard.events(ast, 300, 30);
-        const cut = { d1: NOW() - 86400000, d7: NOW() - 7 * 86400000 }, sum = { d1: { ok: 0, fail: 0, locked: 0, rate: 0 }, d7: { ok: 0, fail: 0, locked: 0, rate: 0 } };
+        const cut = { d1: NOW() - 86400000, d7: NOW() - 7 * 86400000 }, sum = { d1: { ok: 0, fail: 0, locked: 0, rate: 0, admin: 0 }, d7: { ok: 0, fail: 0, locked: 0, rate: 0, admin: 0 } };
         const byIp = {}, lockedIds = {};
         evs.forEach(e => { ['d1', 'd7'].forEach(k => { if (e.t >= cut[k]) sum[k][e.r] = (sum[k][e.r] || 0) + 1; });
-          if (e.t >= cut.d7 && (e.r === 'fail' || e.r === 'locked' || e.r === 'rate')) { byIp[e.iph] = (byIp[e.iph] || 0) + 1; }
+          if (e.t >= cut.d7 && (e.r === 'fail' || e.r === 'locked' || e.r === 'rate' || e.r === 'admin')) { byIp[e.iph] = (byIp[e.iph] || 0) + 1; }
           if (e.t >= cut.d1 && e.r === 'locked') lockedIds[e.idh] = e.id; });
         const suspects = Object.entries(byIp).filter(([, n]) => n >= 5).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([iph, n]) => ({ iph, n }));
         return J(200, { ok: true, summary: sum, suspects, lockedToday: Object.values(lockedIds), events: evs.slice(0, 60), getUsed: evs.filter(e => e.m === 'GET' && e.t >= cut.d7).length });

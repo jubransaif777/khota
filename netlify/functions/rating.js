@@ -5,6 +5,7 @@
 //  لا تُخزَّن أسماء ولا عناوين IP. يلزم إضافة "@netlify/blobs" إلى package.json.
 // ============================================================
 const crypto = require('crypto');
+const guard = require('./lib/guard');
 const PAGES = ['/', '/summary', '/schedule', '/exams', '/news', '/links'];
 const J = (code, obj) => ({ statusCode: code, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, body: JSON.stringify(obj) });
 
@@ -33,7 +34,7 @@ async function handle(event, store) {
   // ---------- لوحة الإدارة ----------
   if (b.action === 'list') {
     const pw = process.env.ADMIN_PASSWORD;
-    if (!pw || !b.pw || !sameSecret(b.pw, pw)) return J(401, { ok: false, error: 'auth' });
+    { const gt = await guard.gate(event, b.pw, pw, 'rating'); if (!gt.ok) return J(gt.code, { ok: false, error: gt.error }); }
     const keys = (await listKeys(store)).slice(0, 3000), items = [];
     for (let i = 0; i < keys.length; i += 25) {
       const vals = await Promise.all(keys.slice(i, i + 25).map(k => store.get(k, { type: 'json' }).catch(() => null)));

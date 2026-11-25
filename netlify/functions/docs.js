@@ -6,6 +6,7 @@
 //  ملف مستقل: لا يحتاج أي ملف آخر في مجلد lib.
 // ============================================================
 const crypto = require('crypto');
+const guard = require('./lib/guard');
 
 const J = (code, obj) => ({ statusCode: code, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, body: JSON.stringify(obj) });
 const MAX_RAW = 4 * 1024 * 1024, MAX_DOCS = 200, NEW_DAYS = 7;
@@ -88,8 +89,8 @@ async function publicGet(event, deps) {
 
 async function admin(event, b, deps) {
   const ip = ipOf(event), pw = process.env.ADMIN_PASSWORD;
-  if (tooMany(ip)) return J(429, { ok: false, error: 'rate' });
-  if (!pw || !b.pw || !sameSecret(b.pw, pw)) { noteFail(ip); return J(401, { ok: false, error: 'auth' }); }
+  const gt = await guard.gate(event, b.pw, pw, 'docs', deps && deps.audit);
+  if (!gt.ok) return J(gt.code, { ok: false, error: gt.error });
   const idx = await readIndex(deps.store);
   if (b.action === 'get') {
     const views = {}; for (const d of idx.docs) views[d.id] = parseInt(await deps.store.get('v:' + d.id, { type: 'text' }).catch(() => 0), 10) || 0;

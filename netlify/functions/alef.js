@@ -104,6 +104,7 @@ async function handle(event, deps){
       const i=info(buf); if(i.status!=='ok') return J(i.status==='badformat'?500:502,{status:i.status});
       return J(200, q.ping?{status:'ok',rows:i.rows}:{status:'ok',verify:i.verify});
     }
+    if(method!=='POST') return J(405,{status:'method'});   // لا استعلام بالرابط: الرقم والاسم لا يُرسَلان إلا في جسم POST
     const idD=digits(q.id), name=clean(q.name);
     if(idD.length<10 || !name) return J(400,{status:'invalid'});
     const g=await guard.check(deps.store, idD, ip);

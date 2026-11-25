@@ -1,4 +1,5 @@
 const XLSX = require('xlsx');
+const guard = require('./lib/guard');
 
 // ============================================================
 //  محرّك صفحة تعاون المعلمين — محمي بكلمة سرّ خاصة به (منفصلة عن /admin)
@@ -118,10 +119,11 @@ function limited(ip){ const now=Date.now(); const rec=RATE[ip];
   rec.count++; return rec.count>40; }
 
 exports.handler = async (event) => {
-  const q=(event&&event.queryStringParameters)||{};
   const J=(code,obj)=>({statusCode:code,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'},body:JSON.stringify(obj)});
-  if(!STAFF_PASSWORD) return J(500,{status:'nopass'});
-  if((q.pw||'')!==STAFF_PASSWORD) return J(401,{status:'denied'});
+  if(event&&event.httpMethod!=='POST') return J(405,{status:'method'});                     // كلمة السرّ لا تُرسَل في الرابط أبداً
+  let b={}; try{ b=JSON.parse((event&&event.body)||'{}'); }catch(e){ return J(400,{status:'invalid'}); }
+  const gt=await guard.gate(event,b.pw,STAFF_PASSWORD,'staff');
+  if(!gt.ok) return J(gt.code,{status:gt.error==='nopass'?'nopass':gt.error==='rate'?'ratelimited':'denied'});
   if(limited(ipOf(event))) return J(429,{status:'ratelimited'});
   try{
     const buf=await download();

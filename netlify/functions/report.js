@@ -126,6 +126,7 @@ async function handle(event, deps){
   if(method==='POST'){ try{ q=JSON.parse(event.body||'{}'); }catch(e){ return J(400,{status:'invalid'}); } } else q=(event&&event.queryStringParameters)||{};
   try{
     if(method==='GET' && q.ping){ const buf=await deps.download(); if(!buf) return J(502,{status:'nofile'}); return J(200,{status:'ok',rows:countRows(buf)}); }   // للمراقبة: عدد الصفوف فقط
+    if(method!=='POST') return J(405,{status:'method'});   // لا استعلام بالرابط: الرقم والاسم لا يُرسَلان إلا في جسم POST
     const idD=digits(q.id), name=clean(q.name);
     if(idD.length<10 || !name) return J(400,{status:'invalid'});
     const g=await guard.check(deps.store, idD, ip);

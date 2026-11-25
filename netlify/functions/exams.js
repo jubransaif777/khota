@@ -1,4 +1,5 @@
 const XLSX = require('xlsx');
+const guard = require('./lib/guard');
 
 // ============================================================
 //  محرّك حجز الاختبارات — يقرأ ملف الاختبارات (تخطيط الأيام كالأسبوع 4)
@@ -212,8 +213,14 @@ async function download(){
 }
 exports.handler=async(event)=>{
   try{
-    const q=(event&&event.queryStringParameters)||{};
-    const audit=!!process.env.ADMIN_PASSWORD && q.audit===process.env.ADMIN_PASSWORD;
+    // v3.3.1: كلمة السرّ لا تُقبل في الرابط أبداً. التدقيق الإداري عبر POST + البوابة الموحّدة فقط.
+    let audit=false;
+    if(String((event&&event.httpMethod)||'GET').toUpperCase()==='POST'){
+      let b={}; try{b=JSON.parse((event&&event.body)||'{}');}catch(e){return {statusCode:400,headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({error:'bad'})};}
+      const gt=await guard.gate(event,b&&b.pw,process.env.ADMIN_PASSWORD,'exams');
+      if(!gt.ok) return {statusCode:gt.code,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'},body:JSON.stringify({error:gt.error})};
+      audit=true;
+    }
     const buf=await download();
     if(!buf) return {statusCode:502,headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({error:'تعذّر تنزيل ملف الاختبارات'})};
     return {statusCode:200,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':audit?'no-store':'public, max-age=300'},body:JSON.stringify(build(buf,audit))};

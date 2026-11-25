@@ -90,8 +90,8 @@ async function publicLookup(event, q, deps) {
 
 async function admin(event, b, deps) {
   const ip = ipOf(event), pw = process.env.ADMIN_PASSWORD;
-  if (tooMany(ip)) return J(429, { ok: false, error: 'rate' });
-  if (!pw || !b.pw || !sameSecret(b.pw, pw)) { noteFail(ip); return J(401, { ok: false, error: 'auth' }); }
+  const gt = await guard.gate(event, b.pw, pw, 'certs', deps && deps.audit);
+  if (!gt.ok) return J(gt.code, { ok: false, error: gt.error });
   if (b.action === 'roster') {
     try { const list = deps.roster ? await deps.roster() : null; if (!list) return J(200, { ok: true, roster: [], note: 'nofile' }); return J(200, { ok: true, roster: list }); }
     catch (e) { return J(200, { ok: true, roster: [], note: 'error' }); }

@@ -5,6 +5,7 @@
 //  لا ينبّه إلا بعد فشلين متتاليين، وينبّه مرة واحدة، ثم يخبرك حين يعود المصدر.
 // ============================================================
 const crypto = require('crypto');
+const guard = require('./lib/guard');
 const SITE = () => (process.env.SITE_URL || process.env.URL || 'https://khotamaereid.net').replace(/\/+$/, '');
 const J = (code, obj) => ({ statusCode: code, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, body: JSON.stringify(obj) });
 const sha = x => crypto.createHash('sha256').update(String(x)).digest();
@@ -93,7 +94,7 @@ async function handle(event, deps) {
   if (event.httpMethod !== 'POST') return J(405, { ok: false });
   let b = {}; try { b = JSON.parse(event.body || '{}'); } catch (e) { return J(400, { ok: false }); }
   const pw = process.env.ADMIN_PASSWORD;
-  if (!pw || !b.pw || !sameSecret(b.pw, pw)) return J(401, { ok: false, error: 'auth' });
+  { const gt = await guard.gate(event, b.pw, pw, 'health', deps && deps.audit); if (!gt.ok) return J(gt.code, { ok: false, error: gt.error }); }
   const cfg = Object.assign(alertConfig(), { site: SITE() });
   try {
     if (b.action === 'status') { const s = await readState(deps.store); return J(200, { ok: true, state: s, config: cfg, now: NOW(), storage: !!deps.store }); }
