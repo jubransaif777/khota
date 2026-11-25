@@ -78,10 +78,10 @@
   function auth(){
     var pw=$('pw').value.trim(); if(!pw) return;
     $('err').textContent='… جارٍ التحقق';
-    fetch('/.netlify/functions/staff?pw='+encodeURIComponent(pw),{cache:'no-store'})
+    fetch('/.netlify/functions/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pw:pw}),cache:'no-store'})
       .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})})
       .then(function(res){
-        if(!res.ok){ $('err').textContent = res.j.status==='denied'?'كلمة السرّ غير صحيحة':'تعذّر الدخول'; return; }
+        if(!res.ok){ $('err').textContent = res.j.status==='denied'?'كلمة السرّ غير صحيحة':res.j.status==='ratelimited'?'محاولات كثيرة. حاول بعد ساعة.':'تعذّر الدخول'; return; }
         PW=pw; D=res.j; curSec=D.sections[0]||'';
         $('gate').classList.add('hidden'); $('panel').classList.remove('hidden');
         renderSecbar(); renderList();

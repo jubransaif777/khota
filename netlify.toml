@@ -12,3 +12,47 @@
   to = "/.netlify/functions/docs/:id"
   status = 200
   force = true
+
+# ===================== رؤوس الأمان (تُطبَّق على كل الصفحات) =====================
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # لا يُسمح بتضمين الموقع داخل إطار في موقع آخر (يمنع هجمات النقر المخادع)
+    X-Frame-Options = "DENY"
+    # يمنع المتصفح من تخمين نوع الملف
+    X-Content-Type-Options = "nosniff"
+    # لا يُرسَل عنوان الصفحة الكامل إلى المواقع الأخرى
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # لا كاميرا ولا ميكروفون ولا موقع جغرافي
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    # اتصال مشفّر دائماً لمدة سنة
+    Strict-Transport-Security = "max-age=31536000"
+    # سياسة المحتوى: لا نصوص ولا اتصالات إلا من الموقع نفسه، ولا تضمين، ولا نماذج تُرسَل لمكان آخر
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+
+# صفحات الإدارة والاستعلام الحساسة لا تُفهرس في محركات البحث
+[[headers]]
+  for = "/admin*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+[[headers]]
+  for = "/staff*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+[[headers]]
+  for = "/alef*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+[[headers]]
+  for = "/report*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+[[headers]]
+  for = "/certs*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"

@@ -313,7 +313,7 @@
   function auth(){
     var pw=$('pw').value.trim(); if(!pw){return}
     $('err').textContent='… جارٍ التحقق';
-    fetch('/.netlify/functions/admin?pw='+encodeURIComponent(pw),{cache:'no-store'})
+    fetch('/.netlify/functions/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pw:pw}),cache:'no-store'})
       .then(function(r){ return r.json().then(function(j){return {ok:r.ok,j:j}}); })
       .then(function(res){
         if(!res.ok){ $('err').textContent = res.j && res.j.error ? res.j.error : 'تعذّر الدخول'; return; }
@@ -416,7 +416,7 @@
   function loadExams(){
     if(exLoaded) return; exLoaded=true;
     $('exstate').innerHTML='<div class="empty">… جارٍ تحميل بيانات الاختبارات</div>';
-    var pE=fetch('/.netlify/functions/exams?audit='+encodeURIComponent(PW),{cache:'no-store'}).then(function(r){return r.json()});
+    var pE=fetch('/.netlify/functions/exams',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pw:PW}),cache:'no-store'}).then(function(r){return r.json()});
     var pS=fetch('/.netlify/functions/schedule',{cache:'no-store'}).then(function(r){return r.json()}).catch(function(){return null});
     Promise.all([pE,pS]).then(function(res){
       EX=res[0]; SC=res[1];
@@ -1251,19 +1251,19 @@
     if(!force&&SY.audit){ paintSys(); return; } SY.sec='loading'; paintSys();
     sysApi('track',{action:'audit'}).then(function(x){ if(x.j&&x.j.ok){ SY.audit=x.j; SY.sec='ok'; } else SY.sec=(x.j&&x.j.error==='storage')?'storage':'fail'; paintSys(); }).catch(function(){ SY.sec='fail'; paintSys(); });
   }
-  var RES={ok:['ناجح','st-ok'],fail:['فشل','st-warn'],locked:['موقوف','st-bad'],rate:['محجوب','st-bad']};
+  var RES={ok:['ناجح','st-ok'],fail:['فشل','st-warn'],locked:['موقوف','st-bad'],rate:['محجوب','st-bad'],admin:['دخول إداري فاشل','st-bad']};
   function paintSec(b){
     var head='<div class="actions"><button class="ct-btn" id="seRef">↻ تحديث</button></div>';
     if(SY.sec==='loading'||SY.sec==='idle'){ b.innerHTML=head+'<div class="empty">… جارٍ تحميل سجل الأمان</div>'; var r0=$('seRef'); if(r0) r0.addEventListener('click',function(){ loadSec(true); }); return; }
     if(SY.sec!=='ok'){ b.innerHTML=head+errBox('تأكّد من رفع <b>track.js</b> و<b>lib/guard.js</b> و<b>alef.js</b> و<b>report.js</b> ثم أعد النشر.'); $('seRef').addEventListener('click',function(){ loadSec(true); }); return; }
     var A=SY.audit, d1=A.summary.d1, d7=A.summary.d7;
     var tile=function(n,t,k){ return '<div class="sc '+(k||'')+'"><div class="n">'+ar(n||0)+'</div><div class="t">'+t+'</div></div>'; };
-    var h=head+'<div class="sy-h">آخر ٢٤ ساعة (ألف والتقرير والشهادات)</div><div class="summary sy-tiles">'+tile(d1.ok,'استعلام ناجح','done')+tile(d1.fail,'محاولة فاشلة',d1.fail>5?'partial':'')+tile(d1.locked,'محاولة موقوفة',d1.locked?'miss':'')+tile(d1.rate,'محجوبة (كثرة طلبات)',d1.rate?'miss':'')+'</div>'+
-      '<div class="lg-note">آخر ٧ أيام: '+ar(d7.ok||0)+' ناجح · '+ar(d7.fail||0)+' فاشل · '+ar(d7.locked||0)+' موقوف · '+ar(d7.rate||0)+' محجوب.</div>';
+    var h=head+'<div class="sy-h">آخر ٢٤ ساعة (ألف والتقرير والشهادات)</div><div class="summary sy-tiles">'+tile(d1.ok,'استعلام ناجح','done')+tile(d1.fail,'محاولة فاشلة',d1.fail>5?'partial':'')+tile(d1.locked,'محاولة موقوفة',d1.locked?'miss':'')+tile(d1.rate,'محجوبة (كثرة طلبات)',d1.rate?'miss':'')+tile(d1.admin,'محاولات دخول للإدارة فاشلة',d1.admin?'miss':'')+'</div>'+
+      '<div class="lg-note">آخر ٧ أيام: '+ar(d7.ok||0)+' ناجح · '+ar(d7.fail||0)+' فاشل · '+ar(d7.locked||0)+' موقوف · '+ar(d7.rate||0)+' محجوب · '+ar(d7.admin||0)+' دخول إداري فاشل.</div>';
     if(A.lockedToday.length) h+='<div class="acard" style="margin-top:12px"><div class="ah"><span class="at">أرقام هوية أُوقفت اليوم</span><span class="an warn">'+ar(A.lockedToday.length)+'</span></div><div class="adesc">بلغ كل رقم منها ٥ محاولات فاشلة فأُوقف حتى منتصف الليل. قد يكون وليّ أمر أخطأ في الاسم، أو محاولة تخمين. إن كان وليّ أمر حقيقياً فتحقّق من هويته وزوّده بالبيانات مباشرة.</div>'+A.lockedToday.map(function(x){ return '<div class="arow"><b dir="ltr">'+esc(x)+'</b></div>'; }).join('')+'</div>';
     if(A.suspects.length) h+='<div class="acard" style="margin-top:12px"><div class="ah"><span class="at">أجهزة بمحاولات فاشلة متكررة</span><span class="an warn">'+ar(A.suspects.length)+'</span></div><div class="adesc">بصمة مبهَمة للعنوان (لا يمكن عكسها إلى IP) بـ٥ إخفاقات فأكثر خلال أسبوع. تُحجب تلقائياً عند تجاوز الحدّ، ولا إجراء مطلوب منك إلا الانتباه.</div>'+A.suspects.map(function(x){ return '<div class="arow"><b dir="ltr">'+esc(x.iph)+'</b><small>'+ar(x.n)+' محاولة فاشلة</small></div>'; }).join('')+'</div>';
     if(A.getUsed) h+='<div class="acard" style="margin-top:12px"><div class="ah"><span class="at">طلبات بالطريقة القديمة (GET)</span><span class="an warn">'+ar(A.getUsed)+'</span></div><div class="adesc">ما زالت صفحة قديمة تُرسل الرقم والاسم في الرابط (يُسجَّل في سجلات الخادم). تأكّد من رفع <b>alef.html</b> و<b>report.html</b> الجديدين، وامسح ذاكرة المتصفح إن لزم.</div></div>';
-    h+='<div class="sy-h">آخر المحاولات</div>'+(A.events.length?'<div class="lgw"><table class="sy"><thead><tr><th>الوقت</th><th>الصفحة</th><th>النتيجة</th><th>الهوية</th><th>بصمة الجهاز</th><th>جهاز</th></tr></thead><tbody>'+A.events.map(function(e){ var r=RES[e.r]||[e.r,'st-mute']; return '<tr><td>'+esc(tmf(e.t))+'</td><td>'+({alef:'ألف',report:'التقرير',cert:'الشهادات'}[e.k]||'التقرير')+'</td><td><span class="st-chip '+r[1]+'">'+r[0]+'</span></td><td dir="ltr">'+esc(e.id)+'</td><td dir="ltr">'+esc(e.iph)+'</td><td>'+(e.ua==='m'?'جوال':'حاسوب')+'</td></tr>'; }).join('')+'</tbody></table></div>':'<div class="empty">لا محاولات مسجّلة بعد.</div>');
+    h+='<div class="sy-h">آخر المحاولات</div>'+(A.events.length?'<div class="lgw"><table class="sy"><thead><tr><th>الوقت</th><th>الصفحة</th><th>النتيجة</th><th>الهوية</th><th>بصمة الجهاز</th><th>جهاز</th></tr></thead><tbody>'+A.events.map(function(e){ var r=RES[e.r]||[e.r,'st-mute']; return '<tr><td>'+esc(tmf(e.t))+'</td><td>'+((e.r==='admin'?({admin:'الإدارة',staff:'المعلمون',content:'المحتوى',certs:'الشهادات',docs:'المستندات',health:'المراقبة',rating:'التقييمات',track:'الإحصاءات',exams:'الاختبارات'}[e.s]||'الإدارة'):({alef:'ألف',report:'التقرير',cert:'الشهادات'}[e.k]||'التقرير')))+'</td><td><span class="st-chip '+r[1]+'">'+r[0]+'</span></td><td dir="ltr">'+esc(e.id)+'</td><td dir="ltr">'+esc(e.iph)+'</td><td>'+(e.ua==='m'?'جوال':'حاسوب')+'</td></tr>'; }).join('')+'</tbody></table></div>':'<div class="empty">لا محاولات مسجّلة بعد.</div>');
     h+='<div class="lg-note">🔒 السجل يحفظ نتيجة المحاولة ووقتها وآخر ٣ أرقام من الهوية وبصمة مبهَمة للجهاز فقط. لا أسماء ولا كلمات مرور ولا عناوين IP. يُحذف ما تجاوز ٣٠ يوماً. القفل: ٥ محاولات فاشلة لكل هوية في اليوم، و٣٠ محاولة لكل جهاز في الساعة.</div>';
     b.innerHTML=h; $('seRef').addEventListener('click',function(){ loadSec(true); });
   }
