@@ -139,6 +139,7 @@ function parseDayCols(ws,maxRow){
   const bookings={}; SECTIONS.forEach(x=>bookings[x]={});
   for(let r=hr+1;r<=maxRow;r++){
     const lab=clean(cell(ws,r,1)).toUpperCase().replace(/\s+/g,''); if(!isSection(lab)) continue;
+    if(!bookings[lab]) bookings[lab]={};   // الشعبة تُعرَف من صفّها ولو لم يكن لها اختبار
     for(const [d,c] of Object.entries(map)){
       const codes=clean(cell(ws,r,c)).toUpperCase().split(/[\s,،;+\/&]+/).filter(Boolean);
       if(codes.length){ if(!bookings[lab]) bookings[lab]={}; bookings[lab][d]=(bookings[lab][d]||[]).concat(codes); }
