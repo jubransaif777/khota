@@ -16,7 +16,7 @@
   // نموذج الأسبوع لمجموعة (6G): الدروس + الاختبارات (pick = '6G1' أو '' للكل)
   function model(o) {
     var plan = o.plan, ex = o.exams, group = o.group, wk = o.weekIndex, pick = o.pick || '', choices = o.choices || {};
-    var w = plan.weeks[wk], ents = (w.sections && w.sections[group]) || [];
+    var w = plan.weeks[wk], ents = ((w.sections && w.sections[group]) || []).filter(function (x) { return !x.sec || !pick || pick.indexOf(group) !== 0 || x.sec === pick; });   // v3.4: شعبة محدّدة ← دروسها + المشترك
     var cl = ''; (plan.sectionOrder || []).forEach(function (s) { if (s.code === group) cl = s.label; });
     var m = { group: group, classLabel: cl || group, weekLabel: westify(w.label || ''), range: westify(w.range || ''), notices: w.notices || [], rows: [], items: [], others: [], hasExams: !!ex, subs: [], differs: false, pick: '', examWeek: null };
     var order = [], by = {}; ents.forEach(function (x) { if (!by[x.subject]) { by[x.subject] = []; order.push(x.subject); } by[x.subject].push(x); });
@@ -39,7 +39,7 @@
       m.rows.push({ subject: subj, emoji: es[0].emoji, code: code, shown: shown, exams: m.items.filter(function (i) { return i.code === code; }) });
     });
     m.others = m.items.filter(function (i) { return !covered[i.code]; });
-    m.reminders = []; ents.forEach(function (x) { var t = x.reminder || x.note; if (t) m.reminders.push({ subject: x.subject, text: t }); });
+    m.reminders = []; ents.forEach(function (x) { var t = x.reminder || x.note; if (t) m.reminders.push({ subject: x.subject, text: t }); if (x.homework) m.reminders.push({ subject: x.subject, text: 'واجب: ' + x.homework }); });
     return m;
   }
   function tag(m, i) { return (!m.pick && m.subs.length > 1 && i.secs.length < m.subs.length) ? ' (' + i.secs.join('، ') + ')' : ''; }

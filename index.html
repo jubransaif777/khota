@@ -217,6 +217,9 @@
   .chooser .prt-i{border-top:1px solid #ccc;padding:6px 0;font-size:13px;line-height:1.7}
   .chooser .prt-i b{color:#0B403B}
 }
+/* v3.4: شرائح اختيار الشعبة داخل المجموعة (عام ١ / عام ٢) */
+.sub-chips{display:flex;gap:6px;margin:0 0 10px;align-items:center;flex-wrap:wrap}.sub-chips span{font-size:11.5px;color:var(--muted)}.sub-chips button{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:16px;padding:5px 12px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}.sub-chips button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.sec-tag{display:inline-block;font-size:10.5px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:1px 7px;margin-inline-start:6px}
 </style>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0E5A54">
@@ -252,6 +255,7 @@
 <a class="ws-link" id="wsLink" href="/summary" hidden></a>
   <div class="listhead"><span class="cnt"><b id="subjCount">٠</b> مواد منشورة</span>
     <button class="toggle-all" id="toggleAll">توسيع الكل</button></div>
+  <div class="sub-chips" id="subChips" hidden></div>
   <main class="cards" id="cards"></main>
   <footer class="foot">
     <button class="pdf-btn" id="pdfBtn">⤓&nbsp; تنزيل خطة الأسبوع (PDF)</button>
@@ -290,7 +294,12 @@ function initApp(){
   function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
   function westify(s){return String(s).replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d)})}
   function labelOf(c){for(var i=0;i<sections.length;i++)if(sections[i].code===c)return sections[i].label;return c}
-  function entries(){var w=weeks[wkIndex];return (w.sections&&w.sections[selCode])||[]}
+  // v3.4: شعب المجموعة (5G1، 5G2…) إن كان الملف يفصلها؛ وإلا القائمة فارغة ويعمل الموقع كما كان
+  function planSubs(){ var s=(D.sectionsOf||{})[selCode]; return (s&&s.length>1)?s:[] }
+  function planPick(){ var subs=planSubs(); if(!subs.length||!window.SiteClass||SiteClass.group('')!==selCode) return ''; var p=SiteClass.sub(); return subs.indexOf(p)>=0?p:'' }
+  function secLabel(c){ var g=(c||'').replace(/\d+$/,''), n=(c||'').slice(g.length); return n?((/A$/.test(g)?'متقدم ':'عام ')+ar(+n)):c }
+  function visible(x,p){ return !x.sec||!p||x.sec===p }
+  function entries(){var w=weeks[wkIndex],p=planPick();return ((w.sections&&w.sections[selCode])||[]).filter(function(x){return visible(x,p)})}
   function weekHasAny(){var s=weeks[wkIndex].sections,k;for(k in s)if(s[k].length)return true;return false}
 
   // اتحاد معلّمي كل مادة داخل كل شعبة عبر جميع الأسابيع (لثبات الاختيار)
@@ -403,16 +412,18 @@ function initApp(){
     if(hasTest)badges+='<span class="badge test">اختبار'+(bk.length===1?' '+esc(bk[0].dayLabel):'')+'</span>';
     if(x.note)badges+='<span class="badge note">ملاحظة</span>';
     if(x.reminder)badges+='<span class="badge note">تذكير</span>';
+    if(x.homework)badges+='<span class="badge note">واجب</span>';
     if(!badges)badges='<span class="badge none">درس</span>';
     var head=document.createElement('button');head.className='card-head';
     head.setAttribute('aria-expanded',open?'true':'false');
     head.innerHTML='<span class="mono" style="background:'+x.tint+'">'+x.emoji+'</span>'+
       '<span class="head-mid"><span class="sn">'+esc(x.subject)+'</span>'+
-      (x.teacher?'<span class="tch">معلم المادة: '+esc(x.teacher)+'</span>':'')+
+      (x.teacher?'<span class="tch">معلم المادة: '+esc(x.teacher)+(x.sec&&!planPick()?'<span class="sec-tag">'+secLabel(x.sec)+'</span>':'')+'</span>':(x.sec&&!planPick()?'<span class="tch"><span class="sec-tag">'+secLabel(x.sec)+'</span></span>':''))+
       '<span class="badges">'+badges+'</span></span><span class="chev">‹</span>';
     var body=document.createElement('div');body.className='card-body';
     var h='<div class="row"><div class="rl">الدرس / الخطة</div><div class="rv">'+esc(x.lesson)+'</div></div>';
     if(x.note)h+='<div class="row"><div class="rl">ملاحظة</div><div class="rv">'+esc(x.note)+'</div></div>';
+    if(x.homework)h+='<div class="row"><div class="rl">الواجب / المهمة</div><div class="rv">'+esc(x.homework)+'</div></div>';
     if(x.reminder)h+='<div class="row"><div class="rl">تذكير</div><div class="rv">'+esc(x.reminder)+'</div></div>';
     bk.forEach(function(b){ var cxx=curExams(), tg=cxx?tagOf(b,cxx):''; h+='<div class="alertbox ex2"><span class="ai">📝</span><div><div class="at">اختبار يوم '+esc(b.dayLabel)+(tg?' ('+esc(tg)+')':'')+'</div><div class="av">'+(b.card&&cardRows(b.card)?cardRows(b.card):'لم تُنشر تفاصيل الاختبار بعد')+'</div></div></div>'; });
     if(x.exam)h+='<div class="alertbox"><span class="ai">📝</span><div><div class="at">موعد اختبار</div><div class="av">'+esc(x.exam)+'</div></div></div>';
@@ -475,6 +486,7 @@ function initApp(){
     order.forEach(function(subject){
       var union=unionTeachers[selCode][subject]||[];
       var tw=bySubj[subject];
+      var pk=planPick(); if(pk&&union.length>1){ var seen={}; weeks.forEach(function(w2){ ((w2.sections&&w2.sections[selCode])||[]).forEach(function(y){ if(y.subject===subject&&y.teacher&&visible(y,pk)) seen[y.teacher]=1 }) }); var u2=union.filter(function(t){return seen[t]}); if(u2.length) union=u2; }
       if(union.length<=1){tw.forEach(function(x){cardsEl.appendChild(normalCard(x,false))});return;}
       var choice=getChoice(selCode,subject);
       if(!choice){cardsEl.appendChild(chooserCard(subject,union,tw));return;}
@@ -494,7 +506,13 @@ function initApp(){
     $('prevWk').disabled=(wkIndex===0);$('nextWk').disabled=(wkIndex===weeks.length-1);
     $('printHead').innerHTML='<h2>'+labelOf(selCode)+' — '+westify(w.label)+'</h2><p>الخطة الأسبوعية · '+westify(w.range)+' · '+D.school+'</p>';
   }
-  function renderAll(){$('classLabel').textContent=labelOf(selCode);renderWeek();renderNotice();
+  function renderSubChips(){
+    var box=$('subChips'), subs=planSubs(); if(!subs.length){ box.hidden=true; box.innerHTML=''; return; }
+    var p=planPick(); box.hidden=false;
+    box.innerHTML='<span>شعبة ابنك:</span><button data-sub="" class="'+(p?'':'on')+'">الكل</button>'+subs.map(function(c){return '<button data-sub="'+c+'" class="'+(p===c?'on':'')+'">'+secLabel(c)+'</button>'}).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('button'),function(b){ b.addEventListener('click',function(){ var v=b.getAttribute('data-sub'); if(window.SiteClass){ SiteClass.setGroup(selCode); if(v) SiteClass.setSection(v); else SiteClass.clearSub(); } renderAll(); }); });
+  }
+  function renderAll(){renderSubChips();$('classLabel').textContent=labelOf(selCode);renderWeek();renderNotice();
     var holiday=!weekHasAny()&&weekNotices().length>0;
     $('glance').style.display=holiday?'none':''; document.querySelector('.listhead').style.display=holiday?'none':'';
     renderGlance();renderTeaser();renderCards()}

@@ -1,4 +1,5 @@
 const XLSX = require('xlsx');
+const cols = require('./lib/cols');
 
 // ============================================================
 //  رابط مشاركة ملف الإكسل (OneDrive). غيّر هذا السطر فقط لو تغيّر الرابط:
@@ -141,14 +142,17 @@ function cell(ws,r1,c1){ const cel=ws[XLSX.utils.encode_cell({r:r1-1,c:c1-1})]; 
 
 function pivot(buf){
   const wb=XLSX.read(buf,{type:'buffer'});
-  const weeks=[];
+  const weeks=[]; const secsOf={}; let termLabel='';
   for(const name of wb.SheetNames){
     if(!/^week/i.test(name)) continue;
     const ws=wb.Sheets[name]; const ref=ws['!ref']; if(!ref) continue;
     const maxRow=XLSX.utils.decode_range(ref).e.r+1;
     const title=clean(cell(ws,3,2));
+    if(!termLabel){ const t=clean(cell(ws,3,1)); if(/الفصل/.test(t)) termLabel=adig(t.replace(/(\d)\s*-\s*(\d)/g,'$1-$2')); }   // اسم الفصل من الخلية A3
     const mNum=title.match(/الأسبوع\s*(\d+)/); const num=mNum?+mNum[1]:weeks.length+1;
     const start=parseStartDate(title,false);
+    const D=cols.detect(ws,cell);   // v3.4: الأعمدة من العناوين (قديم: بالمجموعة، جديد: بالشعبة)
+    D.secCols.forEach(x=>{ if(x.sec){ (secsOf[x.group]=secsOf[x.group]||new Set()).add(x.sec); } });
     const sections={}; SECTIONS.forEach(([c])=>sections[c]=[]);
     // إعلانات الأسبوع: نصٌّ في عمود (ملاحظات/موعد/تذكير) لا يحمله أي درس.
     //  • صفّ بلا اسم معلم ولا مادة  → إعلان عام لكل الأولياء دائماً.
@@ -157,17 +161,25 @@ function pivot(buf){
     for(let r=5;r<=maxRow;r++){
       const subject=fixSubject(cell(ws,r,C_SUBJECT));
       const teacher=clean(cell(ws,r,C_TEACHER));
-      const note=clean(cell(ws,r,C_NOTE)), exam=clean(cell(ws,r,C_EXAM)), rem=clean(cell(ws,r,C_REM));
-      const texts=()=>[note, rem?'تذكير: '+rem:'', exam?'موعد اختبار: '+exam:''];
+      const g=c=>c?clean(cell(ws,r,c)):''; const note=g(D.note), exam=g(D.exam), rem=g(D.rem), hw=g(D.hw);
+      const texts=()=>[note, rem?'تذكير: '+rem:'', exam?'موعد اختبار: '+exam:'', hw?'واجب: '+hw:''];
       if(!subject && !teacher){ texts().forEach(t=>general.push(t)); continue; }
       const [emoji,tint]=meta(subject);
       let placed=false; const codesFilled=[];
       for(const [code] of SECTIONS){
-        const lesson=clean(cell(ws,r,COL[code]));
-        if(!lesson) continue;
-        const e={subject,teacher,lesson,emoji,tint};
-        if(note) e.note=note; if(rem) e.reminder=rem; if(exam) e.exam=exam;
-        sections[code].push(e); placed=true; codesFilled.push(code);
+        const gc=cols.colsOf(D,code); if(!gc.length) continue;
+        const vals=gc.map(x=>({sec:x.sec,lesson:clean(cell(ws,r,x.col))}));
+        const filled=vals.filter(v=>v.lesson); if(!filled.length) continue;
+        // نص واحد متطابق في كل أعمدة شعب المجموعة ← إدخال واحد للمجموعة كلها؛ وإلا إدخال لكل شعبة (e.sec)
+        const same=filled.length===vals.length && filled.every(v=>v.lesson===filled[0].lesson);
+        const list=same?[{sec:'',lesson:filled[0].lesson}]:filled;
+        for(const v of list){
+          const e={subject,teacher,lesson:v.lesson,emoji,tint};
+          if(v.sec) e.sec=v.sec;
+          if(note) e.note=note; if(rem) e.reminder=rem; if(exam) e.exam=exam; if(hw) e.homework=hw;
+          sections[code].push(e);
+        }
+        placed=true; codesFilled.push(code);
       }
       if(teacher && subject) roster.push({subject,teacher,codes:codesFilled});
       if(!placed) texts().forEach(t=>stray.push(t));
@@ -271,7 +283,8 @@ function pivot(buf){
     currentSections(tl,weeks.length-1).forEach(c=>{ const arr=activeTeachers[c][subject]||(activeTeachers[c][subject]=[]); if(!arr.includes(teacher)) arr.push(teacher); }); });
   const retired=[...new Set(recs.map(r=>canon(r.subject,r.teacher)).filter(t=>t&&isRet(t)))];
   weeks.forEach(w=>{ delete w._roster; });
-  return {school:SCHOOL,term:TERM,currentWeekIndex:cur, currentIsUpcoming:upcoming, activeTeachers, retired, announcement, links, news,
+  const sectionsOf={}; Object.keys(secsOf).forEach(g=>{ sectionsOf[g]=[...secsOf[g]].sort(); });
+  return {school:SCHOOL,term:termLabel||TERM,sectionsOf,currentWeekIndex:cur, currentIsUpcoming:upcoming, activeTeachers, retired, announcement, links, news,
     sectionOrder:SECTIONS.map(([code,label])=>({code,label})), weeks};
 }
 

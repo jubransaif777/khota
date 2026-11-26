@@ -1,4 +1,5 @@
 const XLSX = require('xlsx');
+const cols = require('./lib/cols');
 const guard = require('./lib/guard');
 
 // ============================================================
@@ -135,12 +136,13 @@ async function download(){
 function follow(buf){
   const wb=XLSX.read(buf,{type:'buffer'});
   const weekSheets=wb.SheetNames.filter(n=>/^week/i.test(n));
-  const weeks=[];
+  const weeks=[]; const codeSet=new Set();
   const AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   for(const name of weekSheets){
     const ws=wb.Sheets[name];const ref=ws['!ref'];if(!ref)continue;
     const maxRow=XLSX.utils.decode_range(ref).e.r+1;
     const title=clean(cell(ws,3,2));
+    const D=cols.detect(ws,cell); const units=D.secCols.map(x=>({col:x.col,code:x.sec||x.group})); units.forEach(u=>codeSet.add(u.code));   // v3.4: الشعب من العناوين
     const mNum=title.match(/الأسبوع\s*(\d+)/);const num=mNum?+mNum[1]:weeks.length+1;
     const start=parseStartDate(title,false);
     let range='';
@@ -152,14 +154,14 @@ function follow(buf){
       const subject=fixSubject(cell(ws,r,C_SUBJECT));
       const teacher=clean(cell(ws,r,C_TEACHER));
       if(!teacher && !subject) continue;
-      { let any=0; for(const [code] of SECTIONS) if(clean(cell(ws,r,COL[code]))) any++;      // صفّ تدريس بلا دروس: نحتفظ بنصوصه للتنبيه
-        if(!any) strayRows.push({teacher,subject,note:clean(cell(ws,r,C_NOTE)),exam:clean(cell(ws,r,C_EXAM)),rem:clean(cell(ws,r,C_REM))}); }
+      { let any=0; for(const u of units) if(clean(cell(ws,r,u.col))) any++;      // صفّ تدريس بلا دروس: نحتفظ بنصوصه للتنبيه
+        if(!any) strayRows.push({teacher,subject,note:D.note?clean(cell(ws,r,D.note)):'',exam:D.exam?clean(cell(ws,r,D.exam)):'',rem:D.rem?clean(cell(ws,r,D.rem)):''}); }
       if(!teacher || /^شاغر/.test(teacher)) continue; // تجاهل الصفوف الشاغرة
       const cells={}; let filled=0, teaches=0;
-      for(const [code] of SECTIONS){
-        const v=clean(cell(ws,r,COL[code]));
+      for(const u of units){
+        const v=clean(cell(ws,r,u.col));
         // نعتبر الشعبة \"مطلوبة\" لهذا المعلّم إن كان يدرّسها في أي أسبوع — نحسبها لاحقًا
-        cells[code]=v?1:0; if(v){filled++;}
+        cells[u.code]=v?1:0; if(v){filled++;}
       }
       rows.push({teacher,subject,cells,filled});
     }
@@ -173,6 +175,12 @@ function follow(buf){
     weeks.push({num,label:'الأسبوع '+adig(num),range,start:start?start.toISOString().slice(0,10):null,rows,strays});
   }
   weeks.sort((a,b)=>a.num-b.num);
+  // ترتيب الشعب/المجموعات الفعلي من عناوين الأعمدة (v3.4): مجموعة قديمة «5G» أو شعب «5G1، 5G2…»
+  const ORDER=[]; SECTIONS.forEach(([g,lab])=>{
+    if(codeSet.has(g)) ORDER.push([g,lab]);
+    [...codeSet].filter(c=>c!==g && c.startsWith(g)).sort((x,y)=>(+x.slice(g.length))-(+y.slice(g.length))).forEach(c=>ORDER.push([c,lab+' '+adig(+c.slice(g.length))]));
+  });
+  if(!ORDER.length) SECTIONS.forEach(x=>ORDER.push(x));
   // توحيد الأسماء (تبويب names + الدمج التلقائي) واستثناء المتوقّفين
   const NT=parseNamesTab(wb);
   const recs=[]; weeks.forEach(w=>w.rows.forEach(r=>recs.push({week:w.num,subject:r.subject,teacher:r.teacher})));
@@ -183,12 +191,12 @@ function follow(buf){
   // الشعب المطلوبة من المعلّم في أسبوع ما = ما أدخله في آخر أسبوعين أدخل فيهما شيئاً (حتى ذلك الأسبوع)، لا تاريخه كله:
   // فإذا انتقل من شعبة تسقط تلقائياً، وإذا تأخّر أسابيع تبقى شعبه السابقة مطلوبة منه.
   const timeline={}; // teacher||subject -> [{i,codes}]
-  weeks.forEach((w,i)=>{ const per={}; w.rows.forEach(r=>{ const k=r.teacher+'||'+r.subject; const st=per[k]||(per[k]=new Set()); SECTIONS.forEach(([c])=>{ if(r.cells[c]) st.add(c); }); });
+  weeks.forEach((w,i)=>{ const per={}; w.rows.forEach(r=>{ const k=r.teacher+'||'+r.subject; const st=per[k]||(per[k]=new Set()); ORDER.forEach(([c])=>{ if(r.cells[c]) st.add(c); }); });
     Object.entries(per).forEach(([k,st])=>{ (timeline[k]=timeline[k]||[]).push({i,codes:st}); }); });
   weeks.forEach((w,i)=>{
     for(const row of w.rows){
       const cs=currentSections(timeline[row.teacher+'||'+row.subject]||[],i);
-      const req=SECTIONS.map(s=>s[0]).filter(c=>cs.has(c));
+      const req=ORDER.map(s=>s[0]).filter(c=>cs.has(c));
       row.required=req; row.done=req.filter(c=>row.cells[c]);
       row.status = req.length===0 ? 'none' : (row.done.length===0 ? 'missing' : (row.done.length<req.length ? 'partial' : 'done'));
     }
@@ -199,7 +207,7 @@ function follow(buf){
       missing:active.filter(r=>r.status==='missing').length};
   });
   const {cur,upcoming}=weekPointer(weeks);
-  return {sectionOrder:SECTIONS.map(([code,label])=>({code,label})),currentWeekIndex:cur,currentIsUpcoming:upcoming,weeks,nameMerges:nm.merges,nameSuspects:nm.suspects,retired:[...retiredSeen]};
+  return {sectionOrder:ORDER.map(([code,label])=>({code,label})),currentWeekIndex:cur,currentIsUpcoming:upcoming,weeks,nameMerges:nm.merges,nameSuspects:nm.suspects,retired:[...retiredSeen]};
 }
 
 exports.handler = async (event) => {
