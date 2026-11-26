@@ -53,7 +53,7 @@ function parseStartDate(v, rangeFirst){
   return null;
 }
 const cell=(ws,r,c)=>{const x=ws[XLSX.utils.encode_cell({r:r-1,c:c-1})];return x?x.v:null;};
-const isSection=s=>/^[5-8][GA][12]$/.test(s);
+const isSection=s=>/^[5-9][GA]\d{1,2}$/.test(s);   // v3.4: أي رقم شعبة (5G3…) لا ١ و٢ فقط
 function dayToken(s){s=String(s);
   const m=s.toUpperCase().match(/MON|TUE|WED|THU|FRI/); if(m) return m[0];
   if(/الاثن|الإثن/.test(s)) return 'MON'; if(/الثلاث/.test(s)) return 'TUE';
@@ -145,6 +145,7 @@ function parseWeek(ws){
       if(dt){ day=dt; continue; }
       const lab=clean(cell(ws,r,b.cc));
       if(day && isSection(lab)){
+        if(!bookings[lab]) bookings[lab]={};
         const codes=[clean(cell(ws,r,b.e1)),clean(cell(ws,r,b.e2))].map(x=>x.toUpperCase()).filter(Boolean);
         if(codes.length){ bookings[lab][day]=(bookings[lab][day]||[]).concat(codes); }
       }
@@ -157,16 +158,27 @@ function build(buf, withAudit){
   const wb=XLSX.read(buf,{type:'buffer'});
   let cards={}; try{ cards=readCards(wb); }catch(e){ cards={}; }
   const weeks=[]; const usedKeys=new Set();
+  // v3.4 — في الملف الموحّد تُسمّى أوراق الاختبارات «exam 1، exam 2…» (أوراق week للخطة)؛ في الملف القديم تبقى week
+  const EXAM_RX=/^(exams?|اختبار)/i;
+  const examSheets=wb.SheetNames.filter(n=>EXAM_RX.test(n.trim()));
+  const useRx=examSheets.length ? EXAM_RX : /^week/i;
+  const parsed=[]; const secSet=new Set(SECTIONS);
   for(const name of wb.SheetNames){
-    if(!/^week/i.test(name)) continue;
+    if(!useRx.test(name.trim())) continue;
     let p=null; try{ p=parseWeek(wb.Sheets[name]); }catch(e){ p=null; }
     if(!p) continue;
+    parsed.push(p); Object.keys(p.bookings).forEach(k=>secSet.add(k));
+  }
+  // ترتيب الشعب: الصف ثم عام قبل متقدم ثم الرقم (الافتراضية دائماً حاضرة فلا يتغيّر شيء في الملف القديم)
+  const secKey=c=>{ const m=c.match(/^(\d)([GA])(\d+)$/); return m?(+m[1])*1000+(m[2]==='G'?0:100)+(+m[3]):1e9; };
+  const SECS=[...secSet].sort((a,b)=>secKey(a)-secKey(b));
+  for(const p of parsed){
     const num=p.num||weeks.length+1;
     // بناء أيام كل شعبة مع أسماء المواد والبطاقات
     const sections={};
-    for(const sec of SECTIONS){
+    for(const sec of SECS){
       const days=DAYS.map(([tok,alabel])=>{
-        const codes=(p.bookings[sec][tok]||[]);
+        const codes=((p.bookings[sec]||{})[tok]||[]);
         const exams=codes.map(code=>{
           const key=num+'|'+tok+'|'+sec+'|'+code;
           usedKeys.add(key);
@@ -184,7 +196,7 @@ function build(buf, withAudit){
   const iso=d=>d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
   weeks.forEach(w=>{ w.range=w._d?fmtRange(w._d):''; w.start=w._d?iso(w._d):null; delete w._d; });
   const {cur,upcoming}=weekPointer(weeks);
-  const out={school:SCHOOL, currentWeekIndex:cur, currentIsUpcoming:upcoming, sectionOrder:SECTIONS, dayOrder:DAYS, weeks};
+  const out={school:SCHOOL, currentWeekIndex:cur, currentIsUpcoming:upcoming, sectionOrder:SECS, dayOrder:DAYS, weeks};
   if(withAudit){
     const dayLabel={}; DAYS.forEach(([t,l])=>dayLabel[t]=l);
     const orphans=[];
