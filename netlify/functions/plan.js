@@ -161,8 +161,8 @@ function pivot(buf){
     for(let r=5;r<=maxRow;r++){
       const subject=fixSubject(cell(ws,r,C_SUBJECT));
       const teacher=clean(cell(ws,r,C_TEACHER));
-      const note=clean(cell(ws,r,D.note)), exam=clean(cell(ws,r,D.exam)), rem=clean(cell(ws,r,D.rem));
-      const texts=()=>[note, rem?'تذكير: '+rem:'', exam?'موعد اختبار: '+exam:''];
+      const g=c=>c?clean(cell(ws,r,c)):''; const note=g(D.note), exam=g(D.exam), rem=g(D.rem), hw=g(D.hw);
+      const texts=()=>[note, rem?'تذكير: '+rem:'', exam?'موعد اختبار: '+exam:'', hw?'واجب: '+hw:''];
       if(!subject && !teacher){ texts().forEach(t=>general.push(t)); continue; }
       const [emoji,tint]=meta(subject);
       let placed=false; const codesFilled=[];
@@ -176,7 +176,7 @@ function pivot(buf){
         for(const v of list){
           const e={subject,teacher,lesson:v.lesson,emoji,tint};
           if(v.sec) e.sec=v.sec;
-          if(note) e.note=note; if(rem) e.reminder=rem; if(exam) e.exam=exam;
+          if(note) e.note=note; if(rem) e.reminder=rem; if(exam) e.exam=exam; if(hw) e.homework=hw;
           sections[code].push(e);
         }
         placed=true; codesFilled.push(code);

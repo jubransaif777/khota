@@ -39,7 +39,7 @@
       m.rows.push({ subject: subj, emoji: es[0].emoji, code: code, shown: shown, exams: m.items.filter(function (i) { return i.code === code; }) });
     });
     m.others = m.items.filter(function (i) { return !covered[i.code]; });
-    m.reminders = []; ents.forEach(function (x) { var t = x.reminder || x.note; if (t) m.reminders.push({ subject: x.subject, text: t }); });
+    m.reminders = []; ents.forEach(function (x) { var t = x.reminder || x.note; if (t) m.reminders.push({ subject: x.subject, text: t }); if (x.homework) m.reminders.push({ subject: x.subject, text: 'واجب: ' + x.homework }); });
     return m;
   }
   function tag(m, i) { return (!m.pick && m.subs.length > 1 && i.secs.length < m.subs.length) ? ' (' + i.secs.join('، ') + ')' : ''; }

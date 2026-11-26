@@ -155,7 +155,7 @@ function follow(buf){
       const teacher=clean(cell(ws,r,C_TEACHER));
       if(!teacher && !subject) continue;
       { let any=0; for(const u of units) if(clean(cell(ws,r,u.col))) any++;      // صفّ تدريس بلا دروس: نحتفظ بنصوصه للتنبيه
-        if(!any) strayRows.push({teacher,subject,note:clean(cell(ws,r,D.note)),exam:clean(cell(ws,r,D.exam)),rem:clean(cell(ws,r,D.rem))}); }
+        if(!any) strayRows.push({teacher,subject,note:D.note?clean(cell(ws,r,D.note)):'',exam:D.exam?clean(cell(ws,r,D.exam)):'',rem:D.rem?clean(cell(ws,r,D.rem)):''}); }
       if(!teacher || /^شاغر/.test(teacher)) continue; // تجاهل الصفوف الشاغرة
       const cells={}; let filled=0, teaches=0;
       for(const u of units){

@@ -412,6 +412,7 @@ function initApp(){
     if(hasTest)badges+='<span class="badge test">اختبار'+(bk.length===1?' '+esc(bk[0].dayLabel):'')+'</span>';
     if(x.note)badges+='<span class="badge note">ملاحظة</span>';
     if(x.reminder)badges+='<span class="badge note">تذكير</span>';
+    if(x.homework)badges+='<span class="badge note">واجب</span>';
     if(!badges)badges='<span class="badge none">درس</span>';
     var head=document.createElement('button');head.className='card-head';
     head.setAttribute('aria-expanded',open?'true':'false');
@@ -422,6 +423,7 @@ function initApp(){
     var body=document.createElement('div');body.className='card-body';
     var h='<div class="row"><div class="rl">الدرس / الخطة</div><div class="rv">'+esc(x.lesson)+'</div></div>';
     if(x.note)h+='<div class="row"><div class="rl">ملاحظة</div><div class="rv">'+esc(x.note)+'</div></div>';
+    if(x.homework)h+='<div class="row"><div class="rl">الواجب / المهمة</div><div class="rv">'+esc(x.homework)+'</div></div>';
     if(x.reminder)h+='<div class="row"><div class="rl">تذكير</div><div class="rv">'+esc(x.reminder)+'</div></div>';
     bk.forEach(function(b){ var cxx=curExams(), tg=cxx?tagOf(b,cxx):''; h+='<div class="alertbox ex2"><span class="ai">📝</span><div><div class="at">اختبار يوم '+esc(b.dayLabel)+(tg?' ('+esc(tg)+')':'')+'</div><div class="av">'+(b.card&&cardRows(b.card)?cardRows(b.card):'لم تُنشر تفاصيل الاختبار بعد')+'</div></div></div>'; });
     if(x.exam)h+='<div class="alertbox"><span class="ai">📝</span><div><div class="at">موعد اختبار</div><div class="av">'+esc(x.exam)+'</div></div></div>';

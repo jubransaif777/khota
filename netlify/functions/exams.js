@@ -128,10 +128,36 @@ function readCards(wb){
   return map;
 }
 
+// v3.4 — التخطيط المبسّط: الشعب صفوف، والأيام أعمدة (اثنين…جمعة)، وفي الخانة رمز المادة (أو أكثر مفصولة بفاصلة).
+// يُكتشف بوجود ٣ أيام أو أكثر في صف واحد؛ وإلا يُقرأ التخطيط القديم (كتلتان وأعمدة Exam 1/2).
+function parseDayCols(ws,maxRow){
+  let hr=0, map={};
+  for(let r=1;r<=Math.min(maxRow,30);r++){ const m={}; let n=0;
+    for(let c=2;c<=12;c++){ const t=clean(cell(ws,r,c)); if(!t||t.length>30) continue; const d=dayToken(t); if(d&&!m[d]){ m[d]=c; n++; } }
+    if(n>=3){ hr=r; map=m; break; } }
+  if(!hr) return null;
+  const bookings={}; SECTIONS.forEach(x=>bookings[x]={});
+  for(let r=hr+1;r<=maxRow;r++){
+    const lab=clean(cell(ws,r,1)).toUpperCase().replace(/\s+/g,''); if(!isSection(lab)) continue;
+    for(const [d,c] of Object.entries(map)){
+      const codes=clean(cell(ws,r,c)).toUpperCase().split(/[\s,،;+\/&]+/).filter(Boolean);
+      if(codes.length){ if(!bookings[lab]) bookings[lab]={}; bookings[lab][d]=(bookings[lab][d]||[]).concat(codes); }
+    }
+  }
+  // رقم الأسبوع والتاريخ: بالعنوان («رقم الأسبوع» / «التاريخ») والقيمة تحته
+  let wk='', start=null;
+  for(let r=1;r<=Math.min(maxRow,10);r++) for(let c=1;c<=14;c++){ const t=clean(cell(ws,r,c));
+    if(!wk && /^رقم الأسبوع|^week\s*no/i.test(t)) wk=clean(cell(ws,r+1,c));
+    if(!start && /^التاريخ|^date/i.test(t)) start=parseDate(cell(ws,r+1,c)); }
+  return {bookings,wk,start};
+}
+
 function parseWeek(ws){
   if(!ws) return null;
   const ref=ws['!ref']; if(!ref) return null;
   const maxRow=XLSX.utils.decode_range(ref).e.r+1;
+  const dc=parseDayCols(ws,maxRow);
+  if(dc) return {num:dc.wk?+dc.wk:null, start:dc.start, bookings:dc.bookings};
   const wknum=clean(cell(ws,6,13)) || '';
   const start=parseDate(cell(ws,6,10));
   const bookings={}; SECTIONS.forEach(s=>bookings[s]={});
