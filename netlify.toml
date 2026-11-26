@@ -6,6 +6,39 @@
 [functions."health-cron"]
   schedule = "*/30 * * * *"
 
+# v3.3.2 — حجب مصادر الدوال وملفات الإعداد عن الزوار.
+# لأن publish = "." تُنشَر كل ملفات المستودع كملفات عادية، فكان مصدر الدوال (وفيه روابط SharePoint) قابلاً للتحميل.
+# force = true يجعل هذه القواعد تتقدّم على وجود الملف نفسه.
+[[redirects]]
+  from = "/netlify/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/netlify"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package-lock.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/netlify.toml"
+  to = "/404.html"
+  status = 404
+  force = true
+
 # رابط نظيف لملفات المستندات: khotamaereid.net/files/<id>.pdf (يخفي مسار الدوال)
 [[redirects]]
   from = "/files/:id"
